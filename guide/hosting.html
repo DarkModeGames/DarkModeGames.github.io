@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hosting & Networking &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Hosting &amp; Networking</h1>
+<h2>Network Modes</h2>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Description</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>host</code></td>
+<td>Server + local client</td>
+<td>Solo or small groups</td>
+</tr>
+<tr>
+<td><code>server</code></td>
+<td>Dedicated server only</td>
+<td>Always-on multiplayer</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td>Connect to a server</td>
+<td>Join an existing game</td>
+</tr>
+<tr>
+<td><code>none</code></td>
+<td>No networking</td>
+<td>Offline testing</td>
+</tr>
+</tbody>
+</table>
+<h2>Host Mode</h2>
+<p>Host mode starts a server and connects a local player automatically. This is the
+simplest way to play with friends.</p>
+<div class="codehilite"><pre><span></span><code>./isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>host_player<span class="w"> </span>--secret<span class="o">=</span>secret
+</code></pre></div>
+
+<p>Other players connect as clients to your IP address.</p>
+<h2>Dedicated Server</h2>
+<p>For always-on multiplayer, run a dedicated server:</p>
+<div class="codehilite"><pre><span></span><code>./isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>server<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>server<span class="w"> </span>--secret<span class="o">=</span>adminpass
+</code></pre></div>
+
+<h3>Server Deployment</h3>
+<h4>Systemd Service</h4>
+<div class="codehilite"><pre><span></span><code><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">Isometry Game Server</span>
+<span class="na">After</span><span class="o">=</span><span class="s">network.target</span>
+
+<span class="k">[Service]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">simple</span>
+<span class="na">User</span><span class="o">=</span><span class="s">isometry</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/opt/isometry/isometry </span>\
+<span class="w">  </span><span class="s">--campaign=mygame --network=server --port=5000 </span>\
+<span class="w">  </span><span class="s">--username=server --secret=secret</span>
+<span class="na">Restart</span><span class="o">=</span><span class="s">always</span>
+<span class="na">RestartSec</span><span class="o">=</span><span class="s">5</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+</code></pre></div>
+
+<h3>Port Configuration</h3>
+<ul>
+<li>Default port: <strong>5000</strong> (UDP)</li>
+<li>Port range: 1024–65535</li>
+<li>Forward UDP traffic on your router/firewall</li>
+</ul>
+<h3>Security</h3>
+<ul>
+<li>Encryption keys are generated on first server launch and stored locally.</li>
+<li>Client passwords are encrypted during transmission.</li>
+<li>The engine checks everyone is on the same campaign version.</li>
+<li>The maximum client count is configurable (default: 4095).</li>
+</ul>
+<h2>Where to next</h2>
+<ul>
+<li><a href="/guide/playing.html">Playing</a> — controls and gameplay mechanics.</li>
+<li><a href="/guide/installation.html">Installation</a> — download and set up
+  Isometry.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

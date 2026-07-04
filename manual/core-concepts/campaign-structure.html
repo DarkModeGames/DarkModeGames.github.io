@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Structure and Packaging &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Campaign Structure and Packaging</h1>
+<p>This page explains how a campaign is laid out on disk and packaged for the engine: the ZIP archive, the data files inside it, how those files merge into one entity set, and how nested plugins extend a campaign. Knowing this layout lets you split your work across many small files and reuse content through plugins without guessing how the engine resolves conflicts.</p>
+<h2>Prerequisites</h2>
+<p>This page assumes you understand entities and how they reference each other:</p>
+<ul>
+<li><a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a></li>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+</ul>
+<p>If a term here is unfamiliar, check the <a href="/manual/getting-started/glossary.html">glossary</a>.</p>
+<h2>What a campaign is</h2>
+<p>A <a href="/manual/getting-started/glossary.html#terms">campaign</a> is a complete game definition packaged as a single <code>.zip</code> archive. The archive holds two kinds of content:</p>
+<ul>
+<li><strong>Data files</strong> that define <a href="/manual/getting-started/glossary.html#terms">entities</a>, written as YAML or JSON.</li>
+<li><strong>Asset files</strong> that the entities reference, such as images, audio, and text tile grids.</li>
+</ul>
+<p>The engine reads the archive, merges every data file into one entity set, validates it, and instantiates the entities. You never edit code to build a game; you edit data files and add assets.</p>
+<p>This page draws from an example <code>demo</code> campaign throughout.</p>
+<h2>Archive layout</h2>
+<p>Every entry in the archive lives under one top-level folder whose name matches the campaign name. The demo archive is built with a command equivalent to <code>zip -r demo.zip demo/</code>, so every entry is prefixed <code>demo/</code>. That prefix is the <strong>campaign prefix</strong>.</p>
+<p>The campaign prefix matters because asset paths inside your YAML are resolved relative to it. A sprite that stores <code>assets/hero.png</code> is read from <code>demo/assets/hero.png</code> in the archive. Keep the prefix folder name consistent with the campaign name you load.</p>
+<p>At runtime the archive must sit beside the Isometry binary. The engine looks for <code>&lt;binary-dir&gt;/&lt;dir&gt;/&lt;campaign&gt;.zip</code>.</p>
+<blockquote>
+<p>Note: <code>--network=none</code> is currently a no-op that loads no campaign. To exercise the load pipeline headless, load an example campaign and run with <code>--network=host</code>. See <a href="/manual/multiplayer/hosting.html">Hosting</a> and <a href="/reference/troubleshooting.html">Troubleshooting</a>.</p>
+</blockquote>
+<p>A campaign typically splits its entities across many small, per-purpose files rather than a few large ones. A partial listing:</p>
+<div class="codehilite"><pre><span></span><code>demo/
+  Main.yaml
+  heroActor.yaml
+  guardActor.yaml
+  map.yaml
+  skills.yaml
+  actions.yaml
+  triggers.yaml
+  assets/
+  demoMap/
+  polygons/
+</code></pre></div>
+
+<p>You are free to organize files however you like. The engine merges them all regardless of name, so split by purpose in whatever way keeps your work readable.</p>
+<h2>Data file format</h2>
+<p>Each data file is a top-level dictionary keyed first by entity type, then by <a href="/manual/getting-started/glossary.html#terms">entity key</a>, then by the entity's fields:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">EntityType</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">entityKey</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">field</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+</code></pre></div>
+
+<p>A single file may contain several entity types, and several files may contribute to the same type. A <code>heroActor.yaml</code> shows one file holding two types, an <code>Actor</code> and a <code>Vector</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroStartPos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+</code></pre></div>
+
+<p>These are typical example values: the hero's <code>base</code> is <code>8</code> and <code>speed</code> is <code>1.0</code>. (A full Actor defines more fields than shown here; see <a href="/reference/entities.html">the entity reference</a> for the full Actor schema.)</p>
+<blockquote>
+<p>Warning: Data files use <strong>clean keys</strong> only. Always write the clean key like <code>name</code>; the underscore forms such as <code>name_</code> are internal and never used in campaign files. This applies to every entity type.</p>
+</blockquote>
+<h3>YAML and JSON</h3>
+<p>You may write data files as YAML (<code>.yaml</code> / <code>.yml</code>) or JSON (<code>.json</code>), and you may mix both in one campaign. The engine chooses the parser by file extension. This manual uses YAML throughout, and both formats are accepted.</p>
+<h2>How files merge into one entity set</h2>
+<p>At load, the engine reads every <code>.json</code>, <code>.yaml</code>, and <code>.yml</code> file in the archive and merges them into one combined set of entities, grouped by type then by key. The merge is per type and per key, so contributions from different files combine into a single set.</p>
+<p>This per-key merge is why you can split entities across files freely. Put all your actions in <code>actions.yaml</code> and all your triggers in <code>triggers.yaml</code>; the engine treats them as one merged whole.</p>
+<h3>Key uniqueness</h3>
+<p>Entity keys must be unique across the <strong>entire</strong> merged dictionary, not just within one type or one file. If two entities share a key, the engine warns about a naming conflict and skips the conflicting entity, which leaves the campaign missing data. The <a href="/manual/core-concepts/validation.html">validation</a> phase also rejects duplicate keys outright.</p>
+<p>When two files contribute the same key, a later-loaded entity overwrites an earlier one. Do not rely on file load order for correctness; give every entity a distinct key.</p>
+<h2>The Main entity</h2>
+<p>Every campaign requires exactly one <a href="/manual/getting-started/glossary.html#terms">Main</a> entity. Main names where the game starts: the player-controlled actor and the starting map. An example <code>Main.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+</code></pre></div>
+
+<p>Here <code>actor</code> is a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to the <code>heroActor</code> entity and <code>map</code> is a KeyRef to <code>demoMap</code>. Both fields are required.</p>
+<p>Main also accepts two optional fields:</p>
+<ul>
+<li><code>notes</code> — a free-form description string.</li>
+<li><code>plugins</code> — an ordered list of plugin names that controls precedence. Covered in <a href="#plugins">Plugins</a> below.</li>
+</ul>
+<blockquote>
+<p>Note: Having more than one Main entity is an error. Define exactly one, with any key you like; the example uses <code>demoMain</code>.</p>
+</blockquote>
+<h2>Assets</h2>
+<p>Asset files travel in the archive alongside your data files and are loaded on demand by the entities that reference them. The loader recognizes these extensions:</p>
+<ul>
+<li><code>.png</code>, <code>.jpg</code>, <code>.jpeg</code> — loaded as image textures.</li>
+<li><code>.wav</code> — loaded as audio. Audio must use a 44,100 Hz sample rate.</li>
+<li><code>.mp3</code> — loaded as audio.</li>
+<li><code>.txt</code> — loaded as text, used for layer tile grids and similar data.</li>
+</ul>
+<p>Reference an asset by its path relative to the campaign prefix, for example <code>assets/hero.png</code>. The engine prepends the prefix when it reads the file.</p>
+<p><a id="plugins"></a></p>
+<h2>Plugins</h2>
+<p>A <a href="/manual/getting-started/glossary.html#terms">plugin</a> is a nested <code>.zip</code> file placed inside the campaign archive. Plugins let you package reusable content, such as a set of enemies or a shared item library, and drop it into any campaign. The engine treats the archive as containing plugins if any entry ends in <code>.zip</code>.</p>
+<p>You can place plugin zips anywhere in the archive; a common convention is a <code>plugins/</code> folder. A plugin's <strong>name</strong> is its zip basename with the <code>.zip</code> extension removed, so <code>plugins/enemies.zip</code> has the name <code>enemies</code>. That name is what you list in <code>Main.plugins</code>.</p>
+<h3>How plugins flatten</h3>
+<p>When the engine detects plugins, it expands and re-roots each one under the campaign prefix, then writes a single merged archive for the session. The plugin's own top-level folder segment is stripped and replaced by the prefix. A plugin <code>enemies.zip</code> containing <code>enemies/goblins.yaml</code> and <code>enemies/sprites/goblin.png</code> becomes <code>&lt;prefix&gt;/goblins.yaml</code> and <code>&lt;prefix&gt;/sprites/goblin.png</code> in the merged archive.</p>
+<p>After flattening, plugin data files merge into the campaign exactly like the campaign's own files. There is no separate plugin namespace; everything lands in one entity set.</p>
+<p>Plugins expand recursively. A plugin may itself contain plugin zips to any depth. Within a single plugin, its nested sub-plugins are applied first and the plugin's own files last, so a plugin's own content beats the sub-plugins it bundles.</p>
+<h3>Precedence</h3>
+<p>When the same path or entity key appears in more than one place, precedence decides which wins, from highest to lowest:</p>
+<ol>
+<li><strong>The campaign's own top-level files</strong> always win. Your campaign can override anything a plugin provides.</li>
+<li><strong>Plugins listed in <code>Main.plugins</code></strong>, in list order. Earlier in the list means higher priority.</li>
+<li><strong>Plugins not listed in <code>Main.plugins</code></strong>, ranked lowest, in archive order.</li>
+</ol>
+<p>To set plugin order, list their names in the <code>Main.plugins</code> array. Suppose two plugins both define a <code>goblinActor</code>, and you want <code>enemies</code> to win over <code>monsters</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+<span class="w">    </span><span class="nt">plugins</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enemies</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monsters</span>
+</code></pre></div>
+
+<p>Because <code>enemies</code> comes first, its <code>goblinActor</code> takes priority over the one in <code>monsters</code>. Your campaign's own <code>goblinActor</code>, if any, would still beat both.</p>
+<blockquote>
+<p>Note: <code>Main.plugins</code> lists plugin <strong>names</strong>, not entity keys, so its entries are not cross-reference validated against entities. If you list a name with no matching plugin zip, the engine logs a warning and ignores the entry.</p>
+</blockquote>
+<p>The merged archive is a build detail used only for loading. For <a href="/manual/multiplayer/networking-and-security.html">multiplayer</a> integrity, the engine checksums the <strong>original</strong> archive, which already contains the nested plugin zips, so every player verifies identical content including plugins.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a></li>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+<li><a href="/manual/core-concepts/validation.html">Validation</a></li>
+<li><a href="/manual/multiplayer/hosting.html">Hosting</a></li>
+<li><a href="/manual/multiplayer/networking-and-security.html">Networking and security</a></li>
+<li><a href="/reference/entities.html">Entity reference</a></li>
+<li><a href="/manual/tutorial/build-the-demo.html">Tutorial: build the demo</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

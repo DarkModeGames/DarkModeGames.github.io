@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Skills &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Add Skills</h1>
+<p>Skills are the abilities a player triggers from the hotbar — a punch, a heal, a charged shot. This page shows how to define a Skill, wire it to the <a href="/manual/guides/define-actions.html">actions</a> it runs, list it on an actor, and build a skill that charges while you hold the button.</p>
+<h2>Introduction</h2>
+<p>A <strong>Skill</strong> is an <a href="/manual/getting-started/glossary.html#terms">entity</a> that connects a hotbar button to an <a href="/manual/getting-started/glossary.html#terms">Action</a>. When the player presses the button, the skill runs one action; when they release it, it can run another. Each skill carries the display details the interface needs — a name and an icon — and optional fields for charged or animated abilities.</p>
+<p>Skills are how players act on the world. An actor with no skills can move but cannot attack, heal, or use any other ability. The hotbar holds at most nine skills, mapped to the keys <code>Q W E R T Y U I O</code> by default.</p>
+<h2>Prerequisites</h2>
+<p>This page assumes you have already:</p>
+<ul>
+<li>Created an actor — see <a href="/manual/guides/create-an-actor.html">Create an Actor</a>.</li>
+<li>Defined the actions a skill will run — see <a href="/manual/guides/define-actions.html">Define Actions</a>.</li>
+</ul>
+<h2>What a Skill points at</h2>
+<p>A Skill does not contain game logic. It points at one or two <a href="/manual/getting-started/glossary.html#terms">KeyRefs</a> — references to Action entities by their key:</p>
+<ul>
+<li><code>start</code> runs when the player presses the skill button.</li>
+<li><code>end</code> runs when the player releases the button.</li>
+</ul>
+<p>Either may be omitted. The example skills set both to the same action, so the ability fires that one action on press and again on release.</p>
+<p>The remaining fields describe the skill to the player and the engine:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>String</td>
+<td>No</td>
+<td>—</td>
+<td>Name shown in the interface.</td>
+</tr>
+<tr>
+<td><code>start</code></td>
+<td>KeyRef → Action</td>
+<td>No</td>
+<td>—</td>
+<td>Action run when the button is pressed.</td>
+</tr>
+<tr>
+<td><code>end</code></td>
+<td>KeyRef → Action</td>
+<td>No</td>
+<td>—</td>
+<td>Action run when the button is released.</td>
+</tr>
+<tr>
+<td><code>icon</code></td>
+<td>String</td>
+<td>No</td>
+<td>—</td>
+<td>Path to the icon shown on the hotbar.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>String</td>
+<td>No</td>
+<td><code>""</code></td>
+<td>Tooltip text.</td>
+</tr>
+<tr>
+<td><code>charge</code></td>
+<td>Int</td>
+<td>No</td>
+<td><code>0</code></td>
+<td>Maximum charge for held abilities; <code>0</code> means no charging.</td>
+</tr>
+</tbody>
+</table>
+<p>No field is required. In practice you give a skill at least a <code>name</code>, an <code>icon</code>, and a <code>start</code> action so the player can see it and use it.</p>
+<h2>Define a Skill</h2>
+<p>Skill entities live in their own file. The example defines both of its skills together.</p>
+<p>The attack skill is the simplest useful shape: a name, an icon, and a single action wired to both press and release.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Skill</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">attackSkill</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Punch</span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackAction</span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackAction</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/icons/sword.png</span>
+</code></pre></div>
+
+<p><code>attackSkill</code> shows as "Punch" with the sword icon. Pressing or releasing its hotbar key runs <code>attackAction</code>, an Action defined elsewhere in the campaign. The icon path starts with a leading slash and points at a file inside the campaign's assets.</p>
+<blockquote>
+<p>Note: The <code>start</code> and <code>end</code> values must be the keys of real Action entities. Validation rejects a Skill whose <code>start</code> or <code>end</code> points at a missing action. See <a href="/manual/guides/define-actions.html">Define Actions</a> for how those actions are written.</p>
+</blockquote>
+<p>The other skill, <code>healSkill</code>, has the same shape — it shows as "Heal" with a health icon and runs <code>conditionalHealAction</code> on both press and release.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Skill</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healSkill</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Heal</span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">conditionalHealAction</span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">conditionalHealAction</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/icons/health.png</span>
+</code></pre></div>
+
+<p>A skill can run different actions on press and release — set <code>start</code> and <code>end</code> to different action keys. The example keeps them identical because a punch or a heal is a single instant action; there is no separate release behavior to model.</p>
+<h2>Add Skills to an actor</h2>
+<p>A skill does nothing until an actor lists it. An actor references its skills through the <code>skills</code> field: an array of Skill keys, in hotbar order. The hero declares both skills.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">75</span>
+<span class="w">    </span><span class="nt">skills</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackSkill</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healSkill</span>
+</code></pre></div>
+
+<p>The order matters: <code>attackSkill</code> takes the first hotbar slot (<code>Q</code> by default) and <code>healSkill</code> the second (<code>W</code>). See <a href="/manual/guides/create-an-actor.html">Create an Actor</a> for the actor's other fields, such as <code>base</code> and <code>speed</code>.</p>
+<blockquote>
+<p>Warning: An actor may list at most nine skills. The tenth and beyond are ignored — both the campaign validator and the runtime cap the hotbar at nine slots.</p>
+</blockquote>
+<p>The default hotbar keys, in order, are <code>Q W E R T Y U I O</code>. They map to the inputs <code>action_1</code> through <code>action_9</code>. You can rebind them; see the <a href="/reference/cli.html">CLI reference</a> for how keybinds are configured.</p>
+<h2>Build a charged skill</h2>
+<p>A <strong>charged skill</strong> builds up power while the player holds its button, then releases it. Set the <code>charge</code> field to a number greater than zero to turn charging on.</p>
+<p>While the button is held, the charge builds up, capped at the <code>charge</code> maximum. Switching to a different skill mid-hold resets the charge to zero. When <code>charge</code> is <code>0</code> — the default — the skill fires immediately with no build-up.</p>
+<p>The following skill reuses the <code>attackAction</code> but charges up to a maximum of <code>10</code> before releasing.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Skill</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">chargedPunch</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Charged Punch</span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackAction</span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackAction</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/icons/sword.png</span>
+<span class="w">    </span><span class="nt">charge</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</code></pre></div>
+
+<p>Here <code>start</code> runs <code>attackAction</code> on press to begin the ability, <code>charge</code> accumulates while the button is held, and <code>end</code> runs <code>attackAction</code> again on release. A skill's cast visual comes from its <code>start</code>/<code>end</code> action's own <code>animation</code> field — see <a href="/manual/guides/visuals-sprites-animations.html">Visuals: Sprites and Animations</a>.</p>
+<blockquote>
+<p>Note: Neither example skill uses <code>charge</code>, so the values above are illustrative. The <code>start</code> and <code>end</code> actions (<code>attackAction</code>) are real keys.</p>
+<p>Tip: A charged skill reads best when <code>start</code> and <code>end</code> run different actions — <code>start</code> begins the cast and <code>end</code> releases the stored charge. Wire <code>end</code> to an action that consumes the built-up charge for a payoff that scales with hold time.</p>
+</blockquote>
+<h2>Show a skill's values in a dialog</h2>
+<p>A <a href="/manual/getting-started/glossary.html#terms">dialog</a> can display live actor values next to a skill's effect using templating tokens. Use these only inside a Dialog entity's <code>text</code> field.</p>
+<div class="codehilite"><pre><span></span><code><span class="x">HP: </span><span class="cp">{{</span><span class="err">@</span><span class="nv">health</span><span class="cp">}}</span><span class="x"> / Your luck: </span><span class="cp">{{</span><span class="err">$</span><span class="nv">luck</span><span class="cp">}}</span>
+</code></pre></div>
+
+<p><code>{{@health}}</code> reads the target actor and <code>{{$luck}}</code> reads the caller. This is useful for a heal skill whose dialog should show the target's current health.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/create-an-actor.html">Create an Actor</a></li>
+<li><a href="/manual/guides/define-actions.html">Define Actions</a></li>
+<li><a href="/manual/guides/conditions-and-logic.html">Conditions and Logic</a></li>
+<li><a href="/manual/guides/visuals-sprites-animations.html">Visuals: Sprites and Animations</a></li>
+<li><a href="/reference/cli.html">CLI Reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

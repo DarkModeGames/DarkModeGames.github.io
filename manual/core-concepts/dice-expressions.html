@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Expressions &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Dice Expressions</h1>
+<p>A few numeric fields in a campaign accept a <a href="/manual/getting-started/glossary.html#terms">dice expression</a> instead of a fixed number: a short string in tabletop dice notation that the engine rolls to produce an integer.</p>
+<h2>Introduction</h2>
+<p>A dice expression lets a value vary at runtime. Instead of writing a flat <code>10</code>, you write <code>1d20</code> and the engine rolls a twenty-sided die each time the value is read. This page covers where dice expressions are allowed, the exact set of characters they may contain, the operators the engine understands, and the integer-only rules that govern the result.</p>
+<p>Only four fields across all 33 entity types accept dice expressions. Everything else that looks numeric is a plain number. Knowing which fields are dice fields, and which characters they accept, keeps your campaign from failing <a href="/manual/core-concepts/validation.html">validation</a>.</p>
+<h2>Prerequisites</h2>
+<p>Read these pages first:</p>
+<ul>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a></li>
+</ul>
+<h2>What a dice expression is</h2>
+<p>A dice expression is a string written in dice notation. The core piece is the <strong>dice pool</strong>, written <code>NdM</code>: roll <code>N</code> dice, each with <code>M</code> sides, and sum the results. So <code>3d6</code> rolls three six-sided dice and adds them together.</p>
+<p>The <code>N</code> is optional and defaults to <code>1</code>. Both lowercase <code>d</code> and uppercase <code>D</code> work, so <code>d20</code> and <code>1D20</code> mean the same thing. Each die rolls a whole number from <code>1</code> to <code>M</code>.</p>
+<p>A <code>luckMeasure</code> is the simplest case: a single twenty-sided die.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Measure</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">luckMeasure</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d20</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/icons/sun.png</span>
+<span class="w">    </span><span class="nt">public</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</code></pre></div>
+
+<p>Each time an actor reads <code>luckMeasure</code>, the engine rolls <code>1d20</code> and returns a value from <code>1</code> to <code>20</code>.</p>
+<h2>The valid character set</h2>
+<p>A dice expression may contain only these characters:</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">0123456789</span><span class="p">()</span><span class="o">*</span><span class="err">%</span><span class="o">/+-</span><span class="n">dD</span><span class="o">&lt;&gt;</span>
+</code></pre></div>
+
+<p>That is: the digits, parentheses, the four arithmetic operators (<code>*</code>, <code>/</code>, <code>+</code>, <code>-</code>), the modulus sign (<code>%</code>), the dice letters <code>d</code> and <code>D</code>, and the filter signs (<code>&gt;</code>, <code>&lt;</code>).</p>
+<p>Any other character is rejected. At load time, validation reports an <code>INVALID_DICE</code> error naming the bad character and its position. At runtime, the roll logs an error and returns <code>0</code>.</p>
+<blockquote>
+<p>Warning: The character set excludes the decimal point. Dice expressions are integer-only, so <code>0.25</code> or <code>1d4*0.25</code> will not validate. To express a fraction, scale up to integers (see <a href="#sound-scale-as-a-percentage">Sound scale as a percentage</a>).</p>
+</blockquote>
+<h2>Operators and evaluation order</h2>
+<p>You can combine dice pools and numbers with arithmetic. The engine evaluates an expression in this order:</p>
+<ol>
+<li>Parentheses, innermost first.</li>
+<li>Filters (<code>&gt;</code> and <code>&lt;</code>).</li>
+<li>Dice pools (<code>NdM</code>).</li>
+<li>Multiplication (<code>*</code>).</li>
+<li>Division (<code>/</code>).</li>
+<li>Modulus (<code>%</code>).</li>
+<li>Addition (<code>+</code>).</li>
+<li>Subtraction (<code>-</code>).</li>
+</ol>
+<p>Use parentheses to group a sub-expression and force it to resolve first. An <code>attackSound</code> that rolls a hundred-sided die inside parentheses, then adds <code>50</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sound</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">attackSound</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/Audio/fx.mp3</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50+(1d100)</span>
+</code></pre></div>
+
+<p>This produces a value from <code>51</code> to <code>150</code>.</p>
+<h3>Keep-highest and keep-lowest filters</h3>
+<p>A filter trims a dice pool down to its best or worst rolls before summing. Write <code>NdM&gt;X</code> to keep the highest <code>X</code> rolls, or <code>NdM&lt;X</code> to keep the lowest <code>X</code> rolls. For example, <code>4d6&gt;3</code> rolls four six-sided dice and sums the highest three. The kept rolls are added together.</p>
+<h2>Integer rules and capping</h2>
+<p>Every dice expression evaluates to a whole number. Arithmetic follows these rules:</p>
+<ul>
+<li><strong>Division rounds toward zero.</strong> <code>10/3</code> is <code>3</code>.</li>
+<li><strong>Division or modulus by zero yields <code>0</code>.</strong> <code>10/0</code> is <code>0</code>, and <code>7%0</code> is <code>0</code>.</li>
+<li><strong>Subtraction caps at zero.</strong> <code>3-5</code> is <code>0</code>, not <code>-5</code>.</li>
+<li><strong>The final result is capped at a minimum of <code>0</code>.</strong> A dice expression never returns a negative number.</li>
+<li><strong>An empty or absent expression evaluates to <code>0</code>.</strong></li>
+</ul>
+<p>That last rule matters for measures: a <code>Measure</code> with no <code>expression</code> field is valid and simply reads as <code>0</code>.</p>
+<blockquote>
+<p>Note: All <code>Measure</code> fields, including <code>expression</code>, are optional.</p>
+</blockquote>
+<h2>Which fields accept dice expressions</h2>
+<p>Exactly four fields are dice fields. They are the only fields the engine validates as dice notation:</p>
+<table>
+<thead>
+<tr>
+<th>Entity</th>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Measure</code></td>
+<td><code>expression</code></td>
+<td>The value calculated fresh each time the <a href="/manual/guides/add-resources-and-measures.html">measure</a> is read.</td>
+</tr>
+<tr>
+<td><code>Sound</code></td>
+<td><code>scale</code></td>
+<td>The audio pitch, as a percentage of normal (see below).</td>
+</tr>
+<tr>
+<td><code>Timer</code></td>
+<td><code>total</code></td>
+<td>The total duration, in seconds.</td>
+</tr>
+<tr>
+<td><code>Timer</code></td>
+<td><code>interval</code></td>
+<td>The seconds between repeated action runs.</td>
+</tr>
+</tbody>
+</table>
+<p>Any other numeric-looking field, such as an actor's <code>speed</code> or a resource's <code>max</code>, is a plain number, not a dice expression.</p>
+<p><a id="sound-scale-as-a-percentage"></a></p>
+<h3>Sound scale as a percentage</h3>
+<p>A <code>Sound</code>'s <code>scale</code> is rolled to an integer, then divided by <code>100.0</code> to set the audio's pitch. Treat the value as a percentage of normal pitch: <code>100</code> is normal speed, <code>50</code> is half, <code>200</code> is double.</p>
+<p>A <code>bgMusic</code> that uses <code>1d200</code> spans a pitch from near-silent crawl up to double speed:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sound</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">bgMusic</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/Audio/Crystal caverns Chimes 1.mp3</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d200</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+
+<p>This is why <code>scale</code> uses dice expressions rather than a decimal pitch: the integer-only engine has no <code>0.5</code>, so you write <code>50</code> and the engine divides for you. See <a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a> for more on sounds.</p>
+<h3>Timer total and interval</h3>
+<p>A <code>Timer</code> runs an <a href="/manual/guides/define-actions.html">action</a> on a schedule. Its <code>interval</code> is the seconds between runs and its <code>total</code> is the overall duration; both accept dice expressions, so a timer's timing can vary each time it starts. A <code>regenTimer</code> that fires its action every <code>1d12</code> seconds:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Timer</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">regenTimer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">total</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d12</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regenAction</span>
+</code></pre></div>
+
+<p>The empty <code>total</code> reads as <code>0</code>. The <code>action</code> field is a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to an Action entity, not a dice field. See <a href="/manual/guides/triggers-and-timers.html">Triggers and timers</a> for the full timer lifecycle.</p>
+<h2>What does not belong in a dice field</h2>
+<p>Some parts of a campaign use the <code>$</code> and <code>@</code> markers to pull in live values at runtime. <code>$</code> reads a value from the <strong>caller</strong> and <code>@</code> reads a value from the <strong>target</strong>. These markers look like they might fit a dice expression, but they do not.</p>
+<blockquote>
+<p>Warning: <code>$</code> and <code>@</code> are not in the dice character set (<code>0123456789()*%/+-dD&lt;&gt;</code>). A marker inside a <code>Measure.expression</code>, <code>Sound.scale</code>, or <code>Timer</code> field fails validation with <code>INVALID_DICE</code>. Keep markers out of dice fields.</p>
+</blockquote>
+<p>The markers live in two other places:</p>
+<ul>
+<li>In <a href="/manual/guides/conditions-and-logic.html">Condition</a> operands, such as <code>@health</code>, which compares against the target's <code>health</code>.</li>
+<li>In <a href="/manual/guides/menus-dialogs-waypoints.html">dialog</a> text, using the templating tokens below.</li>
+</ul>
+<p>When a dialog shows a live value, it wraps the marker in double braces:</p>
+<div class="codehilite"><pre><span></span><code><span class="x">HP: </span><span class="cp">{{</span><span class="err">@</span><span class="nv">health</span><span class="cp">}}</span><span class="x"> / Your luck: </span><span class="cp">{{</span><span class="err">$</span><span class="nv">luck</span><span class="cp">}}</span>
+</code></pre></div>
+
+<p>These templating paths do not go through dice validation. They are covered on the conditions and dialogs pages, not here. No dice field uses a marker.</p>
+<blockquote>
+<p>Note: Markers behave defensively. A key that names no resource or measure resolves to <code>0</code>, and a missing actor resolves its marker to <code>0</code>.</p>
+</blockquote>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/core-concepts/validation.html">Validation</a></li>
+<li><a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a></li>
+<li><a href="/manual/guides/triggers-and-timers.html">Triggers and timers</a></li>
+<li><a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a></li>
+<li><a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a></li>
+<li><a href="/manual/guides/menus-dialogs-waypoints.html">Menus, dialogs, and waypoints</a></li>
+<li><a href="/reference/actions.html">Action function reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>
