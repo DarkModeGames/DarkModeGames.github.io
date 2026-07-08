@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Updates &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Updates</h1>
+<p>Release notes for Isometry, newest first.</p>
+<blockquote>
+<p>Adding a release: copy the most recent <code>## vX.Y — date</code> block to the top and fill in
+grouped bullets in plain language.</p>
+</blockquote>
+<h2>v0.387 — Open beta</h2>
+<p><strong>Isometry is now in open beta.</strong> This release covers roughly three months of work bringing
+the framework to a public, playable state — gameplay, multiplayer, authoring, and a brand-new
+documentation site.</p>
+<h3>Gameplay &amp; controls</h3>
+<ul>
+<li>Click to select an actor, click the ground to move, and click again to act — mouse-driven
+  play throughout.</li>
+<li>Movement keys and the facing keys now update an actor's bearing and heading, so you face
+  the way you move or aim.</li>
+<li>The cursor reacts to what's under it (move, target, interact).</li>
+<li>Actor-to-actor interactions now resolve edge-to-edge ("base to base") instead of from
+  centers, so reach feels right.</li>
+<li>You can move while a dialog or menu is open; talking to someone and then walking away (or
+  clicking empty ground) closes the conversation cleanly.</li>
+<li><strong>Flying actors</strong>: actors can be set to fly over walls and obstacles, stopped only by a
+  new impassable <strong>boundary</strong> terrain — with fly/land actions and a flying state you can
+  check in your own logic.</li>
+</ul>
+<h3>Camera &amp; map view</h3>
+<ul>
+<li>A pop-out <strong>map view</strong> that opens from the bottom of the screen with its own zoom, pan
+  (movement/look keys), and recenter-on-player.</li>
+<li>The world camera remembers your zoom level between sessions.</li>
+<li>Left-click on the map view centers the camera there.</li>
+</ul>
+<h3>Skills &amp; actions</h3>
+<ul>
+<li>Click to use skills from the hotbar.</li>
+<li>A skill's <strong>charge</strong> time can now affect action dice (e.g. scale damage by how long you held
+  it), and the cast animation holds on its final frame while charging.</li>
+<li>Action parameters accept <strong>dice expressions</strong>, and resource minimums/maximums can be dice
+  too — so values can roll at runtime.</li>
+<li>New <strong>particle-effect</strong> actions to attach and remove cosmetic effects on actors.</li>
+<li>Movement tracks accept ordered, numbered waypoints; teleport resumes travel to your
+  original destination after the jump.</li>
+</ul>
+<h3>Multiplayer</h3>
+<ul>
+<li>Teleports and facing now reach and replicate to the owning client correctly, so what you
+  do shows up the same for everyone.</li>
+<li>A first-login hook and per-player login statistics.</li>
+<li>Stability fixes to actors updating correctly on everyone's screen, and joining a game while
+  it's still loading.</li>
+</ul>
+<h3>Interface</h3>
+<ul>
+<li>Menus (resources, skills, system, and more) now have outlined, keyboard-navigable slots, a
+  dedicated description panel, and a theme-aware selection outline; keybind and gamepad
+  screens are fully keyboard-navigable.</li>
+<li>Focus plates show an actor's group name in the group's color.</li>
+<li>The system info screen scrolls with the arrow keys.</li>
+<li>Reworked the validation-error screen and added syntax highlighting to the error log.</li>
+<li>Resource icons fit their slots, a placeholder shows for missing icons, and various spacing
+  and theme-opacity polish.</li>
+<li>Timed-hold keybinds with a configurable hold time.</li>
+</ul>
+<h3>Campaign authoring</h3>
+<ul>
+<li>Stronger validation: full dice-notation checking and per-action parameter checking, so
+  mistakes surface before the game runs.</li>
+<li>Actions may omit their function to be animation-only or chain-only.</li>
+<li>Bad or missing campaign names now fail gracefully instead of crashing.</li>
+<li>Tiles can carry isolated navigation, and unused optional fields dissolve away on load.</li>
+</ul>
+<h3>Platform</h3>
+<ul>
+<li>Engine upgraded for performance and stability.</li>
+<li>Adopted a <code>major.commit-count</code> version scheme.</li>
+<li>All documentation moved to this website; the player log is written to <code>log.txt</code>.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Philosophy &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Design Philosophy</h1>
+<p>This page explains why Isometry is built the way it is. Understanding the reasoning behind the engine's core decisions helps you predict how it behaves and why your campaigns are structured the way they are.</p>
+<h2>Introduction</h2>
+<p>Isometry is a single binary that turns YAML into a playable isometric RPG. It has no backend service, no database, and no Docker. Every game is data: you describe what your world contains, and the engine resolves how it plays.</p>
+<p>This page is conceptual. It documents no entities and asks you to write no YAML. Instead it covers five decisions that shape everything else: one self-contained binary, data-driven campaigns, command-line launch, multiplayer-first networking, and a small set of deliberate constraints.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><a href="/manual/getting-started/introduction.html">What is Isometry</a></li>
+</ul>
+<p>The <a href="/manual/getting-started/glossary.html">glossary</a> defines the core terms used below.</p>
+<h2>One self-contained binary</h2>
+<p>Isometry ships as a single executable per platform. There is no server you stand up, no container you build, and no service the game phones home to. You download one binary and run it.</p>
+<p>A <a href="/manual/getting-started/glossary.html#terms">campaign</a> is a <code>.zip</code> archive that sits beside that binary. At launch the engine reads the archive from the executable's own directory and loads it.</p>
+<p>This keeps distribution simple. To ship a game you ship two files: the Isometry binary and your campaign <code>.zip</code>. There is nothing to deploy and nothing to keep running.</p>
+<h2>Data-driven campaigns</h2>
+<p>A whole game is built from YAML files in a campaign folder, with no code changes. The demo campaign built in the <a href="/manual/tutorial/build-the-demo.html">tutorial</a> is the canonical example.</p>
+<p>This is the central idea of Isometry: <a href="/manual/getting-started/glossary.html#terms">entities</a> hold data only and contain no game logic. There are exactly 33 entity types, and all game behavior is resolved by the engine through its built-in action functions. You describe <em>what</em> exists; the engine decides <em>how</em> it runs.</p>
+<p>For example, the demo hero is just data:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mana</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gold</span>
+<span class="w">    </span><span class="nt">skills</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackSkill</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healSkill</span>
+</code></pre></div>
+
+<p>Nothing here is procedural. The actor names its parts, and the engine assembles the running character. Because campaigns are declarative, they are also easy to share, diff, and mod: changing the game means editing text, not recompiling the binary.</p>
+<p>See <a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a> for how entities reference one another, and the <a href="/manual/core-concepts/campaign-structure.html">campaign structure</a> reference for how the files fit together.</p>
+<h3>Why this makes campaigns predictable</h3>
+<p>Because the game is data, the engine can check it before it runs. <a href="/manual/core-concepts/validation.html">Validation</a> is schema-driven: it cross-checks every reference and every dice expression before a campaign loads. A campaign that loads cleanly logs <code>Campaign validation passed</code>, then <code>Successfully created Entity</code> for each entity it builds.</p>
+<p>This is only possible because logic lives in the engine, not in your files. YAML has no hidden control flow to mis-execute, so most mistakes surface as a clear validation error instead of a runtime surprise.</p>
+<h2>Command-line launch</h2>
+<p>You configure Isometry through command-line arguments, parsed at startup. The common flags are <code>--campaign</code>, <code>--network</code>, <code>--port</code>, <code>--username</code>, <code>--secret</code>, and <code>--log-level</code>. The <a href="/reference/cli.html">CLI reference</a> lists them in full.</p>
+<p>This is deliberate. A command-line front door means the launcher is a separable layer: you can wrap the binary in your own launcher UI rather than ship the one in the box. Isometry provides separate launcher and engine builds precisely because the launcher is a front end, not the engine.</p>
+<h2>Multiplayer-first</h2>
+<p>Networking is part of the architecture, not an add-on. Sessions use secure encrypted connections. The network mode is one of four values: <code>NONE</code>, <code>HOST</code>, <code>SERVER</code>, or <code>CLIENT</code>.</p>
+<p>Designing multiplayer in from the start simplifies the single-player case rather than complicating it. Single-player is just a host session: single-player and multiplayer use the same system underneath, so a solo game runs the same way as a networked one.</p>
+<blockquote>
+<p>Warning: <code>--network=none</code> is currently a no-op and loads no campaign. To run a single-player session, use <code>--network=host</code>. See <a href="/manual/multiplayer/networking-and-security.html">Networking and security</a>.</p>
+</blockquote>
+<h2>Deliberate constraints</h2>
+<p>Isometry is opinionated where being opinionated keeps campaigns uniform. Two constraints are worth knowing up front.</p>
+<h3>Two numeric primitives</h3>
+<p>Actor stats use two clear systems, not one. A <a href="/manual/getting-started/glossary.html#terms">Resource</a> is a stored, trackable integer with a <code>default</code>, <code>min</code>, and <code>max</code>. A <a href="/manual/getting-started/glossary.html#terms">Measure</a> is a value derived from a <a href="/manual/getting-started/glossary.html#terms">dice expression</a> such as <code>1d20</code>, calculated fresh each time it's read.</p>
+<p>In the demo, health, mana, and gold are Resources, while <code>luckMeasure</code> is a Measure. There is no special "experience" stat built into the engine; any stat like that is simply a campaign-defined Resource. Keeping exactly two primitives makes every stat in every campaign fall into one of two well-understood shapes. See <a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a>.</p>
+<h3>A nine-skill bar</h3>
+<p>An actor can carry up to nine skills, and the HUD binds those skills to the slots <code>action_1</code> through <code>action_9</code>.</p>
+<p>This is a constraint on the actor, not on a skill. A <a href="/manual/getting-started/glossary.html#terms">Skill</a> entity itself has no nine-item limit. The demo hero carries only two skills (<code>attackSkill</code> and <code>healSkill</code>), well under the cap. See <a href="/manual/guides/add-skills.html">Add skills</a>.</p>
+<blockquote>
+<p>Note: A small, fixed skill bar keeps the player's controls consistent across every campaign, so the HUD never has to grow unbounded.</p>
+</blockquote>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/getting-started/introduction.html">What is Isometry</a></li>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a></li>
+<li><a href="/manual/core-concepts/validation.html">Validation</a></li>
+<li><a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a></li>
+<li><a href="/manual/guides/add-skills.html">Add skills</a></li>
+<li><a href="/manual/multiplayer/networking-and-security.html">Networking and security</a></li>
+<li><a href="/reference/cli.html">CLI reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Networking and Security &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Networking and Security</h1>
+<p>This page explains how Isometry multiplayer protects player logins, and what you, the operator, must provide on top of what the game offers. Read it before you open a server to other players.</p>
+<h2>Introduction</h2>
+<p>In Isometry multiplayer, one machine runs the game (the server); players connect to it. Before any player can join, the game does two things:</p>
+<ul>
+<li>It encrypts player logins, so a username and password never cross the network in plain text.</li>
+<li>It checks that everyone is running the same <a href="/manual/getting-started/glossary.html">campaign</a> version.</li>
+</ul>
+<p>Everything beyond those two protections — who is allowed to log in, how the host machine is secured, how the server stays online — is your responsibility. This page covers the protections the game provides, where its files live on disk, and the gaps you must fill yourself.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><a href="/manual/multiplayer/hosting.html">Hosting a campaign</a> — how to start a server and connect a client.</li>
+<li><a href="/reference/cli.html">CLI reference</a> — the command-line flags referenced below.</li>
+</ul>
+<p>It also helps to understand <a href="/manual/core-concepts/campaign-structure.html">campaign structure</a> and <a href="/manual/core-concepts/validation.html">validation</a>, because the campaign version check happens only after a campaign validates.</p>
+<h2>Network modes</h2>
+<p>Isometry runs in one of four network modes, chosen with the <code>--network</code> flag:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Value</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>none</code></td>
+<td><code>0</code></td>
+<td>Single-process, no networking. Currently a no-op: it loads no campaign.</td>
+</tr>
+<tr>
+<td><code>host</code></td>
+<td><code>1</code></td>
+<td>Runs a server <em>and</em> spawns a local player on the same machine.</td>
+</tr>
+<tr>
+<td><code>server</code></td>
+<td><code>2</code></td>
+<td>Runs a headless, dedicated server with no local player.</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td><code>3</code></td>
+<td>Connects to a server at a URI and port.</td>
+</tr>
+</tbody>
+</table>
+<p>You can pass the mode as its number, its full name (case-insensitive), or its single letter (<code>n</code>, <code>h</code>, <code>s</code>, <code>c</code>). An invalid or out-of-range value falls back to <code>none</code>.</p>
+<p>The default URI is <code>localhost</code> and the default port is <code>5000</code>.</p>
+<p><code>host</code> and <code>server</code> differ only in the local player. Both start listening for clients. A <code>host</code> also creates a local character for the operator; a pure <code>server</code> stays headless and waits for clients.</p>
+<blockquote>
+<p>Note: <code>none</code> mode loads nothing today. To exercise the load pipeline on a single machine, use <code>host</code>.</p>
+</blockquote>
+<h2>The server</h2>
+<p>The server is the one machine that runs the game; everyone else connects to it as a client. For public access, you forward a single UDP port — the server port — and nothing else.</p>
+<h2>How logins are protected</h2>
+<p>Player logins are encrypted, so a username and password never cross the network in plain text. The encryption keys are created automatically the first time you launch a server and are stored locally on the host machine; you do not set them up or manage them.</p>
+<p>Because a username and password are joined with a period internally, neither may contain one (see <a href="#valid-credentials">Valid credentials</a>).</p>
+<h2>Campaign version check</h2>
+<p>The game checks that each connecting player is running the same campaign version as the server. If their campaign differs in any way, they are refused. This check happens before the login is checked.</p>
+<p>When a player's campaign does not match the server's, they cannot join and see this error:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">Update</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">latest</span><span class="w"> </span><span class="nv">campaign</span><span class="w"> </span><span class="nv">version</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="k">connect</span>.
+</code></pre></div>
+
+<p>To fix a mismatch, give your players the server's exact campaign <code>.zip</code>.</p>
+<blockquote>
+<p>Warning: Editing any campaign file changes its version. After you update a server's campaign, every player must receive the updated <code>.zip</code> or they will be rejected.</p>
+</blockquote>
+<p><a id="valid-credentials"></a></p>
+<h2>Valid credentials</h2>
+<p>A username and password each must be non-empty and may not contain any of the rejected characters. There is no length requirement.</p>
+<p>The rejected characters are:</p>
+<div class="codehilite"><pre><span></span><code>&lt;&gt;:&quot;&#39;/\|?*~!@#$%^&amp;()={}[];.`
+</code></pre></div>
+
+<blockquote>
+<p>Note: There is no account database. Any non-empty, valid username and password creates or resumes a save. You decide who may connect by controlling access to the server, not through a registration system the game provides.</p>
+</blockquote>
+<h2>Where files live on disk</h2>
+<p>All runtime files live <strong>beside the executable</strong>, in the directory that holds the Isometry game.</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Path (relative to the game)</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Encryption keys</td>
+<td><code>.rsa/</code></td>
+<td>The server's login encryption keys. Created automatically; never share.</td>
+</tr>
+<tr>
+<td>Player saves</td>
+<td><code>data/</code></td>
+<td>One save file per player.</td>
+</tr>
+</tbody>
+</table>
+<p>Player saves are <strong>plain JSON</strong>. They are not encrypted. As the operator you can read and edit them, and so can anyone with file access to the server. A save holds the player's character, map, location, resources, and discovery. When a player reconnects, the server loads their existing save. On disconnect, the server saves the player's character automatically.</p>
+<blockquote>
+<p>Warning: Protect the <code>.rsa/</code> and <code>data/</code> directories with file permissions. They hold the login encryption keys and the player saves.</p>
+</blockquote>
+<h2>What the game does not provide</h2>
+<p>Isometry encrypts player logins and checks campaign versions. It does <strong>not</strong> give you:</p>
+<ul>
+<li>An account database, registration, or password reset.</li>
+<li>Rate limiting, IP banning, or protection against attacks that flood the server.</li>
+<li>Encrypted gameplay. Only the login is encrypted; the rest of the network traffic is not.</li>
+</ul>
+<p>You must supply these yourself: a firewall, access controls, monitoring, and a policy for who is allowed to connect. Do not plan a deployment around features the game does not have.</p>
+<h2>Maximum clients</h2>
+<p>The server accepts up to <code>4095</code> players. This is a fixed ceiling, not a setting. There is no <code>--max-clients</code> option; the session flags are <code>--uri</code>, <code>--port</code>, <code>--campaign</code>, <code>--network</code>, <code>--dir</code>, <code>--username</code>, and <code>--secret</code> (see the <a href="/reference/cli.html">CLI reference</a> for the full list).</p>
+<blockquote>
+<p>Note: Trial builds disable multiplayer entirely, so trial users cannot host or join networked sessions.</p>
+</blockquote>
+<h2>Deployment scenarios</h2>
+<p><strong>Local co-op or testing.</strong> Run one machine in <code>host</code> mode. The operator plays locally while others connect over the LAN. No port forwarding is needed for same-network play beyond the host's firewall.</p>
+<p><strong>Dedicated server.</strong> Run <code>server</code> mode on a machine that no one plays on. Forward the single UDP server port, restrict file access, and back up the <code>data/</code> directory. Keep the <code>.rsa/</code> directory off any shared volume.</p>
+<p><strong>Updating a live campaign.</strong> Edit the campaign, rebuild the <code>.zip</code>, and restart the server. The version changes, so distribute the new <code>.zip</code> to every player before they reconnect; otherwise they hit the campaign mismatch error.</p>
+<h2>Verifying a host session</h2>
+<p>To confirm a campaign loads and a login works on one machine, place your campaign <code>.zip</code> beside the game and start a host session with logging on:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>A successful boot logs <code>Campaign validation passed</code> and <code>Successfully created Entity</code> lines.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/multiplayer/hosting.html">Hosting a campaign</a></li>
+<li><a href="/reference/cli.html">CLI reference</a></li>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a></li>
+<li><a href="/manual/core-concepts/validation.html">Validation</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

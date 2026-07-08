@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build a Map &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Build a Map</h1>
+<p>This page shows you how to assemble a playable level out of terrain entities: a Map that ties together a tile grid, a spawn point, and the actors placed on it when the level loads. By the end you can author a map and understand why it looks empty until an actor walks across it.</p>
+<h2>Prerequisites</h2>
+<p>You should be comfortable with the campaign data model before you build a map:</p>
+<ul>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a> explains how entities reference each other by key.</li>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a> explains where YAML files and assets live inside a campaign.</li>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a> covers the actor you spawn onto the map and its <code>perception</code> field.</li>
+</ul>
+<h2>Fog of war: why a correct map looks blank</h2>
+<p>Before you build anything, you need to know that a freshly loaded map renders nothing. This is intended.</p>
+<p>Every tile layer starts hidden. Each tile begins fully transparent over a dark, unexplored background. This is <a href="/manual/getting-started/glossary.html#terms">fog of war</a>: the unexplored darkness that lifts only as an actor explores.</p>
+<p>A tile reveals when an actor's discovery area overlaps it. That area is sized from the actor's <code>perception</code> field (see <a href="/manual/guides/create-an-actor.html">Create an actor</a>). A hero with a small <code>perception</code> sees only the patch of terrain immediately around the spawn point when the level loads. The rest stays dark until the player moves.</p>
+<p>Each tile is always in one of three states:</p>
+<ul>
+<li><strong>Visible</strong> — inside an actor's discovery area right now, drawn at full strength.</li>
+<li><strong>Discovered</strong> — seen before but not currently in view, drawn dimmed.</li>
+<li><strong>Undiscovered</strong> — never seen, hidden.</li>
+</ul>
+<p>Discovery is tracked per actor and is saved with the game, so explored areas stay explored across sessions.</p>
+<blockquote>
+<p>Note: If your map appears completely black after loading, that is normal. Move the player actor and the terrain fades in around it. A blank screen is not a sign that your tiles are wrong.</p>
+</blockquote>
+<h2>How a map fits together</h2>
+<p>A map is a small stack of entities, each with one job. The <a href="/reference/entities.html#map">Map</a> entity is the top of the stack and points at the rest by <a href="/manual/getting-started/glossary.html#terms">KeyRef</a>:</p>
+<ul>
+<li>A <strong>TileMap</strong> holds the ordered terrain layers and the tile definitions they draw from.</li>
+<li>A <strong>TileSet</strong> names the texture atlas and lists the <strong>Tile</strong> definitions.</li>
+<li>Each <strong>Tile</strong> maps a single symbol character to one cell in that atlas, and declares whether the tile is walkable or solid.</li>
+<li>Each <strong>Layer</strong> points at a plain-text grid file whose characters are tile symbols.</li>
+<li>A <strong>Vector</strong> marks the spawn point where the player enters.</li>
+<li><strong>Deployment</strong> entities place non-player actors on the map at load time.</li>
+</ul>
+<blockquote>
+<p>Note: None of the fields below are required by the validator. In practice you set the ones you need for the map to function, and the example values show a working baseline.</p>
+</blockquote>
+<h2>Define the tiles</h2>
+<p>Start with the look of the terrain. A <a href="/reference/entities.html#tileset">TileSet</a> names a texture image inside the campaign and lays it out as a grid. The <code>columns</code> field tells the engine how wide that grid is, so it can turn each tile's <code>index</code> into a position in the atlas.</p>
+<p>The example tile set uses an 8-column atlas and defines three tiles:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">TileSet</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoTileSet</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">columns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/basic.png</span>
+<span class="w">    </span><span class="nt">tiles</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">grass</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">water</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wall</span>
+<span class="nt">Face</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">roof</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">northeast</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">northwest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">Tile</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">grass</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">G</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">navigation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">roof</span>
+<span class="w">  </span><span class="nt">water</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">W</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">46</span>
+<span class="w">  </span><span class="nt">wall</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">X</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">52</span>
+<span class="w">    </span><span class="nt">obstacle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">roof</span>
+</code></pre></div>
+
+<p>Each <a href="/reference/entities.html#tile">Tile</a> field controls one thing:</p>
+<ul>
+<li><code>symbol</code> is the character matched against the layer grid. It is a string by schema, but the engine reads one character at a time, so use a single character such as <code>"G"</code>.</li>
+<li><code>index</code> picks which cell in the grid to use, counting left to right then top to bottom, starting at <code>0</code>. With <code>columns</code> set to 8, grass <code>0</code> is the top-left cell, water <code>46</code> is column 6 row 5, and wall <code>52</code> is column 4 row 6.</li>
+<li><code>navigation</code> points at a <a href="/reference/entities.html#face">Face</a> entity that marks the tile as walkable. Here <code>grass</code> references <code>roof</code>, so actors can walk across grass and avoid everything else.</li>
+<li><code>obstacle</code> points at a <code>Face</code> entity that marks the tile as solid. The <code>wall</code> references the same <code>roof</code>. A tile's faces just say which parts are walkable versus solid.</li>
+</ul>
+<blockquote>
+<p>Tip: A tile defaults to neither walkable nor solid (both references absent). A floor tile you want actors to cross needs <code>navigation</code> pointing at a walkable <code>Face</code>, as <code>grass</code> shows. Reuse one <code>Face</code> entity (like <code>roof</code>) across many tiles.</p>
+</blockquote>
+<p>Two more Tile fields exist for special cases. <code>origin</code> adjusts what draws in front, and <code>ghost</code> makes a tile invisible while it still blocks movement. Leave both off unless you have a specific need; the example uses neither.</p>
+<blockquote>
+<p>Warning: Do not set <code>ghost</code> on your main floor tiles. A ghost tile is never drawn, so a ghosted floor leaves the terrain invisible.</p>
+</blockquote>
+<h2>Draw the layers</h2>
+<p>A <a href="/reference/entities.html#layer">Layer</a> is a plain-text file of tile symbols, one character per cell. The file holds your map's shape: where the grass is, where the walls run, where there is nothing at all.</p>
+<p>The grid format is deliberately simple. Each non-blank character is matched against a tile's <code>symbol</code>. Blank cells — a space, tab, newline, or empty position — place no tile, which is how you leave gaps. A short grass patch with a gap might look like this:</p>
+<div class="codehilite"><pre><span></span><code>GGG
+G G
+GGG
+</code></pre></div>
+
+<p>Here the center cell is a space, so no tile is placed there.</p>
+<p>The example splits its terrain across three layers, drawn in order from a <a href="/reference/entities.html#tilemap">TileMap</a>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">TileMap</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoTileMap</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">tileset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoTileSet</span>
+<span class="w">    </span><span class="nt">layers</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoFloor</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoWater</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoWalls</span>
+<span class="nt">Layer</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoFloor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/demoMap/layer0</span>
+<span class="w">    </span><span class="nt">ysort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">demoWater</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/demoMap/layer1</span>
+<span class="w">    </span><span class="nt">ysort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">demoWalls</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/demoMap/layer2</span>
+<span class="w">    </span><span class="nt">ysort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+
+<p>Each layer's <code>source</code> is a path to a grid file, relative to the campaign root. In the example these files live under a <code>demoMap/</code> folder inside the campaign and have no file extension: <code>layer0</code>, <code>layer1</code>, <code>layer2</code>. The floor layer draws grass, the walls layer draws the maze border, and the water layer is blank in this map.</p>
+<p>The <code>ysort</code> field controls what draws in front, so taller terrain like walls draws in front of what is behind it. Leave it off for a flat floor, as <code>demoFloor</code> does, and on for upright features.</p>
+<blockquote>
+<p>Note: Layers draw in the order you list them. Put your floor first and features such as walls after, so the features sit on top.</p>
+</blockquote>
+<h3>How grid characters become tile positions</h3>
+<p>The engine walks the grid in a fixed direction. Each row advances the tile position by one step along the map's X axis, and each character within a row steps by one along the Y axis. You do not set these coordinates yourself; you only arrange characters in the file. The result is that the shape you type in the text file is the shape you walk in the game.</p>
+<h2>Place the spawn point</h2>
+<p>The player needs somewhere to enter. The Map's <code>spawn</code> field is a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to a <a href="/reference/entities.html#vector">Vector</a> entity that holds an <code>x</code> and <code>y</code> position in pixels. It is the fallback location for the player actor when no saved position or action override applies.</p>
+<p>The spawn Vector sits beside the Map entity in the same file:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoSpawn</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+</code></pre></div>
+
+<p>The Map refers to it by key, as the assembled Map below shows.</p>
+<h2>Deploy non-player actors</h2>
+<p>A <a href="/reference/entities.html#deployment">Deployment</a> places one non-player actor on the map when the level loads. Each deployment pairs an <code>actor</code> to spawn with a <code>location</code> Vector that says where. The engine spawns each deployed actor as an NPC.</p>
+<p>The example places three NPCs:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Deployment</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardDeploy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardPos</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardActor</span>
+<span class="w">  </span><span class="nt">merchantDeploy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">merchantPos</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">merchantActor</span>
+<span class="w">  </span><span class="nt">patrollerDeploy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrollerPos</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrollerActor</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardPos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-48</span>
+<span class="w">  </span><span class="nt">merchantPos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">160</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+<span class="w">  </span><span class="nt">patrollerPos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">288</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</code></pre></div>
+
+<p>Each <code>actor</code> is a full Actor entity defined elsewhere in the campaign. To give a deployed NPC its own behavior, give that actor a strategy; see <a href="/manual/guides/add-npc-ai.html">Add NPC AI</a>.</p>
+<h2>Assemble the map</h2>
+<p>With the tiles, layers, spawn, and deployments in place, the Map entity ties them together:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Map</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMap</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Demo Map</span>
+<span class="w">    </span><span class="nt">tilemap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoTileMap</span>
+<span class="w">    </span><span class="nt">spawn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoSpawn</span>
+<span class="w">    </span><span class="nt">deployments</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardDeploy</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">merchantDeploy</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrollerDeploy</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoSpawn</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+</code></pre></div>
+
+<p>This Map names itself for the interface, draws its terrain from <code>demoTileMap</code>, enters the player at <code>demoSpawn</code>, and deploys the three NPCs. To make this map the one a campaign starts on, point the Main entity's map field at it; see <a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a>.</p>
+<p>The Map also carries <code>background</code> and <code>audio</code> fields for parallax scenery and music. Those are covered in <a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a>.</p>
+<h2>Add floor overlays (optional)</h2>
+<p>A <a href="/reference/entities.html#floor">Floor</a> draws a single texture image at a fixed position, beneath the tiles. Use it for a backdrop or a decorative surface that the tile grid sits on top of. A Floor has a <code>texture</code> path and a <code>location</code> KeyRef to a Vector for its top-left corner. The Map's <code>floor</code> field lists the floor overlays to draw. The example map uses none, so you can skip this until you need a painted backdrop.</p>
+<h2>Verify the map loads</h2>
+<p>Zip your campaign and check that the map loads and validates:</p>
+<div class="codehilite"><pre><span></span><code>./isometry<span class="w"> </span>--validate<span class="o">=</span>/path/to/mygame.zip
+./isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>A successful load logs <code>Campaign validation passed</code> and <code>Successfully created Entity</code> lines. Remember the fog of war: a loaded map looks dark until an actor's discovery area reveals the tiles near it.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a></li>
+<li><a href="/manual/guides/add-npc-ai.html">Add NPC AI</a></li>
+<li><a href="/manual/guides/visuals-sprites-animations.html">Visuals: sprites and animations</a></li>
+<li><a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a></li>
+<li><a href="/reference/entities.html">Entity reference</a></li>
+<li><a href="/manual/tutorial/build-the-demo.html">Tutorial: build the demo</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

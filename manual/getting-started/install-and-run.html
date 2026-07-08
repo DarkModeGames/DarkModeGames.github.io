@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install and Run &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Install and Run</h1>
+<p>This page shows you how to download the Isometry engine, get it running, and load an example <a href="/manual/getting-started/glossary.html#terms">campaign</a>. It ends with the exact commands you use to confirm a campaign loads.</p>
+<h2>Introduction</h2>
+<p>Isometry is a single program that loads game <a href="/manual/getting-started/glossary.html#terms">campaigns</a> defined entirely in YAML. There is no separate server to install and nothing else to set up; the program is the whole product. To build campaigns you first need it on your machine, and you need a reliable way to check that a campaign you wrote actually loads.</p>
+<p>This page covers downloading the engine, running it, and the headless verification boot you return to throughout the manual.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li>You have read <a href="/manual/getting-started/introduction.html">What is Isometry</a> and understand that a campaign is YAML data the engine loads.</li>
+</ul>
+<h2>Download Isometry</h2>
+<p>Isometry ships as a ready-to-run binary from itch.io:</p>
+<p><a href="https://dark-mode-games.itch.io/isometry">https://dark-mode-games.itch.io/isometry</a></p>
+<p>Download the build for your platform and unzip it. The download contains the engine executable and nothing else to install: no separate installer, no runtime, and no extra dependencies. The binary is the whole product.</p>
+<blockquote>
+<p>Note: Isometry is in open beta, version 0.387. itch.io is the only official download source.</p>
+</blockquote>
+<h2>Run the engine</h2>
+<p>Launch the engine executable to open the <strong>launcher</strong>, where you pick a campaign, log in, and host or join a session. The engine reads campaign <code>.zip</code> files from a folder beside the binary, so a campaign you want to play is placed next to the executable before you launch.</p>
+<p>Throughout this manual, command examples call the engine as <code>isometry</code>; use the actual file name of the executable you downloaded for your platform.</p>
+<h2>Load an example campaign</h2>
+<p>A campaign's <a href="/manual/getting-started/glossary.html#terms">Main</a> entity is the single required entry point that names the player actor and the starting map. A minimal <code>Main.yaml</code> defines one Main entity:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+</code></pre></div>
+
+<p>Here <code>actor</code> is a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to the <code>heroActor</code> entity and <code>map</code> is a KeyRef to <code>demoMap</code>. The hero actor it points to uses real values you will reuse later:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</code></pre></div>
+
+<p><code>speed</code> is the actor's movement rate and <code>base</code> is the footprint size in pixels.</p>
+<p>To play a campaign, package its folder into a <code>.zip</code> (see <a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a> for packaging), place the zip beside the engine binary, and launch.</p>
+<h2>Verify a campaign loads (headless)</h2>
+<p>When you write your own campaign, you need a fast way to confirm it loads and validates without opening a window. The engine offers two headless checks.</p>
+<h3>Quick validate</h3>
+<p>The fastest check runs the campaign validator and exits with status <code>0</code> on success or <code>1</code> on failure, without building the world. Point it at a campaign directory or a <code>.zip</code>:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--validate<span class="o">=</span>mycampaign.zip
+</code></pre></div>
+
+<p>Use this in scripts and quick iteration: a zero exit code means every entity, KeyRef, and dice expression passed validation.</p>
+<h3>Full host boot</h3>
+<p>To exercise the full load-and-validate pipeline, boot in host mode. The <code>--network</code> flag selects the multiplayer mode: <code>none</code>, <code>host</code>, <code>server</code>, or <code>client</code>. Host mode runs the pipeline you want to exercise.</p>
+<blockquote>
+<p>Warning: <code>--network=none</code> currently loads no campaign. The engine boots but does nothing, so single-player from the command line does not work yet. Single-player today works only through the launcher. To boot a campaign from the CLI, use <code>--network=host</code>.</p>
+</blockquote>
+<p>Place the campaign zip next to the engine binary, then run the boot:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>The campaign zip must sit beside the binary because the engine resolves campaign files relative to the executable's directory. The <code>--campaign</code> flag names the zip without its extension.</p>
+<blockquote>
+<p>Note: The log level defaults to <code>NONE</code>, which produces an essentially empty log. You must pass <code>--log-level=INFO</code> (or higher) to see the verification lines. Valid levels, from quietest to loudest, are <code>NONE</code>, <code>FATAL</code>, <code>ERROR</code>, <code>WARN</code>, <code>INFO</code>, <code>DEBUG</code>, and <code>TRACE</code>.</p>
+</blockquote>
+<p>The engine writes to a file named <code>log.txt</code> in the same directory as the binary. Open that file and look for two lines that confirm success:</p>
+<ul>
+<li><code>Campaign validation passed</code></li>
+<li><code>Successfully created Entity</code></li>
+</ul>
+<p>If both appear, the campaign loaded and every entity was created. If validation fails instead, the log names the entity and field at fault.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/getting-started/introduction.html">What is Isometry</a> — the big picture before you set up.</li>
+<li><a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a> — build the smallest campaign that loads.</li>
+<li><a href="/manual/getting-started/glossary.html">Glossary</a> — definitions of every term used here.</li>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a> — file layout and the merge model.</li>
+<li><a href="/manual/core-concepts/validation.html">Validation</a> — what the load check verifies and how errors read.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

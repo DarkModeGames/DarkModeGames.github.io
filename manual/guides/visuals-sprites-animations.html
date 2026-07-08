@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprites and Animations &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Sprites and Animations</h1>
+<p>This page shows how an actor gets its on-screen appearance from three entities: a <a href="/reference/entities.html#sprite">Sprite</a> that names a sprite sheet and frame size, an AnimationSet that groups animations, and Animation entities that list the frames to play for each of the eight directions an actor can face.</p>
+<h2>Introduction</h2>
+<p>An actor in the game world is drawn from a single image file, a <em>sprite sheet</em>, that packs many small pictures into one grid. A Sprite entity tells the engine which sheet to use and how big one frame is. An Animation entity then lists, per facing direction, which frames to show in sequence so the actor appears to walk, run, or swing a tool.</p>
+<p>You connect these pieces by key. The actor references a Sprite, the Sprite references an AnimationSet, and the AnimationSet references its Animations. At runtime the engine combines the current animation state (such as <code>idle</code> or <code>run</code>) with the actor's heading (such as <code>S</code> for south) to pick the exact frames to play. Getting this wiring right is what makes a static image come alive in eight directions.</p>
+<p>This page uses an example hero throughout: <code>heroSprite</code>, <code>heroAnimSet</code>, and the <code>idle</code>, <code>run</code>, and <code>tool</code> animations.</p>
+<h2>Prerequisites</h2>
+<p>Read these pages first:</p>
+<ul>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a> — how entities reference each other by key.</li>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a> — the actor's <code>sprite</code> field points at the Sprite you build here.</li>
+</ul>
+<p>If a term is unfamiliar, see the <a href="/manual/getting-started/glossary.html">Glossary</a>.</p>
+<h2>How a sprite sheet becomes frames</h2>
+<p>A sprite sheet is one image divided into a grid of equal cells. Each cell is a <em>frame</em>, and every frame has an index. Indices count left to right, then top to bottom, starting at <code>0</code>.</p>
+<p>The engine slices the image into frames by the frame size you give it, then numbers them. So if a sheet is <code>512</code> pixels wide and each frame is <code>64</code> pixels wide, there are <code>8</code> columns across. Frame <code>0</code> is the top-left cell, frame <code>7</code> is the top-right cell, and frame <code>8</code> is the first cell of the second row.</p>
+<blockquote>
+<p>Note: You never write pixel coordinates in an Animation. You write frame indices, and the engine converts each index into a rectangle for you.</p>
+</blockquote>
+<h2>Define the Sprite</h2>
+<p>A Sprite entity names the sheet, the frame size, the rendering margin, and the AnimationSet to build from. The hero's sprite:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sprite</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroSprite</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">animation_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroAnimSet</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/astronaut_sprite.png</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spriteSize</span>
+<span class="w">    </span><span class="nt">margin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spriteMargin</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">spriteSize</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">64</span>
+<span class="nt">Inset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">spriteMargin</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">top</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">bottom</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</code></pre></div>
+
+<p>The fields:</p>
+<ul>
+<li><code>texture</code> is the path to the sheet image inside the campaign archive.</li>
+<li><code>size</code> is a <a href="/manual/getting-started/glossary.html">KeyRef</a> to a Vector giving one frame's width and height in pixels. Here each frame is <code>64</code> by <code>64</code>. This is the number the engine uses to slice the grid.</li>
+<li><code>margin</code> is a KeyRef to an Inset giving the empty padding around the visible art on each edge (<code>top</code>/<code>right</code>/<code>bottom</code>/<code>left</code>). The bottom edge seats the art's feet on the tile, the left/right center it, and all four edges size the actor's footprint so it hugs the body instead of the empty frame.</li>
+<li><code>animation_set</code> is a KeyRef to the AnimationSet whose animations are built into this sprite. Without it, the sprite has no directional animations.</li>
+</ul>
+<p>All four fields are optional in the schema, but a sprite with no <code>texture</code>, <code>size</code>, or <code>animation_set</code> produces nothing visible. Always set them.</p>
+<blockquote>
+<p>Tip: Define <code>spriteSize</code> (a Vector) and <code>spriteMargin</code> (an Inset) in the same file as the sprite. It keeps the frame geometry next to the entity that uses it.</p>
+</blockquote>
+<p>The <code>size</code> Vector does double duty. The engine uses it both to slice the sheet into frames and as the full frame size. The <code>margin</code> Inset's edges are subtracted from that full size so a frame with empty padding sits correctly on its tile and the footprint matches the art.</p>
+<h2>Group animations with an AnimationSet</h2>
+<p>An AnimationSet is a named collection of Animations:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">AnimationSet</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroAnimSet</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero Animations</span>
+<span class="w">    </span><span class="nt">animations</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">idle</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">run</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tool</span>
+</code></pre></div>
+
+<p>The fields:</p>
+<ul>
+<li><code>name</code> is a human-readable label for the set.</li>
+<li><code>animations</code> is an array of KeyRefs to Animation entities.</li>
+</ul>
+<p>Each Animation's <em>key</em> matters: the key becomes the animation state name at runtime. The set lists <code>idle</code>, <code>run</code>, and <code>tool</code>, so those three keys are the states this actor can play.</p>
+<blockquote>
+<p>Warning: In YAML, write the clean key <code>name</code>. The internal GDScript backing field is <code>name_</code>, but that alias is internal only and must never appear in a campaign file.</p>
+</blockquote>
+<h2>Define an Animation</h2>
+<p>An Animation holds eight arrays, one per direction, plus an optional sound. Each array lists the frame indices to play in order for that facing.</p>
+<p>The eight directions are <code>N</code>, <code>NE</code>, <code>E</code>, <code>SE</code>, <code>S</code>, <code>SW</code>, <code>W</code>, and <code>NW</code> — the eight compass headings an isometric actor can face.</p>
+<h3>A single-frame animation: idle</h3>
+<p>The hero's <code>idle</code> animation shows one frame per direction. The actor stands still, so each array holds a single index:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Animation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">idle</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">N</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">35</span>
+<span class="w">    </span><span class="nt">NE</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">    </span><span class="nt">E</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">    </span><span class="nt">SE</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+<span class="w">    </span><span class="nt">S</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+<span class="w">    </span><span class="nt">SW</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+<span class="w">    </span><span class="nt">W</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">NW</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</code></pre></div>
+
+<p>Each integer is one frame index into the sheet. When the hero faces south while idle, the engine shows frame <code>30</code>.</p>
+<h3>A looping animation: run</h3>
+<p>The <code>run</code> animation cycles four frames per direction to animate the legs:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Animation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">run</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">N</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">37</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">38</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">39</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">38</span>
+<span class="w">    </span><span class="nt">NE</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">33</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">34</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">33</span>
+<span class="w">    </span><span class="nt">E</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">SE</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">27</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">28</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">29</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">28</span>
+<span class="w">    </span><span class="nt">S</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">22</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">23</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">24</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">23</span>
+<span class="w">    </span><span class="nt">SW</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">17</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">18</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">19</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">18</span>
+<span class="w">    </span><span class="nt">W</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">13</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">14</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">13</span>
+<span class="w">    </span><span class="nt">NW</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</code></pre></div>
+
+<p>Facing south, the engine plays frames <code>22</code>, <code>23</code>, <code>24</code>, <code>23</code> in sequence, producing a four-step running cycle. Repeating the middle frame (<code>23</code>) gives a back-and-forth leg motion.</p>
+<h3>An animation with sound: tool</h3>
+<p>The <code>tool</code> animation is a single-frame action pose with an attached sound:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Animation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">tool</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">sound</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackSound</span>
+<span class="w">    </span><span class="nt">N</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">36</span>
+<span class="w">    </span><span class="nt">NE</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">31</span>
+<span class="w">    </span><span class="nt">E</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+<span class="w">    </span><span class="nt">SE</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">26</span>
+<span class="w">    </span><span class="nt">S</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">21</span>
+<span class="w">    </span><span class="nt">SW</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+<span class="w">    </span><span class="nt">W</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">11</span>
+<span class="w">    </span><span class="nt">NW</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</code></pre></div>
+
+<p>The <code>sound</code> field is a KeyRef to a <a href="/manual/guides/audio-and-backgrounds.html">Sound</a> entity. The engine builds an audio node named after the animation key and plays it when the animation starts. See <a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a> for how Sound entities are defined.</p>
+<p>An <code>Animation</code> also accepts an optional <code>loop</code> boolean. In the current build animations loop on their own, so this flag has no effect yet.</p>
+<h2>How states and headings choose what plays</h2>
+<p>At runtime the engine names each playable animation by combining the state with the heading, in the form <code>&lt;state&gt;:&lt;heading&gt;</code>. For example, <code>run:S</code> is the running animation facing south, and <code>idle:N</code> is the idle pose facing north. The engine builds one of these for every animation-and-direction pair in the set.</p>
+<p>Two inputs drive the choice:</p>
+<ol>
+<li><strong>The state.</strong> Movement uses the built-in states <code>idle</code>, <code>walk</code>, and <code>run</code>. When the actor is moving, the engine selects <code>run</code> if its speed is high enough, otherwise <code>walk</code>; when it stops, it returns to <code>idle</code>. A skill can also set a state from its action's animation (the example attack uses <code>tool</code>).</li>
+<li><strong>The heading.</strong> The actor's facing maps to one of the eight directions.</li>
+</ol>
+<p>Because of this, an AnimationSet should normally include <code>idle</code> plus <code>walk</code> and/or <code>run</code> so movement has frames to play. The example provides <code>idle</code> and <code>run</code>.</p>
+<blockquote>
+<p>Note: If a requested <code>&lt;state&gt;:&lt;heading&gt;</code> animation does not exist, the actor falls back to <code>idle:&lt;heading&gt;</code> for that direction. A missing run animation simply shows the idle pose while moving, so define the states you actually use.</p>
+</blockquote>
+<h3>Driving an animation from a skill</h3>
+<p>A skill's start action can name an animation. When the skill runs, the engine sets that animation as the state for the action's duration, then returns the actor to <code>idle</code> when the action ends. The example attack skill uses the <code>tool</code> animation this way, which is why <code>tool</code> is in <code>heroAnimSet</code>. See <a href="/manual/guides/add-skills.html">Add skills</a> and <a href="/manual/guides/define-actions.html">Define actions</a> for how an action references an animation.</p>
+<h2>Wire the sprite to an actor</h2>
+<p>The actor connects to everything through its <code>sprite</code> field. The hero sets:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+</code></pre></div>
+
+<p>That single KeyRef pulls in the whole chain: <code>heroSprite</code> names the sheet and frame size and points at <code>heroAnimSet</code>, which lists <code>idle</code>, <code>run</code>, and <code>tool</code>. At load time the engine slices the sheet into frames and builds a directional animation for each state-and-heading pair. See <a href="/manual/guides/create-an-actor.html">Create an actor</a> for the rest of the actor's fields.</p>
+<h2>Checklist for a new actor sprite</h2>
+<ol>
+<li>Add the sheet image to your campaign's <code>assets</code> folder.</li>
+<li>Define a Vector for the frame <code>size</code> and an Inset for <code>margin</code>.</li>
+<li>Define a Sprite with <code>texture</code>, <code>size</code>, <code>margin</code>, and <code>animation_set</code>.</li>
+<li>Define an AnimationSet listing your Animation keys.</li>
+<li>Define <code>idle</code> plus <code>walk</code> and/or <code>run</code> Animations, with all eight directions filled in.</li>
+<li>Point the actor's <code>sprite</code> field at your Sprite.</li>
+</ol>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a></li>
+<li><a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a></li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a></li>
+<li><a href="/manual/guides/add-skills.html">Add skills</a></li>
+<li><a href="/reference/entities.html">Entity reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glossary &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Glossary</h1>
+<p>Concise definitions of the core terms you meet when building an Isometry campaign.</p>
+<h2>Introduction</h2>
+<p>This page defines the vocabulary used throughout the Isometry developer manual. Read it once to get oriented, then return to it whenever a term in another page is unfamiliar. The terms below are the building blocks of every campaign: the data you write, the engine concepts that load it, and the words the manual uses to describe gameplay.</p>
+<p>Terms are listed alphabetically. Each definition is one or two sentences, with links to the pages where you put the concept to work.</p>
+<h2>Prerequisites</h2>
+<p>You do not need to read these pages first, but the terms here make more sense once you have seen them in context:</p>
+<ul>
+<li><a href="/manual/getting-started/introduction.html">What is Isometry</a></li>
+<li><a href="/manual/getting-started/install-and-run.html">Installation</a></li>
+<li><a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a></li>
+</ul>
+<p><a id="terms"></a></p>
+<h2>Terms</h2>
+<p><strong>Action</strong>
+: An entity that changes the game when it runs, such as dealing damage or moving an actor. Each action names one of the 75 built-in action functions in its <code>do</code> field and passes <a href="#terms">parameters</a> to it.</p>
+<p><strong>Actor</strong>
+: A character in the game world, either player-controlled or AI-driven. An actor entity defines fields such as <code>name</code>, <code>speed</code>, <code>base</code>, <code>perception</code>, and <code>salience</code>, and references its sprite, skills, resources, and strategy.</p>
+<p><strong>base</strong>
+: The size of an actor's footprint, used for placement and to decide what is solid. In the example hero actor, <code>base</code> is <code>8</code>.</p>
+<p><strong>Behavior</strong>
+: A goal-and-action pair used by AI. A behavior lists the <a href="#terms">conditions</a> (its <code>goals</code>) that must be met, and the action to run when they are.</p>
+<p><strong>campaign</strong>
+: A complete game definition: a folder of YAML entity files plus assets, packaged as a <code>.zip</code> that sits beside the Isometry binary.</p>
+<p><strong>Condition</strong>
+: An entity that compares two values with an operator (<code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>). Conditions drive an action's <code>if</code>/<code>else</code> logic and a behavior's goals.</p>
+<p><strong>dice expression</strong>
+: A string in tabletop dice notation, such as <code>1d20</code> or <code>(1d6)-1</code>, that the engine rolls to produce a number. Measures and damage parameters use dice expressions.</p>
+<p><strong>entity</strong>
+: A pure-data record loaded from YAML. There are exactly 33 entity types (Main, Actor, Action, Skill, Strategy, and so on); entities hold data only and contain no game logic.</p>
+<p><strong>entity key</strong>
+: The unique name you give an entity in its YAML file, for example <code>heroActor</code> or <code>attackAction</code>. Other entities point to it by this key. Always write the clean key like <code>name</code>; the underscore forms such as <code>name_</code> are internal and never used in campaign files.</p>
+<p><strong>fog of war</strong>
+: The unexplored darkness over the map that lifts as actors discover tiles within their <a href="#terms">perception</a> range. Tiles marked as ghosts stay hidden.</p>
+<p><strong>KeyRef</strong>
+: A field whose value is the key of another entity, forming a typed reference. For example an actor's <code>sprite</code> field is a KeyRef to a Sprite entity, resolved at load time.</p>
+<p><strong>KeyRefArray</strong>
+: A field holding a list of entity keys, that is, an array of <a href="#terms">KeyRefs</a>. An actor's <code>skills: ["attackSkill", "healSkill"]</code> is a KeyRefArray.</p>
+<p><strong>Main</strong>
+: The single required entity that defines a campaign's starting state: the player <code>actor</code> and the starting <code>map</code>. Every campaign has exactly one Main entity.</p>
+<p><strong>Measure</strong>
+: A value an actor computes from a <a href="#terms">dice expression</a>, such as <code>luckMeasure</code> rolling <code>1d20</code>. A measure can be public, private, and gated by a <code>reveal</code> threshold.</p>
+<p><strong>Parameter</strong>
+: A key-and-value entity passed to an action function. An action lists its parameters as a flat array of <a href="#terms">KeyRefs</a>, for example <code>"parameters": ["attackResourceParam", "attackDamageParam"]</code>, with a sibling top-level <code>Parameter</code> block defining each one.</p>
+<p><strong>perception</strong>
+: An actor's vision range in pixels for detecting other actors and clearing <a href="#terms">fog of war</a>. The example hero's <code>perception</code> is <code>25</code>.</p>
+<p><strong>dialog</strong>
+: A titled text panel shown to the player, defined by a Dialog entity with <code>title</code> and <code>text</code>. Dialog text supports templating tokens for live actor values (see below).</p>
+<p><strong>plugin</strong>
+: A nested campaign <code>.zip</code> merged into the host campaign at load. The Main entity's <code>plugins</code> field sets resolution order; earlier entries win, and the host campaign's own files always take priority.</p>
+<p><strong>Repo</strong>
+: The engine's internal store of loaded entities. You never touch it directly.</p>
+<p><strong>Resource</strong>
+: A trackable numeric value on an actor, such as health, mana, or gold. A resource entity defines <code>default</code>, <code>min</code>, <code>max</code>, and visibility fields like <code>reveal</code>.</p>
+<p><strong>salience</strong>
+: How easily other actors detect this actor; higher means more visible. The example hero's <code>salience</code> is <code>1</code>.</p>
+<p><strong>Strategy</strong>
+: The AI controller assigned to an actor through its <code>strategy</code> field. A strategy holds a list of <a href="#terms">behaviors</a> that the engine evaluates to decide what the actor does.</p>
+<p><a id="dialog-templating-tokens"></a></p>
+<h2>Dialog templating tokens</h2>
+<p>Dialog text can show live actor values with two Jinja2-style tokens. <code>@</code> reads the target actor (the one being viewed); <code>$</code> reads the caller, that is, the actor whose dialog is open.</p>
+<div class="codehilite"><pre><span></span><code><span class="x">HP: </span><span class="cp">{{</span><span class="err">@</span><span class="nv">health</span><span class="cp">}}</span><span class="x"> / Your luck: </span><span class="cp">{{</span><span class="err">$</span><span class="nv">luck</span><span class="cp">}}</span>
+</code></pre></div>
+
+<p>Here <code>{{@health}}</code> shows the target's <code>health</code> resource and <code>{{$luck}}</code> shows the caller's <code>luck</code> measure. Use these tokens only inside a Dialog entity's <code>text</code> field.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/getting-started/introduction.html">What is Isometry</a></li>
+<li><a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

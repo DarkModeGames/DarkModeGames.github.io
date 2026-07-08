@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add NPC AI &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Add NPC AI</h1>
+<p>This page shows you how to make a non-player actor act on its own: patrol a route, watch for intruders, or chase whoever comes near. You do this by giving an actor a <a href="/manual/getting-started/glossary.html#terms">strategy</a>, so it is worth understanding before you populate a map with anything other than the player.</p>
+<h2>Prerequisites</h2>
+<p>You should already be comfortable with these pages:</p>
+<ul>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a> — the actor that the AI will drive.</li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a> — the actions a behavior runs.</li>
+<li><a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a> — the conditions a behavior uses as goals.</li>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a> — the map and tracks the AI moves across.</li>
+</ul>
+<h2>How NPC AI is organized</h2>
+<p>Isometry drives AI with two entity types that work together.</p>
+<p>A <a href="/manual/getting-started/glossary.html#terms">Behavior</a> is a single rule: a set of <em>goals</em> and one <em>action</em>. The goals are <a href="/manual/getting-started/glossary.html#terms">conditions</a> that describe when the rule applies. The action is what the actor does when the rule is active and all its goals are true.</p>
+<p>A <a href="/manual/getting-started/glossary.html#terms">Strategy</a> is an ordered list of behaviors. It is the AI controller you attach to an actor. The engine reads the behaviors as a priority list, top to bottom, and the first behavior whose goals are met runs its action.</p>
+<p>You wire AI onto an actor by setting that actor's <code>strategy</code> field to a Strategy key. An actor without a <code>strategy</code> field does nothing on its own. This page builds up three AI patterns: patrol, follow, and guard.</p>
+<blockquote>
+<p>Note: <code>strategy</code>, <code>behaviors</code>, <code>goals</code>, and <code>action</code> are all optional fields. A strategy with no behaviors, or a behavior with no goals, is allowed — a behavior with empty goals always counts as met.</p>
+</blockquote>
+<h2>When behaviors are evaluated</h2>
+<p>While the game is running on the host or server, the engine keeps checking an actor's strategy. AI never runs on a plain client. The engine resolves the actor's current target, walks the strategy's behaviors in order, and runs the action of the first behavior whose goals are all true.</p>
+<p>Goals are combined with logical AND: every condition in a behavior's <code>goals</code> must be true for that behavior to match. Because behaviors are ordered, put the most specific or highest-priority behavior first.</p>
+<h2>Conditions for AI: targets and distance</h2>
+<p>AI behaviors read built-in <em>measure references</em> that describe the actor's view of the world. Two of them drive every pattern here:</p>
+<ul>
+<li><code>@has_target</code> is <code>1</code> when the actor currently has a target, <code>0</code> otherwise.</li>
+<li><code>@distance_to_target</code> is how far the target is, in pixels.</li>
+</ul>
+<p>A target is another actor the AI has detected. Detection is sized by the actor's <code>perception</code> and <code>salience</code> fields (see <a href="/manual/guides/create-an-actor.html">Create an actor</a>); a patroller might use <code>perception</code> of <code>20</code>, a guard <code>15</code>. These are actor fields, not strategy fields — they decide <em>what</em> the AI can see, while the strategy decides <em>what the actor does about it</em>.</p>
+<p>The example defines two goal conditions. The first is true when a target exists; the second is true when the target is more than one pixel away.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hasTarget</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@has_target&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;=&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">isNearTarget</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@distance_to_target&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&gt;&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+</code></pre></div>
+
+<p><code>hasTarget</code> gates behaviors that should run once an actor is spotted. <code>isNearTarget</code> gates pursuit, which should stop when the target is reached. See <a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a> for the full operator list.</p>
+<h2>Build a patrol</h2>
+<p>A patrol walks a fixed route until something interrupts it. The behavior's goal is <code>hasTarget</code>, and its action follows a track.</p>
+<p>The patrol action uses the <code>use_track</code> action function and lists one parameter per waypoint. Each parameter's key is an integer index (<code>0</code>, <code>1</code>, <code>2</code>, …) and its value is a <a href="/reference/entities.html#vector">Vector</a> key; <code>use_track</code> visits the points in ascending index order (gaps are allowed). Each parameter is a flat <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to a top-level <code>Parameter</code> block, never an inline-nested object.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">patrolAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Patrol</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">use_track</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scanAction</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolPoint0</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolPoint1</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">patrolPoint0</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolPointA</span>
+<span class="w">  </span><span class="nt">patrolPoint1</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolPointB</span>
+</code></pre></div>
+
+<p>The <code>then</code> field chains <code>scanAction</code> after the move, so the actor looks for a target as it walks. See <a href="/manual/guides/define-actions.html">Define actions</a> for how <code>then</code>, <code>do</code>, and <code>parameters</code> fit together.</p>
+<p>Wrap that action in a behavior, then in a strategy:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">patrolBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hasTarget</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolAction</span>
+<span class="nt">Strategy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">patrolStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">behaviors</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolBehavior</span>
+</code></pre></div>
+
+<p>Finally, attach the strategy to an actor through its <code>strategy</code> field. The merchant patrols:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">merchantActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolStrategy</span>
+</code></pre></div>
+
+<h2>Build a follow</h2>
+<p>A follow chases a target until it catches up. Its goal is <code>isNearTarget</code>, and its action moves toward the target with the <code>move_to_target</code> action function.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">pursueAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Pursue</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">move_to_target</span>
+<span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">followBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">isNearTarget</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pursueAction</span>
+<span class="nt">Strategy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">followStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">behaviors</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">followBehavior</span>
+</code></pre></div>
+
+<p>Because the goal is "target is more than one pixel away," the actor pursues until it closes the gap, then the goal stops being met and the action stops. The patroller actor uses <code>followStrategy</code>.</p>
+<h2>Build a guard</h2>
+<p>A guard combines the two patterns into one ordered strategy. It first tries to scan for intruders, then falls back to following one it has found. Order matters: the engine runs the first behavior whose goals are met, so <code>guardBehavior</code> comes before <code>followBehavior</code>.</p>
+<p>The scan action targets the nearest actor with the <code>target_nearest</code> action function:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">scanAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Scan</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_nearest</span>
+</code></pre></div>
+
+<p>The guard behavior runs that scan once a target exists, and the strategy lists it ahead of the reused follow behavior:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hasTarget</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">scanAction</span>
+<span class="nt">Strategy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">behaviors</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardBehavior</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">followBehavior</span>
+</code></pre></div>
+
+<p>The guard actor sets <code>"strategy": "guardStrategy"</code>. Notice that <code>followBehavior</code> is shared between <code>followStrategy</code> and <code>guardStrategy</code> — behaviors are entities, so you reference one from many strategies rather than duplicating it.</p>
+<blockquote>
+<p>Tip: To build new AI, start from these three strategies and swap the actions and goal conditions for your own.</p>
+</blockquote>
+<h2>Verify it loads</h2>
+<p>A strategy only takes effect after the campaign validates and loads. Boot your campaign on a host to see the actors move, since AI runs on host or server only:</p>
+<div class="codehilite"><pre><span></span><code>./isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>A clean boot logs <code>Campaign validation passed</code> and creates the actors. If a strategy references a missing behavior, condition, or action key, validation fails and names the broken reference.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a></li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a></li>
+<li><a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a></li>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a></li>
+<li><a href="/manual/guides/triggers-and-timers.html">Triggers and timers</a></li>
+<li><a href="/manual/guides/menus-dialogs-waypoints.html">Menus, dialogs, and waypoints</a></li>
+<li><a href="/reference/entities.html">Entity reference</a></li>
+<li><a href="/reference/actions.html">Action function reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

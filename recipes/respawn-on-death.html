@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respawn an actor on death &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Respawn an actor on death</h1>
+<p><strong>Problem.</strong> You want a defeated actor to come back after a short delay instead of being
+gone for good.</p>
+<p><strong>Pattern.</strong> Watch the actor's <code>health</code> resource with a condition, and when it hits zero run
+an action chain that restores the resource and moves the actor back to a spawn point. A
+<code>Timer</code> entity introduces the delay before the restore runs.</p>
+<p>The building blocks are all data entities:</p>
+<ul>
+<li>a <code>Resource</code> (<code>health</code>) with a <code>min</code> of <code>0</code>,</li>
+<li>an <code>Action</code> that sets <code>health</code> back to full and teleports the actor to a <code>Vector</code> spawn point,</li>
+<li>a <code>Trigger</code> (or a <code>Strategy</code> condition) that fires the action when <code>health</code> reaches <code>0</code>,</li>
+<li>a <code>Timer</code> to delay the respawn.</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">respawnHero</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">respawnResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">respawnValue</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">respawnMove</span>
+<span class="w">  </span><span class="nt">respawnMove</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_destination_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">respawnPoint</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">respawnResource</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">resource</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">health</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">respawnValue</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">value</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;100&quot;</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">respawnPoint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">destination</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">heroSpawn</span><span class="p p-Indicator">}</span>
+
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroSpawn</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="nv">240</span><span class="p p-Indicator">,</span><span class="nt"> y</span><span class="p">:</span><span class="w"> </span><span class="nv">160</span><span class="p p-Indicator">}</span>
+</code></pre></div>
+
+<p>See the <a href="/reference/actions.html">action reference</a> for the exact parameters of
+<code>set_resource_self</code> and <code>set_destination_self</code>, and the
+<a href="/reference/entities.html">entity reference</a> for <code>Trigger</code>, <code>Timer</code>, and <code>Resource</code> fields.</p>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>
