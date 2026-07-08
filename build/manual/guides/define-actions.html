@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Define Actions &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Define Actions</h1>
+<p>An <a href="/manual/getting-started/glossary.html#terms">Action</a> entity is how a campaign changes the game: it deals damage, moves an actor, opens a dialog, or chains into more actions. This page shows how to write an action, pass values to it with <a href="/manual/getting-started/glossary.html#terms">parameters</a>, and branch on a <a href="/manual/getting-started/glossary.html#terms">condition</a>.</p>
+<h2>Introduction</h2>
+<p>Every action names one built-in <em>action function</em> and hands it the values it needs. The function does the work; your YAML decides which function runs, with what inputs, under what condition, and what happens next. There are exactly 75 action functions, listed in the <a href="/reference/actions.html">action function reference</a>.</p>
+<p>This page covers the <code>do</code> field that picks the function, the <code>parameters</code> array that feeds it, the <code>if</code>/<code>then</code>/<code>else</code> fields that chain actions conditionally, and the <code>time</code> and <code>animation</code> fields that make an action take real seconds on screen.</p>
+<h2>Prerequisites</h2>
+<p>Read these pages first:</p>
+<ul>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a> — actions are run by and against actors.</li>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a> — actions and parameters reference each other by key.</li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a> — parameter values can be dice rolls such as <code>(1d6)-1</code>.</li>
+</ul>
+<h2>What an action does</h2>
+<p>An action is a thin wrapper around a function. The <code>do</code> field holds the function's name, and that function performs the effect. For example, <code>minus_resource_target</code> subtracts a value from a resource on the action's target.</p>
+<p>The <code>do</code> field is the only required field. Here is the smallest useful action from an example campaign:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">attackAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Attack</span>
+<span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.1</span>
+<span class="w">    </span><span class="nt">animation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tool</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackResourceParam</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackDamageParam</span>
+</code></pre></div>
+
+<p>This action is named "Attack", takes <code>1.1</code> seconds, plays the <code>tool</code> animation, and runs <code>minus_resource_target</code> with two parameters. The <code>do</code> value must be one of the 75 valid function names; an unknown name fails campaign validation with an <code>INVALID_ACTION_NAME</code> error.</p>
+<blockquote>
+<p>Note: Write clean YAML keys only — <code>name</code>, <code>if</code>, <code>then</code>, <code>else</code>, <code>do</code>, <code>time</code>, <code>animation</code>. The engine uses internal aliases such as <code>name_</code> and <code>if_</code> in GDScript, but your entity files never use them.</p>
+</blockquote>
+<h2>Pass values with parameters</h2>
+<p>Most functions need inputs. <code>minus_resource_target</code> needs to know <em>which</em> resource to subtract from and <em>how much</em>. You supply those through <a href="/manual/getting-started/glossary.html#terms">Parameter</a> entities.</p>
+<p>The <code>parameters</code> field is a <strong>flat array of <a href="/manual/getting-started/glossary.html#terms">KeyRefs</a></strong> pointing at Parameter entities. Each Parameter is defined separately in a sibling top-level <code>Parameter</code> block. You never nest a parameter's definition inside the action.</p>
+<p>A Parameter has two required string fields: <code>key</code> and <code>value</code>. The <code>key</code> must match the argument the action function reads. The <code>value</code> is the input, written as a string — a literal, a dice expression, or a KeyRef to another entity.</p>
+<p>The example defines the two parameters that <code>attackAction</code> references:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">attackResourceParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
+<span class="w">  </span><span class="nt">attackDamageParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">(1d6)-1</span>
+</code></pre></div>
+
+<p>The <code>resource</code> parameter tells the function to act on <code>health</code>. The <code>expression</code> parameter is a <a href="/manual/core-concepts/dice-expressions.html">dice expression</a>: the engine rolls <code>(1d6)-1</code> each time to decide the damage. Resource changes stay within the resource's <code>min</code> and <code>max</code> bounds (see <a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a>).</p>
+<h3>Why the names must match</h3>
+<p>When an action runs, the engine hands each Parameter's <code>value</code> to the function under its <code>key</code>. So the Parameter's <code>key</code> is what the function looks up. If a function expects a <code>resource</code> and your Parameter uses <code>target</code> instead, the function gets nothing.</p>
+<p>The <a href="/reference/actions.html">action function reference</a> lists the parameter names each function expects. A few common ones:</p>
+<ul>
+<li><code>minus_resource_target</code>, <code>plus_resource_self</code>, and the other resource functions read <code>resource</code> and <code>expression</code>.</li>
+<li><code>echo</code> reads <code>message</code>.</li>
+<li><code>open_dialog</code> reads <code>dialog</code> (a KeyRef to a Dialog entity).</li>
+<li><code>use_track</code> reads index-numbered parameters (names <code>0</code>, <code>1</code>, <code>2</code>, …; values are Vector keys), visited in ascending index order.</li>
+<li><code>change_strategy</code> reads <code>strategy</code>.</li>
+<li><code>set_destination_self</code> reads <code>destination</code>, a KeyRef to a Vector entity.</li>
+</ul>
+<p>Some functions take no parameters at all — for example <code>wait</code>, <code>target_nearest</code>, <code>move_to_target</code>, <code>swap_positions</code>, and <code>despawn_self</code>. For those you can omit <code>parameters</code> entirely.</p>
+<blockquote>
+<p>Note: The validator checks that every required parameter is present, that there are no unexpected parameter keys, and that each value type-checks (keyrefs resolve, dice parse, numbers/colors are valid). A wrong or missing <code>key</code> now fails campaign validation rather than misbehaving at runtime.</p>
+</blockquote>
+<h2>Branch with if, then, and else</h2>
+<p>An action can run conditionally. The <code>if</code> field is a KeyRef to a <a href="/manual/getting-started/glossary.html#terms">Condition</a> entity. When <code>if</code> is present, the engine evaluates the condition first and only runs <code>do</code> when the condition passes. When <code>if</code> is absent, the action always runs.</p>
+<p>Two more fields chain actions:</p>
+<ul>
+<li><code>then</code> is a KeyRef to another Action that runs <strong>after</strong> <code>do</code> finishes, when the condition passed.</li>
+<li><code>else</code> is a KeyRef to another Action that runs <strong>instead</strong> of <code>do</code>, when the condition failed.</li>
+</ul>
+<p>The <code>conditionalHealAction</code> shows all three together:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">conditionalHealAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">isHurt</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healConfirmAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">alreadyFullAction</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healResourceParam</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healAmountParam</span>
+</code></pre></div>
+
+<p>If the <code>isHurt</code> condition passes, the actor heals (<code>plus_resource_self</code>) and then runs <code>healConfirmAction</code>. If <code>isHurt</code> fails, the actor is already at full health, so the engine runs <code>alreadyFullAction</code> instead. See <a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a> for how to write the <code>isHurt</code> condition.</p>
+<h2>Add timing and animation</h2>
+<p>Two fields control how an action plays out over time.</p>
+<p><code>time</code> is how many seconds the action takes, defaulting to <code>0.0</code> for an instant effect. <code>animation</code> is a KeyRef to an <a href="/manual/getting-started/glossary.html#terms">Animation</a> entity that plays while the action runs. The <code>attackAction</code> uses <code>"time": 1.1</code> and <code>"animation": "tool"</code>, so the attack plays the <code>tool</code> animation across just over a second.</p>
+<blockquote>
+<p>Note: If you set <code>animation</code>, set <code>time</code> to a value greater than <code>0.0</code>. An animation needs a non-zero duration to play. See <a href="/manual/guides/visuals-sprites-animations.html">Visuals: sprites and animations</a> for defining Animation entities.</p>
+</blockquote>
+<h2>Dialogs and live values</h2>
+<p>Functions like <code>open_dialog</code> show a <a href="/manual/getting-started/glossary.html#terms">dialog</a> — a titled text panel. Dialog text can display live actor values with templating tokens: <code>@</code> reads the target actor and <code>$</code> reads the caller.</p>
+<div class="codehilite"><pre><span></span><code><span class="x">HP: </span><span class="cp">{{</span><span class="err">@</span><span class="nv">health</span><span class="cp">}}</span><span class="x"> / Your luck: </span><span class="cp">{{</span><span class="err">$</span><span class="nv">luck</span><span class="cp">}}</span>
+</code></pre></div>
+
+<p>Here <code>{{@health}}</code> shows the target's <code>health</code> resource and <code>{{$luck}}</code> shows the caller's <code>luck</code> measure. Put these tokens only in a Dialog entity's <code>text</code> field, then point an action's <code>dialog</code> parameter at that Dialog.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a></li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a></li>
+<li><a href="/manual/guides/add-skills.html">Add skills</a></li>
+<li><a href="/reference/actions.html">Action function reference</a></li>
+<li><a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a></li>
+<li><a href="/manual/guides/visuals-sprites-animations.html">Visuals: sprites and animations</a></li>
+<li><a href="/reference/entities.html">Entity reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

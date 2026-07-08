@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entity Reference &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Entity Reference</h1>
+<p>Every one of the 33 entity types and its fields. Each block is a ready-to-copy YAML scaffold — required fields carry a default, optional fields are <code>null</code> (and dissolve away on load). Generated from the engine.</p>
+<p><a id="action"></a></p>
+<h2>Action</h2>
+<p>Action Entity An action used by an actor to effect resources.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># The KeyRef to the animation entity that runs while this action is running. If not null, time must be greater that 0.0</span>
+<span class="w">    </span><span class="nt">animation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Animation</span>
+<span class="w">    </span><span class="c1"># Function name of action, or empty for an animation-only / chain-only action. When set, must be a defined action function.</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># KeyRef to another action. To be run if the `if` condtion fails. Must be a valid action key defined in the campaign.</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># If condition to check if the `do` action should be executed.</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Condition</span>
+<span class="w">    </span><span class="c1"># Human-readable name of action.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Array of of parameters. They are expected to match the parameters of the `do` in action.gd</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Parameter]</span>
+<span class="w">    </span><span class="c1"># KeyRef to anther action. To be run if the `if` condition succeeds after the `do` action function is complete.</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># The time this action takes to execute in seconds. Expressed as a float.</span>
+<span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w">  </span><span class="c1"># Float</span>
+</code></pre></div>
+
+<p><a id="actor"></a></p>
+<h2>Actor</h2>
+<p>Actor Entity A controllable or AI-driven character in the game world.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleActor</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Size of actor&#39;s base circle in pixels.</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Current facing direction in degrees (0-360). Default north (0).</span>
+<span class="w">    </span><span class="nt">bearing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Dialog entity shown when a player interacts with this actor.</span>
+<span class="w">    </span><span class="nt">dialog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Dialog</span>
+<span class="w">    </span><span class="c1"># If true, the actor starts flying: it ignores walls and the navmesh (moves straight to its destination) and is stopped only by boundary tiles. Toggle at runtime with the fly_*/land_* actions.</span>
+<span class="w">    </span><span class="nt">flying</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Group entity for faction/team membership and outline color.</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Group</span>
+<span class="w">    </span><span class="c1"># Measure entities associated with this actor.</span>
+<span class="w">    </span><span class="nt">measures</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Measure]</span>
+<span class="w">    </span><span class="c1"># Menu entity for custom interaction options.</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Menu</span>
+<span class="w">    </span><span class="c1"># Human-readable name displayed in UI.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Action triggered when this actor enters a map.</span>
+<span class="w">    </span><span class="nt">on_map_entered</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Action triggered when this actor exits a map.</span>
+<span class="w">    </span><span class="nt">on_map_exited</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Action triggered on the player&#39;s first login (login_count == 1).</span>
+<span class="w">    </span><span class="nt">on_start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Action triggered when another actor touches this actor.</span>
+<span class="w">    </span><span class="nt">on_touch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Action triggered when this actor is viewed by another actor.</span>
+<span class="w">    </span><span class="nt">on_view</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Vision range in pixels for detecting other actors.</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Private resources visible only on own data plate.</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Resource]</span>
+<span class="w">    </span><span class="c1"># Public resources visible on target focus plate when other actors view this actor.</span>
+<span class="w">    </span><span class="nt">public</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Resource]</span>
+<span class="w">    </span><span class="c1"># Resource entities associated with this actor.</span>
+<span class="w">    </span><span class="nt">resources</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Resource]</span>
+<span class="w">    </span><span class="c1"># Detection difficulty for other actors (higher = more visible).</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Skills available to actor. Maximum 9 skills.</span>
+<span class="w">    </span><span class="nt">skills</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Skill]</span>
+<span class="w">    </span><span class="c1"># Movement speed in pixels per second.</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Reference to Sprite entity for visual representation.</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Sprite</span>
+<span class="w">    </span><span class="c1"># Strategy entity for AI behavior control.</span>
+<span class="w">    </span><span class="nt">strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Strategy</span>
+<span class="w">    </span><span class="c1"># Timer entities that execute actions at intervals or after duration.</span>
+<span class="w">    </span><span class="nt">timers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Timer]</span>
+<span class="w">    </span><span class="c1"># Trigger entit ies that monitor resource changes and execute actions.</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Trigger]</span>
+</code></pre></div>
+
+<p><a id="animation"></a></p>
+<h2>Animation</h2>
+<p>Animation Entity 8-directional sprite animation with frame data for each direction.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Animation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAnimation</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Frame array for east (90°) direction. Default empty.</span>
+<span class="w">    </span><span class="nt">E</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># Frame array for north (0°) direction. Default empty.</span>
+<span class="w">    </span><span class="nt">N</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># Frame array for northeast (45°) direction. Default empty.</span>
+<span class="w">    </span><span class="nt">NE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># Frame array for northwest (315°) direction. Default empty.</span>
+<span class="w">    </span><span class="nt">NW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># Frame array for south (180°) direction. Default empty.</span>
+<span class="w">    </span><span class="nt">S</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># Frame array for southeast (135°) direction. Default empty.</span>
+<span class="w">    </span><span class="nt">SE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># Frame array for southwest (225°) direction. Default empty.</span>
+<span class="w">    </span><span class="nt">SW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># Frame array for west (270°) direction. Default empty.</span>
+<span class="w">    </span><span class="nt">W</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># If true, animation repeats continuously.</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Scaler speed that the animation plays at. Default 1</span>
+<span class="w">    </span><span class="nt">rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Sound entity to play with this animation.</span>
+<span class="w">    </span><span class="nt">sound</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Sound</span>
+</code></pre></div>
+
+<p><a id="animationset"></a></p>
+<h2>AnimationSet</h2>
+<p>AnimationSet Entity A named collection of animations for an actor.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">AnimationSet</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAnimationSet</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Animation entities in this set (idle, walk, attack, etc).</span>
+<span class="w">    </span><span class="nt">animations</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Animation]</span>
+<span class="w">    </span><span class="c1"># Animation played while a flying actor is moving (the airborne walk/run).</span>
+<span class="w">    </span><span class="nt">fly</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Animation</span>
+<span class="w">    </span><span class="c1"># Which animation in this set fills each engine auto-state. Lets an actor name its animations anything (e.g. barb_ogre_idle) instead of the literal idle/walk/run keys.</span>
+<span class="w">    </span><span class="nt">idle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Animation</span>
+<span class="w">    </span><span class="c1"># Human-readable animation set name.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Animation</span>
+<span class="w">    </span><span class="nt">walk</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Animation</span>
+</code></pre></div>
+
+<p><a id="behavior"></a></p>
+<h2>Behavior</h2>
+<p>Behavior Entity A goal-action pair for AI decision making.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Action entity to execute when goals are satisfied.</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Condition entities that must be met to activate this behavior.</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Condition]</span>
+</code></pre></div>
+
+<p><a id="condition"></a></p>
+<h2>Condition</h2>
+<p>Condition Entity A boolean comparison used in action if/else logic.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Left operand of comparison. Future: dice expression support.</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Comparison operator (==, !=, &lt;, &gt;, &lt;=, &gt;=). NOT NULL.</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Right operand of comparison. Future: dice expression support.</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="deployment"></a></p>
+<h2>Deployment</h2>
+<p>Deployment Entity Defines an actor's initial placement on a map.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Deployment</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleDeployment</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Actor entity to deploy at this location.</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Actor</span>
+<span class="w">    </span><span class="c1"># Vector entity defining spawn position (x, y).</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Vector</span>
+</code></pre></div>
+
+<p><a id="dialog"></a></p>
+<h2>Dialog</h2>
+<p>Dialog Entity A text display with title and body content.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Dialog</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleDialog</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Body text content.</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Title text displayed prominently.</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="face"></a></p>
+<h2>Face</h2>
+<p>Face Entity The six triangular wedges of a tile's isometric-cube silhouette, each enabled or disabled. Referenced by Tile.navigation and Tile.obstacle to place per-wedge navigation and collision shapes. The hexagon is split into six triangles from its center.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Face</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleFace</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Right vertical side wedge.</span>
+<span class="w">    </span><span class="nt">east</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Upper-right half of the top diamond (roof).</span>
+<span class="w">    </span><span class="nt">northeast</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Upper-left half of the top diamond (roof).</span>
+<span class="w">    </span><span class="nt">northwest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Lower-right half of the bottom diamond (floor).</span>
+<span class="w">    </span><span class="nt">southeast</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Lower-left half of the bottom diamond (floor).</span>
+<span class="w">    </span><span class="nt">southwest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Left vertical side wedge.</span>
+<span class="w">    </span><span class="nt">west</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+</code></pre></div>
+
+<p><a id="floor"></a></p>
+<h2>Floor</h2>
+<p>Floor Entity A texture placed at a specific location on the map floor.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Floor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleFloor</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Location Vector defining floor position (x, y).</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">    </span><span class="c1"># Path to texture image file.</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="group"></a></p>
+<h2>Group</h2>
+<p>Group Entity A faction or team with visual identification color.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Group</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Hex color code for actor outline and UI display.</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Human-readable group name.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="inset"></a></p>
+<h2>Inset</h2>
+<p>Inset Entity Per-edge padding (in pixels) around a sprite's visible art within its frame.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Inset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleInset</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Padding below the art (the gap under the feet).</span>
+<span class="w">    </span><span class="nt">bottom</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Padding left of the art.</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Padding right of the art.</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Padding above the art.</span>
+<span class="w">    </span><span class="nt">top</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+</code></pre></div>
+
+<p><a id="layer"></a></p>
+<h2>Layer</h2>
+<p>Layer Entity A rendering layer in a tilemap defining tile placement data.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Layer</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleLayer</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Tile placement source data identifying which tiles to place.</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># If true, enables Y-sorting for depth-based rendering.</span>
+<span class="w">    </span><span class="nt">ysort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+</code></pre></div>
+
+<p><a id="main"></a></p>
+<h2>Main</h2>
+<p>Main Entity Campaign configuration defining the starting state. A Main entity is required for each campaign and for each campaign, there can only be one Main entity.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleMain</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Main player-controlled Actor entity.</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># Actor</span>
+<span class="w">    </span><span class="c1"># Starting Map entity where campaign begins.</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># Map</span>
+<span class="w">    </span><span class="c1"># Campaign notes or description. Default empty.</span>
+<span class="w">    </span><span class="nt">notes</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Plugin resolution order (nested-zip basenames); earlier = higher priority. The campaign top-level always wins; unlisted plugins rank lowest. Default empty.</span>
+<span class="w">    </span><span class="nt">plugins</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># Save-compatibility version. Bump when an entity change would invalidate older player saves; saves from a lower version are migrated, higher are discarded. Default 0.</span>
+<span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span><span class="c1"># Integer</span>
+</code></pre></div>
+
+<p><a id="map"></a></p>
+<h2>Map</h2>
+<p>Map Entity A game level containing terrain, actors, and environmental elements.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Map</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleMap</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Background audio/music for this map.</span>
+<span class="w">    </span><span class="nt">audio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Sound]</span>
+<span class="w">    </span><span class="c1"># Parallax background layers.</span>
+<span class="w">    </span><span class="nt">background</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Parallax]</span>
+<span class="w">    </span><span class="c1"># Actor deployments defining initial actor placements.</span>
+<span class="w">    </span><span class="nt">deployments</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Deployment]</span>
+<span class="w">    </span><span class="c1"># Floor textures placed at specific locations.</span>
+<span class="w">    </span><span class="nt">floor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Floor]</span>
+<span class="w">    </span><span class="c1"># Human-readable name displayed in UI.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Foreground Overlay effects shown full-screen on map load (rain/fire/fog).</span>
+<span class="w">    </span><span class="nt">overlay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Overlay]</span>
+<span class="w">    </span><span class="c1"># Spawn point Vector where player enters the map.</span>
+<span class="w">    </span><span class="nt">spawn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">    </span><span class="c1"># TileMap entity defining the terrain grid.</span>
+<span class="w">    </span><span class="nt">tilemap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># TileMap</span>
+</code></pre></div>
+
+<p><a id="measure"></a></p>
+<h2>Measure</h2>
+<p>Measure Entity A calculated value based on dice expressions, associated with an actor.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Measure</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleMeasure</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Dice expression to calculate value (e.g., &quot;2d6+3&quot;).</span>
+<span class="w">    </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">    </span><span class="c1"># Icon path for UI display.</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Menu entity for interaction options.</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Menu</span>
+<span class="w">    </span><span class="c1"># If true, measure is shown on own data plate.</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># If true, measure is shown on target focus plate when other actors view this actor.</span>
+<span class="w">    </span><span class="nt">public</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Visibility threshold. Measure only visible when value &gt;= reveal. 0 = always visible.</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+</code></pre></div>
+
+<p><a id="menu"></a></p>
+<h2>Menu</h2>
+<p>Menu Entity A collection of action options for interaction.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Menu</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleMenu</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Action entities available in this menu.</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Action]</span>
+<span class="w">    </span><span class="c1"># Human-readable menu name.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="overlay"></a></p>
+<h2>Overlay</h2>
+<p>Overlay Entity A full-screen animated foreground effect (rain, fire, fog) shown between the game world and the UI, fixed to the camera. Shown/hidden by triggers via the overlay action functions.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Overlay</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleOverlay</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Frame indices into the sheet, in play order.</span>
+<span class="w">    </span><span class="nt">frames</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># If true, the animation repeats; otherwise it holds on the last frame.</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Starting opacity (0..1); the set_overlay_opacity action can change it at runtime.</span>
+<span class="w">    </span><span class="nt">opacity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Playback speed scalar over the base FPS (1.0 = unchanged).</span>
+<span class="w">    </span><span class="nt">rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Reference to a Vector entity giving one frame&#39;s size in the sheet.</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">    </span><span class="c1"># Path to the effect&#39;s sprite-sheet texture.</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># If true, the texture tiles across the screen (rain/snow); otherwise it stretches to fill.</span>
+<span class="w">    </span><span class="nt">tile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+</code></pre></div>
+
+<p><a id="parallax"></a></p>
+<h2>Parallax</h2>
+<p>Parallax Entity A background layer with parallax scrolling effect.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Parallax</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleParallax</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Parallax scroll speed multiplier. Lower values = slower movement.</span>
+<span class="w">    </span><span class="nt">effect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Path to texture image file.</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="parameter"></a></p>
+<h2>Parameter</h2>
+<p>Parameter Entity A key-value pair passed to action functions.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Parameter key matching the action function argument (clean JSON key is `key`; `key_` backs it because Entity already owns `key()`/`_key`).</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Parameter value (string representation).</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="particle"></a></p>
+<h2>Particle</h2>
+<p>Particle Entity A cosmetic sprite attached to an actor via the attach_particle actions. It follows the actor and optionally drifts (direction degrees + speed). Purely visual — the attached set replicates, so it shows on every client with no extra networking.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Particle</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleParticle</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Drift direction as a bearing: degrees relative to the way the actor faces (0 = forward, 90 = clockwise). 0..360.</span>
+<span class="w">    </span><span class="nt">direction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Frame indices into the sheet, in play order.</span>
+<span class="w">    </span><span class="nt">frames</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w">  </span><span class="c1"># Array</span>
+<span class="w">    </span><span class="c1"># If true, the drift bearing is captured once when the particle is attached (fixed to the facing at that moment); if false (default), it tracks the actor&#39;s current facing each frame.</span>
+<span class="w">    </span><span class="nt">lock</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># If true, the animation repeats; otherwise it holds on the last frame.</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Starting opacity (0..1).</span>
+<span class="w">    </span><span class="nt">opacity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Playback speed scalar over the base FPS (1.0 = unchanged).</span>
+<span class="w">    </span><span class="nt">rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Reference to a Vector entity giving one frame&#39;s size in the sheet.</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">    </span><span class="c1"># Drift speed in pixels/second relative to the actor (0 = static, follows the actor).</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Path to the particle&#39;s sprite-sheet texture.</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="resource"></a></p>
+<h2>Resource</h2>
+<p>Resource Entity A trackable numeric value associated with an actor (health, mana, stamina, etc).</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleResource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Default starting value.</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Description text displayed in UI.</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Dialog entity shown when a player interacts with this resource.</span>
+<span class="w">    </span><span class="nt">dialog</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Dialog</span>
+<span class="w">    </span><span class="c1"># Icon path for UI display.</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Maximum allowed value, as dice notation evaluated per-actor (supports $/@ injection).</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">    </span><span class="c1"># Menu entity for interaction options.</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Menu</span>
+<span class="w">    </span><span class="c1"># Minimum allowed value, as dice notation evaluated per-actor (supports $/@ injection).</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">    </span><span class="c1"># Human-readable name displayed in UI.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Visibility threshold. Resource only visible when value &gt;= reveal. 0 = always visible.</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+</code></pre></div>
+
+<p><a id="skill"></a></p>
+<h2>Skill</h2>
+<p>Skill Entity A skill action available to an actor, typically bound to hotkeys.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Skill</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleSkill</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Maximum charge value for charging skills. 0 = no charging. Default 0.</span>
+<span class="w">    </span><span class="nt">charge</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Description text displayed in UI tooltips. Default empty.</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Action triggered when skill button is released.</span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Icon path for UI display in skill bar.</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Human-readable name displayed in UI.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Action triggered when skill button is pressed.</span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+</code></pre></div>
+
+<p><a id="sound"></a></p>
+<h2>Sound</h2>
+<p>Sound Entity An audio file with volume control and looping options.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sound</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleSound</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># If true, audio loops continuously.</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Volume scale multiplier (dice expression, e.g., &quot;1.0&quot; or &quot;1d4*0.25&quot;).</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">    </span><span class="c1"># Path to audio file.</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="sprite"></a></p>
+<h2>Sprite</h2>
+<p>Sprite Entity Visual representation configuration for actors with animation and texture data.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sprite</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleSprite</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Reference to AnimationSet entity containing available animations.</span>
+<span class="w">    </span><span class="nt">animation_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># AnimationSet</span>
+<span class="w">    </span><span class="c1"># Reference to Inset entity: per-edge padding (top/right/bottom/left) around the visible art.</span>
+<span class="w">    </span><span class="nt">margin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Inset</span>
+<span class="w">    </span><span class="c1"># Reference to Vector entity defining sprite dimensions (width, height).</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">    </span><span class="c1"># Path to texture/sprite sheet file.</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="strategy"></a></p>
+<h2>Strategy</h2>
+<p>Strategy Entity AI behavior strategy defining goal-based decision making.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Strategy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Behavior entities evaluated to determine AI actions.</span>
+<span class="w">    </span><span class="nt">behaviors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Behavior]</span>
+</code></pre></div>
+
+<p><a id="tile"></a></p>
+<h2>Tile</h2>
+<p>Tile Entity A single tile definition with navigation and rendering properties.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Tile</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleTile</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Reference to a Face entity: which cube faces are a hard boundary that blocks ALL actors, including flying ones (unlike obstacle/walls, which flyers ignore). Absent = none.</span>
+<span class="w">    </span><span class="nt">boundary</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Face</span>
+<span class="w">    </span><span class="c1"># If true, tile is invisible but still functional for pathfinding/collision.</span>
+<span class="w">    </span><span class="nt">ghost</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Index in the tileset texture grid.</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># If true, this tile&#39;s navigation faces are kept in their own navigation region (as-is) instead of being merged into the map&#39;s combined navmesh — finer pathing control on custom maps.</span>
+<span class="w">    </span><span class="nt">isolated</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Boolean</span>
+<span class="w">    </span><span class="c1"># Reference to a Face entity: which cube faces are walkable. Absent = none.</span>
+<span class="w">    </span><span class="nt">navigation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Face</span>
+<span class="w">    </span><span class="c1"># Reference to a Face entity: which cube faces collide (walls). Absent = none.</span>
+<span class="w">    </span><span class="nt">obstacle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Face</span>
+<span class="w">    </span><span class="c1"># Y-sort origin offset for rendering layering.</span>
+<span class="w">    </span><span class="nt">origin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Symbol identifier for this tile type.</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="tilemap"></a></p>
+<h2>TileMap</h2>
+<p>TileMap Entity A grid-based map using tiles from a tileset arranged in layers.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">TileMap</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleTileMap</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Layer entities defining tile placement and rendering order.</span>
+<span class="w">    </span><span class="nt">layers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Layer]</span>
+<span class="w">    </span><span class="c1"># TileSet entity containing tile definitions.</span>
+<span class="w">    </span><span class="nt">tileset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># TileSet</span>
+</code></pre></div>
+
+<p><a id="tileset"></a></p>
+<h2>TileSet</h2>
+<p>TileSet Entity A collection of tiles from a texture atlas arranged in a grid.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">TileSet</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleTileSet</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Number of columns in the tile grid.</span>
+<span class="w">    </span><span class="nt">columns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Path to tileset texture file.</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Tile entities defining individual tiles in the set.</span>
+<span class="w">    </span><span class="nt">tiles</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Tile]</span>
+</code></pre></div>
+
+<p><a id="timer"></a></p>
+<h2>Timer</h2>
+<p>Timer Entity Executes an action at intervals or after a total duration.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Timer</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleTimer</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Action entity to execute at intervals or completion.</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Interval between action executions in seconds (dice expression).</span>
+<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">    </span><span class="c1"># Total duration in seconds (dice expression, e.g., &quot;60&quot; or &quot;2d6&quot;).</span>
+<span class="w">    </span><span class="nt">total</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="trigger"></a></p>
+<h2>Trigger</h2>
+<p>Trigger Entity Monitors a resource and executes an action when the resource changes.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Trigger</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleTrigger</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Action entity to execute when resource changes.</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Resource entity to monitor for changes.</span>
+<span class="w">    </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Resource</span>
+</code></pre></div>
+
+<p><a id="vector"></a></p>
+<h2>Vector</h2>
+<p>Vector Entity A 2D coordinate point used for positions, dimensions, and polygon vertices.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleVector</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># X coordinate in pixels.</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Y coordinate in pixels.</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Integer</span>
+</code></pre></div>
+
+<p><a id="waypoint"></a></p>
+<h2>Waypoint</h2>
+<p>Waypoint Entity A discoverable fast-travel location on a map.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Waypoint</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleWaypoint</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Description text displayed in UI.</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Icon path for map and UI display.</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># Vector entity defining waypoint position (x, y).</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">    </span><span class="c1"># Map entity this waypoint belongs to.</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Map</span>
+<span class="w">    </span><span class="c1"># Menu entity for waypoint interaction options.</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Menu</span>
+<span class="w">    </span><span class="c1"># Human-readable waypoint name.</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

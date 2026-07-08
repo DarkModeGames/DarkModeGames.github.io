@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isometry &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <div class="hero">
+<p><img class="hero-logo" src="/assets/img/logo.svg" alt="" width="96" height="96"></p>
+<h1>Isometry</h1>
+<p class="tagline">A data-driven isometric RPG framework. Build a multiplayer game by writing data, not code.</p>
+<div class="cta">
+<a class="primary" href="/platform/">Download</a>
+<a href="/guide/">Play a campaign</a>
+<a href="/manual/">Build a campaign</a>
+</div>
+</div>
+<h2>Write data, not code</h2>
+<p>Isometry is a single executable that loads <strong>campaigns</strong> defined entirely in YAML or JSON. Define maps, actors, skills, AI, items, and dialog as data, package them into a <code>.zip</code>, and the engine runs them — no programming required. Multiplayer is built in and driven from the command line, with secure, authenticated sessions.</p>
+<p>There is no separate backend and no Docker: the game binary is the whole product. You change the game by changing the data.</p>
+<h2>What you get</h2>
+<ul>
+<li><strong>Isometric grid worlds</strong> — tile maps with layers, terrain, spawns, fog of war, and pathfinding.</li>
+<li><strong>Data-defined actors &amp; AI</strong> — stats, resources, skills, and goal-driven strategies, all as entities.</li>
+<li><strong>75 built-in action functions</strong> — damage, healing, movement, teleport, spawn, dialog, and more, composed from data.</li>
+<li><strong>Multiplayer first</strong> — host, dedicated server, or client over the network; single-player is just a one-client session.</li>
+<li><strong>Gamepad + keyboard</strong> with remappable keybinds, and themeable UI.</li>
+<li><strong>33 entity types</strong> — a small, composable vocabulary that describes a whole game.</li>
+</ul>
+<h2>A campaign is just data</h2>
+<p>The required entry point names the starting actor and map:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+</code></pre></div>
+
+<p>Entities reference each other by key, and the engine validates every reference before a campaign is allowed to run.</p>
+<h2>Where to next</h2>
+<ul>
+<li><strong><a href="/platform/">Download &amp; install</a></strong> — get the engine for Linux, Windows, or macOS.</li>
+<li><strong><a href="/guide/">Player Guide</a></strong> — install, join, host, and play campaigns.</li>
+<li><strong><a href="/manual/">Developer Manual</a></strong> — build a campaign from scratch, end to end.</li>
+<li><strong><a href="/reference/">Reference</a></strong> — every entity, action function, and CLI flag.</li>
+<li><strong><a href="/recipes/">Recipes</a></strong> — reusable patterns for plugins and campaigns.</li>
+<li><strong><a href="/updates/">Updates</a></strong> — what's new (currently in open beta, v0.387).</li>
+</ul>
+<p style="color:var(--fg-dim)">Isometry is made by Dark Mode Games and licensed CC BY-NC 4.0.</p>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

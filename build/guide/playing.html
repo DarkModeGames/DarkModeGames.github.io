@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playing Isometry &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Playing Isometry</h1>
+<h2>Controls</h2>
+<p>These are the default keybinds. Every binding can be remapped (keyboard/mouse and
+gamepad) from the options menu.</p>
+<h3>Movement</h3>
+<ul>
+<li><strong>Right Click</strong> — set a destination; your character paths to it around
+  obstacles.</li>
+<li><strong>W / A / S / D</strong> — move directly in a direction (hold to keep moving).</li>
+<li><strong>Arrow Keys</strong> — change your facing direction (bearing).</li>
+</ul>
+<h3>Camera</h3>
+<ul>
+<li><strong>L</strong> — toggle camera lock on your character.</li>
+<li><strong>Space</strong> — recenter the camera on your character (hold to keep it centered).</li>
+<li><strong><code>=</code></strong> — zoom in.</li>
+<li><strong><code>-</code></strong> — zoom out.</li>
+</ul>
+<h3>Targeting</h3>
+<ul>
+<li><strong>Tab</strong> — select the nearest target.</li>
+<li><strong><code>`</code> (Grave)</strong> — move to the current target.</li>
+<li><strong>E</strong> — cycle to the next target.</li>
+<li><strong>Q</strong> — cycle to the previous target.</li>
+<li><strong>C</strong> — cycle to the next target group.</li>
+<li><strong>Z</strong> — cycle to the previous target group.</li>
+<li><strong>X</strong> — target yourself.</li>
+<li><strong>Esc</strong> — clear the current target.</li>
+</ul>
+<h3>Skills</h3>
+<ul>
+<li><strong>1 – 9</strong> — activate the skills in hotbar slots 1 through 9.</li>
+<li>Skills may require a target to be selected.</li>
+<li>Some skills are instant; others have casting animations.</li>
+<li>Hold a skill key to charge it (if the skill supports charging).</li>
+</ul>
+<h3>Menus &amp; Views</h3>
+<ul>
+<li><strong>Enter</strong> — open the selection menu for the current target.</li>
+<li><strong>Backspace</strong> — open the global menu.</li>
+<li><strong>M</strong> — toggle the map view.</li>
+<li><strong>O</strong> — toggle the resources view.</li>
+<li><strong>K</strong> — toggle the skills view.</li>
+<li><strong>Esc</strong> — close the current menu.</li>
+</ul>
+<h2>Gameplay Mechanics</h2>
+<h3>Resources</h3>
+<p>Resources are numeric values tracked on your character (health, mana, gold, and
+so on). They display on your data plate and can be viewed by right-clicking your
+resource bar.</p>
+<ul>
+<li>Resources have minimum and maximum values.</li>
+<li>Resources can regenerate via timers.</li>
+<li>Resources can trigger actions when they change (for example, death at 0
+  health).</li>
+</ul>
+<h3>Skills &amp; Actions</h3>
+<p>Skills are bound to the number keys <code>1</code>–<code>9</code> by default. Pressing a skill key
+executes its associated action, which may:</p>
+<ul>
+<li>Deal damage to a target</li>
+<li>Heal yourself</li>
+<li>Move to a location</li>
+<li>Display information</li>
+<li>Trigger conditional logic</li>
+</ul>
+<h3>Perception &amp; Vision</h3>
+<p>Characters have a perception radius. You can only see actors within your
+perception range. Actors also have a visibility setting (salience) that affects
+how easily you can spot them.</p>
+<h3>Groups &amp; Factions</h3>
+<p>Actors belong to groups (players, enemies, neutral). Group membership affects
+targeting and determines the colored outline on characters.</p>
+<h2>Multiplayer</h2>
+<h3>Hosting a Game</h3>
+<ol>
+<li>Launch with <code>--network=host</code>, or click <strong>HOST</strong> in the launcher.</li>
+<li>Share your IP address and port with players.</li>
+<li>Players connect with <code>--network=client</code> pointing at your address.</li>
+</ol>
+<p>For details, see <a href="/guide/hosting.html">Hosting &amp; Networking</a>.</p>
+<h3>Joining a Game</h3>
+<ol>
+<li>Get the server's IP and port from the host.</li>
+<li>Launch with <code>--network=client --uri=SERVER_IP --port=PORT</code>.</li>
+<li>Enter the same campaign name along with your credentials.</li>
+</ol>
+<h3>Authentication</h3>
+<p>Isometry keeps your password secure and encrypted. Players sign in with
+their username and password to join and spawn.</p>
+<h2>Troubleshooting</h2>
+<h3>Campaign won't load</h3>
+<ul>
+<li>Verify the <code>.zip</code> file exists in your campaign directory.</li>
+<li>Check the campaign name matches (case-sensitive, no <code>.zip</code> extension).</li>
+<li>Run with <code>--log-level=trace</code> for detailed error output.</li>
+<li>Validate the campaign directly with <code>--validate=/path/to/campaign.zip</code>.</li>
+</ul>
+<h3>Can't connect to server</h3>
+<ul>
+<li>Verify the server is running and the port is open.</li>
+<li>Check firewall settings (the UDP port must be reachable).</li>
+<li>Ensure both client and server use the same campaign version.</li>
+</ul>
+<h3>Performance issues</h3>
+<ul>
+<li>Reduce the zoom level.</li>
+<li>Play on maps with fewer simultaneously visible actors.</li>
+<li>Check <code>--log-level=trace</code> for bottleneck information.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

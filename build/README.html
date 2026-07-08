@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isometry Documentation &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Isometry Documentation</h1>
+<p>The source for the <a href="https://dark-mode-games.itch.io/isometry">Isometry</a> documentation website.</p>
+<p><strong>Live site:</strong> https://darkmodegames.github.io/</p>
+<p>Isometry is a data-driven isometric RPG framework by <strong>Dark Mode Games</strong> — build a
+multiplayer game by writing YAML, not code. This repository holds the public docs: the
+player guide, developer manual, reference, recipes, and updates.</p>
+<h2>Working on the docs</h2>
+<p>The site is a static site built with <strong>swb</strong>. From this folder:</p>
+<div class="codehilite"><pre><span></span><code>swb<span class="w"> </span>run<span class="w"> </span>.<span class="w">      </span><span class="c1"># preview locally (http://localhost:8080)</span>
+swb<span class="w"> </span>build<span class="w"> </span>.<span class="w">    </span><span class="c1"># build the static site into build/</span>
+swb<span class="w"> </span>deploy<span class="w"> </span>.<span class="w">   </span><span class="c1"># publish the built site to GitHub Pages</span>
+</code></pre></div>
+
+<p>Pages are Markdown under <code>manual/</code>, <code>guide/</code>, <code>reference/</code>, <code>recipes/</code>, <code>platform/</code>,
+<code>updates/</code>, and <code>about/</code>; the layout and theme live in <code>templates/</code> and <code>assets/</code>. The
+entity and action reference pages are generated, so they should be regenerated upstream
+rather than edited by hand.</p>
+<h2>Download Isometry</h2>
+<p>The engine (Linux, Windows, macOS) is available on itch.io:
+https://dark-mode-games.itch.io/isometry</p>
+<h2>License</h2>
+<p>Documentation © Dark Mode Games, licensed <strong>CC BY-NC 4.0</strong>.</p>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action Function Reference &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Action Function Reference</h1>
+<p>All 75 action functions. Each block is a ready-to-copy YAML scaffold wiring the function into an Action (and its Parameter entries). Generated from the engine.</p>
+<p><a id="area_of_effect_at_self"></a></p>
+<h2>area_of_effect_at_self</h2>
+<p>Executes specified action on all actors within elliptical area centered at caller's position.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">area_of_effect_at_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_action</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radius</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_action</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Action entity to execute on each affected actor (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">action</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">  </span><span class="nt">p_radius</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Radius of the elliptical area in pixels (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radius</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="area_of_effect_at_self_radial"></a></p>
+<h2>area_of_effect_at_self_radial</h2>
+<p>Executes action on all actors in elliptical area at radial position from caller.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">area_of_effect_at_self_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_action</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radius</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_action</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Action entity to execute on each affected actor (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">action</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from caller&#39;s position to AoE center (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to caller&#39;s bearing (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radius</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Radius of the elliptical area in pixels (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radius</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="area_of_effect_at_target"></a></p>
+<h2>area_of_effect_at_target</h2>
+<p>Executes specified action on all actors within elliptical area centered at target's position.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">area_of_effect_at_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_action</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radius</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_action</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Action entity to execute on each affected actor (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">action</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">  </span><span class="nt">p_radius</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Radius of the elliptical area in pixels (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radius</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="area_of_effect_at_target_radial"></a></p>
+<h2>area_of_effect_at_target_radial</h2>
+<p>Executes action on all actors in elliptical area at radial position from target.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">area_of_effect_at_target_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_action</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radius</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_action</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Action entity to execute on each affected actor (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">action</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from target&#39;s position to AoE center (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to caller&#39;s bearing (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radius</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Radius of the elliptical area in pixels (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radius</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="attach_particle_self"></a></p>
+<h2>attach_particle_self</h2>
+<p>Attaches a cosmetic particle to the caller.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attach_particle_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_duration</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_particle</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_duration</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># seconds before auto-remove (optional; 0/absent = until removed)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">duration</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+<span class="w">  </span><span class="nt">p_particle</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to a Particle entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">particle</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Particle</span>
+</code></pre></div>
+
+<p><a id="attach_particle_target"></a></p>
+<h2>attach_particle_target</h2>
+<p>Attaches a cosmetic particle to the target (e.g. a debuff cloud on an enemy).</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attach_particle_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_duration</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_particle</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_duration</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># number (optional)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">duration</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+<span class="w">  </span><span class="nt">p_particle</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># keyref -&gt; Particle</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">particle</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Particle</span>
+</code></pre></div>
+
+<p><a id="change_actor_self"></a></p>
+<h2>change_actor_self</h2>
+<p>Transforms the calling actor into a different actor type while preserving all resources, location, and identity. Useful for polymorph, shapeshift, level up, or evolution mechanics.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_actor_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_actor</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_actor</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Actor entity to transform into (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actor</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Actor</span>
+</code></pre></div>
+
+<p><a id="change_actor_target"></a></p>
+<h2>change_actor_target</h2>
+<p>Transforms the target actor into a different actor type while preserving all resources, location, and identity. Useful for polymorph effects cast on other actors.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_actor_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_actor</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_actor</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Actor entity to transform target into (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actor</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Actor</span>
+</code></pre></div>
+
+<p><a id="change_map_self"></a></p>
+<h2>change_map_self</h2>
+<p>map: KeyRef to Map. location: KeyRef to Vector where the target actor's new position will be.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_map_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_location</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_map</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_location</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># keyref -&gt; Vector (optional)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">location</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">  </span><span class="nt">p_map</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># keyref -&gt; Map</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">map</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Map</span>
+</code></pre></div>
+
+<p><a id="change_map_target"></a></p>
+<h2>change_map_target</h2>
+<p>map: KeyRef to Map. location: KeyRef to Vector where the target actor's new position will be.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_map_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_location</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_map</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_location</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># keyref -&gt; Vector (optional)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">location</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">  </span><span class="nt">p_map</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># keyref -&gt; Map</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">map</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Map</span>
+</code></pre></div>
+
+<p><a id="change_strategy"></a></p>
+<h2>change_strategy</h2>
+<p>Interrupts current strategy and switches caller to new AI strategy.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_strategy</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_strategy</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_strategy</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Strategy entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">strategy</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Strategy</span>
+</code></pre></div>
+
+<p><a id="clear_overlays"></a></p>
+<h2>clear_overlays</h2>
+<p>No parameters required Hides every foreground effect.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clear_overlays</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="clear_target_self"></a></p>
+<h2>clear_target_self</h2>
+<p>No parameters required Clears caller's current target, setting it to empty string.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">clear_target_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="close_game"></a></p>
+<h2>close_game</h2>
+<p>No parameters required Closes and exits the game. Currently a placeholder.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">close_game</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="close_interaction"></a></p>
+<h2>close_interaction</h2>
+<p>No parameters. Closes the caller's interaction panel (e.g. a "Leave" option).</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">close_interaction</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="despawn_self"></a></p>
+<h2>despawn_self</h2>
+<p>No parameters required Removes calling actor from the game world permanently.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">despawn_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="despawn_target"></a></p>
+<h2>despawn_target</h2>
+<p>No parameters required Removes target actor from the game world permanently.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">despawn_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="echo"></a></p>
+<h2>echo</h2>
+<p>Logs a message. Useful for debugging and displaying information.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_message</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_message</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Text message to log (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">message</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># String</span>
+</code></pre></div>
+
+<p><a id="fly_self"></a></p>
+<h2>fly_self</h2>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fly_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="fly_target"></a></p>
+<h2>fly_target</h2>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fly_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="hide_overlay"></a></p>
+<h2>hide_overlay</h2>
+<p>Hides a single foreground effect.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hide_overlay</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_overlay</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_overlay</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Overlay entity key (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">overlay</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Overlay</span>
+</code></pre></div>
+
+<p><a id="land_self"></a></p>
+<h2>land_self</h2>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">land_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="land_target"></a></p>
+<h2>land_target</h2>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">land_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="minus_resource_self"></a></p>
+<h2>minus_resource_self</h2>
+<p>Subtracts from caller's resource value. Useful for self-damage, costs, debuffs.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_expression</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_resource</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_expression</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Dice algebra expression (e.g., &quot;2d6+3&quot;) (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+</code></pre></div>
+
+<p><a id="minus_resource_target"></a></p>
+<h2>minus_resource_target</h2>
+<p>Subtracts from target's resource value. Useful for damage, debuffs, resource costs.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_expression</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_resource</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_expression</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Dice algebra expression (e.g., &quot;2d6+3&quot;) (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+</code></pre></div>
+
+<p><a id="move_away_from_target"></a></p>
+<h2>move_away_from_target</h2>
+<p>Sets caller's destination to position away from target by specified distance.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">move_away_from_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># How far to move away (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="move_to_self_radial"></a></p>
+<h2>move_to_self_radial</h2>
+<p>Moves caller to a position at specified radial angle and distance from current location.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">move_to_self_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from caller&#39;s current position (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to caller&#39;s bearing, where 0° is forward (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="move_to_target"></a></p>
+<h2>move_to_target</h2>
+<p>Sets caller's destination to target actor's position. No parameters required.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">move_to_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="move_to_target_radial"></a></p>
+<h2>move_to_target_radial</h2>
+<p>Moves caller to a position at specified radial angle and distance from target.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">move_to_target_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from target position (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to caller&#39;s bearing, where 0° is forward (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="open_dialog"></a></p>
+<h2>open_dialog</h2>
+<p>Shows the dialog's text in the caller's interaction panel (opening it if needed).</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open_dialog</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_dialog</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_dialog</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Dialog entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dialog</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dialog</span>
+</code></pre></div>
+
+<p><a id="open_menu"></a></p>
+<h2>open_menu</h2>
+<p>Shows the menu's options in the caller's interaction panel (opening it if needed). Used to branch a dialog tree to a new set of choices.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open_menu</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_menu</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_menu</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Menu entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">menu</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Menu</span>
+</code></pre></div>
+
+<p><a id="open_options"></a></p>
+<h2>open_options</h2>
+<p>No parameters required Opens the options/settings menu. Currently a placeholder.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open_options</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="play_keyframe_self"></a></p>
+<h2>play_keyframe_self</h2>
+<p>Plays specified animation on caller. Sets animation state and triggers playback.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">play_keyframe_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_animation</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_animation</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Animation entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">animation</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Animation</span>
+</code></pre></div>
+
+<p><a id="play_keyframe_target"></a></p>
+<h2>play_keyframe_target</h2>
+<p>Plays specified animation on target. Sets animation state and triggers playback.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">play_keyframe_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_animation</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_animation</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Animation entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">animation</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Animation</span>
+</code></pre></div>
+
+<p><a id="plus_resource_self"></a></p>
+<h2>plus_resource_self</h2>
+<p>Adds to caller's resource value. Useful for self-healing, gaining resources, buffs.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_expression</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_resource</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_expression</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Dice algebra expression (e.g., &quot;2d6+3&quot;) (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+</code></pre></div>
+
+<p><a id="plus_resource_target"></a></p>
+<h2>plus_resource_target</h2>
+<p>Adds to target's resource value. Useful for healing, buffs, giving resources to allies.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_expression</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_resource</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_expression</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Dice algebra expression (e.g., &quot;2d6+3&quot;) (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+</code></pre></div>
+
+<p><a id="pull_target_closer"></a></p>
+<h2>pull_target_closer</h2>
+<p>Pulls target closer to caller by specified distance. Direction calculated from target to caller.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pull_target_closer</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># How far to pull the target toward caller (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="push_target_away"></a></p>
+<h2>push_target_away</h2>
+<p>Pushes target away from caller by specified distance. Direction calculated from caller to target.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">push_target_away</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># How far to push the target away from caller (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="remove_particle_self"></a></p>
+<h2>remove_particle_self</h2>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">remove_particle_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_particle</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_particle</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Particle key to remove (optional; absent = clear all)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">particle</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Particle</span>
+</code></pre></div>
+
+<p><a id="remove_particle_target"></a></p>
+<h2>remove_particle_target</h2>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">remove_particle_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_particle</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_particle</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># keyref -&gt; Particle (optional)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">particle</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Particle</span>
+</code></pre></div>
+
+<p><a id="set_destination_self"></a></p>
+<h2>set_destination_self</h2>
+<p>Sets caller's movement destination to specified vertex coordinates.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_destination_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_destination</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_destination</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Vector entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">destination</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Vector</span>
+</code></pre></div>
+
+<p><a id="set_modulate_self"></a></p>
+<h2>set_modulate_self</h2>
+<p>Sets caller's color modulation/tint. Useful for visual status effects, team colors, highlighting.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_modulate_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_color</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_color</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Hex color code (e.g., &quot;#ff0000&quot; for red) or color name (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">color</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Color</span>
+</code></pre></div>
+
+<p><a id="set_modulate_target"></a></p>
+<h2>set_modulate_target</h2>
+<p>Sets target's color modulation/tint. Useful for visual status effects, team colors, highlighting.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_modulate_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_color</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_color</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Hex color code (e.g., &quot;#ff0000&quot; for red) or color name (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">color</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Color</span>
+</code></pre></div>
+
+<p><a id="set_overlay_opacity"></a></p>
+<h2>set_overlay_opacity</h2>
+<p>Sets the opacity of a shown foreground effect.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_overlay_opacity</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_opacity</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_overlay</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_opacity</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Opacity 0..1 (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">opacity</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+<span class="w">  </span><span class="nt">p_overlay</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Overlay entity key (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">overlay</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Overlay</span>
+</code></pre></div>
+
+<p><a id="set_resource_self"></a></p>
+<h2>set_resource_self</h2>
+<p>Sets caller's resource to exact value (still respects min/max bounds).</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_resource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_value</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+<span class="w">  </span><span class="nt">p_value</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Absolute value to set (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+</code></pre></div>
+
+<p><a id="set_resource_target"></a></p>
+<h2>set_resource_target</h2>
+<p>Sets target's resource to exact value (still respects min/max bounds).</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_resource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_value</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+<span class="w">  </span><span class="nt">p_value</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Absolute value to set (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+</code></pre></div>
+
+<p><a id="set_speed_self"></a></p>
+<h2>set_speed_self</h2>
+<p>Permanently sets caller's movement speed.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_speed_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_speed</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_speed</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># New speed value in pixels per second (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">speed</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+</code></pre></div>
+
+<p><a id="set_speed_target"></a></p>
+<h2>set_speed_target</h2>
+<p>Permanently sets target's movement speed.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_speed_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_speed</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_speed</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># New speed value in pixels per second (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">speed</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+</code></pre></div>
+
+<p><a id="show_connection_info"></a></p>
+<h2>show_connection_info</h2>
+<p>No parameters required Displays connection and network information. Currently a placeholder.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">show_connection_info</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="show_overlay"></a></p>
+<h2>show_overlay</h2>
+<p>Shows a full-screen foreground effect (rain/fire/fog) between the world and the UI.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">show_overlay</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_overlay</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_overlay</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Overlay entity key (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">overlay</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Overlay</span>
+</code></pre></div>
+
+<p><a id="spawn_actor_at_self"></a></p>
+<h2>spawn_actor_at_self</h2>
+<p>Spawns a new actor instance at caller's current position.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spawn_actor_at_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_actor</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_actor</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Actor entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actor</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Actor</span>
+</code></pre></div>
+
+<p><a id="spawn_actor_at_self_radial"></a></p>
+<h2>spawn_actor_at_self_radial</h2>
+<p>Spawns a new actor instance at radial position from caller.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spawn_actor_at_self_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_actor</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_actor</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Actor entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actor</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Actor</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from caller&#39;s position (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to caller&#39;s bearing (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="spawn_actor_at_target"></a></p>
+<h2>spawn_actor_at_target</h2>
+<p>Spawns a new actor instance at target's current position.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spawn_actor_at_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_actor</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_actor</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Actor entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actor</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Actor</span>
+</code></pre></div>
+
+<p><a id="spawn_actor_at_target_radial"></a></p>
+<h2>spawn_actor_at_target_radial</h2>
+<p>Spawns a new actor instance at radial position from target.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spawn_actor_at_target_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_actor</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_actor</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Actor entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actor</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Actor</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from target&#39;s position (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to caller&#39;s bearing (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="swap_positions"></a></p>
+<h2>swap_positions</h2>
+<p>No parameters required Swaps positions of caller and target. Both actors instantly teleport to each other's location.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">swap_positions</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="target_furthest"></a></p>
+<h2>target_furthest</h2>
+<p>Sets caller's target to the furthest actor in view. No parameters required.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_furthest</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="target_highest_measure"></a></p>
+<h2>target_highest_measure</h2>
+<p>Targets the actor in view with the highest value of specified measure.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_highest_measure</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_measure</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_measure</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Measure entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">measure</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Measure</span>
+</code></pre></div>
+
+<p><a id="target_highest_resource"></a></p>
+<h2>target_highest_resource</h2>
+<p>Targets the actor in view with the highest value of specified resource.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_highest_resource</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_resource</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+</code></pre></div>
+
+<p><a id="target_lowest_measure"></a></p>
+<h2>target_lowest_measure</h2>
+<p>Targets the actor in view with the lowest value of specified measure.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_lowest_measure</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_measure</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_measure</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Measure entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">measure</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Measure</span>
+</code></pre></div>
+
+<p><a id="target_lowest_resource"></a></p>
+<h2>target_lowest_resource</h2>
+<p>Targets the actor in view with the lowest value of specified resource.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_lowest_resource</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_resource</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+</code></pre></div>
+
+<p><a id="target_nearest"></a></p>
+<h2>target_nearest</h2>
+<p>Sets caller's target to the nearest actor in view. No parameters required.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_nearest</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="target_nearest_in_group"></a></p>
+<h2>target_nearest_in_group</h2>
+<p>Targets nearest actor in view that belongs to specified group.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_nearest_in_group</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_group</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_group</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Group entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">group</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Group</span>
+</code></pre></div>
+
+<p><a id="target_random"></a></p>
+<h2>target_random</h2>
+<p>Sets caller's target to a random actor in view. No parameters required.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_random</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="target_random_in_group"></a></p>
+<h2>target_random_in_group</h2>
+<p>Targets a random actor in view that belongs to specified group.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_random_in_group</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_group</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_group</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Group entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">group</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Group</span>
+</code></pre></div>
+
+<p><a id="teleport"></a></p>
+<h2>teleport</h2>
+<p>Teleports caller forward in current bearing direction by specified distance.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">teleport</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels to teleport forward (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="teleport_self_to_target"></a></p>
+<h2>teleport_self_to_target</h2>
+<p>No parameters required Instantly teleports caller to target's current position.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">teleport_self_to_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="teleport_self_to_target_radial"></a></p>
+<h2>teleport_self_to_target_radial</h2>
+<p>Teleports caller to position at specified radial angle and distance from target.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">teleport_self_to_target_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from target position (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to caller&#39;s bearing, where 0° is forward (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="teleport_target_to_self"></a></p>
+<h2>teleport_target_to_self</h2>
+<p>No parameters required Instantly teleports target to caller's current position.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">teleport_target_to_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+
+<p><a id="teleport_target_to_self_radial"></a></p>
+<h2>teleport_target_to_self_radial</h2>
+<p>Teleports target to position at specified radial angle and distance from caller.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">teleport_target_to_self_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from caller&#39;s position (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to target&#39;s bearing, where 0° is forward (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="teleport_to_radial"></a></p>
+<h2>teleport_to_radial</h2>
+<p>Teleports caller to position at specified radial angle and distance from current location.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">teleport_to_radial</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_distance</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_radial</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_distance</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Distance in pixels from caller&#39;s current position (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distance</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_radial</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Angle in degrees (0-360) relative to caller&#39;s bearing, where 0° is forward (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radial</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+</code></pre></div>
+
+<p><a id="temp_speed_self"></a></p>
+<h2>temp_speed_self</h2>
+<p>Temporarily changes caller's speed, then restores original speed after duration.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">temp_speed_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_duration</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_speed</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_duration</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Duration in seconds for the speed change (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">duration</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+<span class="w">  </span><span class="nt">p_speed</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Temporary speed value in pixels per second (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">speed</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+</code></pre></div>
+
+<p><a id="temp_speed_target"></a></p>
+<h2>temp_speed_target</h2>
+<p>Temporarily changes target's speed, then restores original speed after duration.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">temp_speed_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_duration</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_speed</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_duration</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Duration in seconds for the speed change (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">duration</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+<span class="w">  </span><span class="nt">p_speed</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Temporary speed value in pixels per second (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">speed</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Number</span>
+</code></pre></div>
+
+<p><a id="transfer_resource"></a></p>
+<h2>transfer_resource</h2>
+<p>Subtracts from target's resource and adds same amount to caller's resource. Example: Drain 10 health from enemy and heal self for same amount.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">transfer_resource</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">p_expression</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">p_resource</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">p_expression</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># Dice algebra for amount to transfer (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Dice</span>
+<span class="w">  </span><span class="nt">p_resource</span><span class="p">:</span>
+<span class="w">    </span><span class="c1"># KeyRef to Resource entity (required)</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Resource</span>
+</code></pre></div>
+
+<p><a id="use_track"></a></p>
+<h2>use_track</h2>
+<p>Index-numbered params - Vector entity keys keyed by integer index, e.g. "0": pointA, "2": pointB (at least one; indices need not be contiguous). Points are ordered by their integer key. Executes the resulting sequence of points for AI pathfinding behavior.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">use_track</span>
+<span class="w">    </span><span class="c1"># one or more index-numbered Vector keys, in order</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">point0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">point1</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">point0</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0&quot;</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Vector</span>
+<span class="w">  </span><span class="nt">point1</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w">  </span><span class="c1"># Vector</span>
+</code></pre></div>
+
+<p><a id="wait"></a></p>
+<h2>wait</h2>
+<p>No parameters required. Duration specified via action.time field. Pauses action chain execution. Useful for timing/sequencing effects.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">exampleAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wait</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+</code></pre></div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

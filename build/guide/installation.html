@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation & Setup &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Installation &amp; Setup</h1>
+<h2>Downloading Isometry</h2>
+<p>Isometry is a single executable — the engine <em>is</em> the product.
+Download it from itch.io:</p>
+<div class="cta">
+<a class="primary" href="https://dark-mode-games.itch.io/isometry">Download on itch.io</a>
+</div>
+
+<p>The download includes builds for <strong>Linux</strong>, <strong>Windows</strong>, and <strong>macOS</strong>. Pick the
+build for your platform and unpack it into a folder of your choosing.</p>
+<p>On macOS, if the app won't open, run this once:</p>
+<div class="codehilite"><pre><span></span><code>xattr<span class="w"> </span>-dr<span class="w"> </span>com.apple.quarantine<span class="w"> </span>Isometry.app
+</code></pre></div>
+
+<h2>Installing Campaigns</h2>
+<p>Campaign files are ZIP archives containing YAML or JSON entity definitions and
+assets. Place a campaign <code>.zip</code> in one of these locations:</p>
+<ul>
+<li>The same folder as the Isometry executable</li>
+<li>A <code>campaigns/</code> subfolder next to the executable</li>
+<li>A custom path you point at with <code>--dir=/path/to/campaigns</code></li>
+</ul>
+<h2>Using the Launcher</h2>
+<p>Launching Isometry without network flags opens the launcher — a
+graphical interface for starting games.</p>
+<p><strong>Choosing a username &amp; password.</strong> Your in-game username is displayed to other
+players. Your password is encrypted on the host's machine, and a new
+username/password combination is created automatically the first time you connect
+to a host. Be mindful of where your password is stored: don't reuse a password
+from another personal account, and <strong>write your username and password down</strong> —
+the host has no way to recover them for you.</p>
+<ol>
+<li>Open Isometry.</li>
+<li>Enter your <strong>username</strong> and <strong>password</strong>.</li>
+<li>Select a <strong>campaign</strong> from the dropdown.</li>
+<li>Enter the <strong>URI</strong> and <strong>port</strong> (defaults: <code>localhost:5000</code>).</li>
+<li>Click <strong>HOST</strong> to start a server, or <strong>JOIN</strong> to connect to one.</li>
+</ol>
+<h2>Command-Line Launch</h2>
+<p>For advanced use, Isometry can launch directly from the command line.
+The examples below use the Linux executable name; substitute the executable for
+your platform.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Single player (host mode, localhost)</span>
+./isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--username<span class="o">=</span>player1<span class="w"> </span>--secret<span class="o">=</span>secret
+
+<span class="c1"># Join a multiplayer server</span>
+./isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>client<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--uri<span class="o">=</span>server.example.com<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--username<span class="o">=</span>player1<span class="w"> </span>--secret<span class="o">=</span>secret
+
+<span class="c1"># Run a dedicated server</span>
+./isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>server<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--username<span class="o">=</span>server<span class="w"> </span>--secret<span class="o">=</span>serverpass
+</code></pre></div>
+
+<h3>CLI Arguments Reference</h3>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--campaign=NAME</code></td>
+<td>Campaign name (without <code>.zip</code>)</td>
+<td>Required</td>
+</tr>
+<tr>
+<td><code>--network=MODE</code></td>
+<td><code>host</code>, <code>server</code>, <code>client</code>, or <code>none</code></td>
+<td>Required</td>
+</tr>
+<tr>
+<td><code>--uri=HOST</code></td>
+<td>Server address</td>
+<td><code>localhost</code></td>
+</tr>
+<tr>
+<td><code>--port=PORT</code></td>
+<td>Server port (1024–65535)</td>
+<td><code>5000</code></td>
+</tr>
+<tr>
+<td><code>--dir=PATH</code></td>
+<td>Campaign directory path</td>
+<td>auto-detected</td>
+</tr>
+<tr>
+<td><code>--username=NAME</code></td>
+<td>Player display name</td>
+<td>Required</td>
+</tr>
+<tr>
+<td><code>--secret=PASS</code></td>
+<td>Authentication password</td>
+<td>Required</td>
+</tr>
+<tr>
+<td><code>--log-level=LEVEL</code></td>
+<td><code>trace</code>, <code>debug</code>, <code>info</code>, <code>warn</code>, <code>error</code></td>
+<td><code>info</code></td>
+</tr>
+<tr>
+<td><code>--delay=MS</code></td>
+<td>Connection delay in milliseconds</td>
+<td><code>0</code></td>
+</tr>
+</tbody>
+</table>
+<p>You can also validate a campaign without launching a session:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Check a campaign for errors (exit 0 = valid, 1 = invalid)</span>
+./isometry<span class="w"> </span>--validate<span class="o">=</span>/path/to/campaign.zip
+</code></pre></div>
+
+<h2>Where to next</h2>
+<ul>
+<li><a href="/guide/playing.html">Playing</a> — controls, joining a campaign, and keybinds.</li>
+<li><a href="/guide/hosting.html">Hosting</a> — run a host or dedicated server for others.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="{{ site.language | default('en-US') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if page_title %}{{ page_title }} &middot; {% endif %}{{ site.title }}</title>
+    <meta name="description" content="{{ site.description | default('') }}">
+    <meta name="author" content="{{ site.author | default('') }}">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    {% for css in css_files %}
+    <link rel="stylesheet" href="/css/{{ css }}">
+    {% endfor %}
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">{{ site.title }}</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                {% for item in site.nav %}
+                <a href="{{ item.url }}">{{ item.title }}</a>
+                {% endfor %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        {{ content }}
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>{{ site.title }} v{{ site.version }} &middot; &copy; {{ site.author }}</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">{{ site.author }} &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

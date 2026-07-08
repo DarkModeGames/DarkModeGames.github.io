@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conditions and Logic &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Conditions and Logic</h1>
+<p>A <a href="/manual/getting-started/glossary.html">Condition</a> is a single yes-or-no comparison that the engine uses to decide whether an <a href="/manual/getting-started/glossary.html">action</a> runs and which branch it takes, and to decide what an AI actor does next. This page explains the three fields of a Condition, the operator symbols you can use, how operands resolve to live actor values, and how the engine evaluates the result.</p>
+<h2>Introduction</h2>
+<p>Most gameplay logic comes down to a question: is this actor hurt? do I have a target? am I close enough to attack? A Condition answers one such question by comparing a left value to a right value with an operator. The answer, <code>true</code> or <code>false</code>, gates two things:</p>
+<ul>
+<li>An action's branching. An action runs its <code>do</code> only when its <code>if</code> Condition passes, then chains to <code>then</code> or <code>else</code>.</li>
+<li>An AI actor's behavior. A <a href="/manual/getting-started/glossary.html">behavior</a> lists Conditions as goals, and runs its action only when all goals pass.</li>
+</ul>
+<p>Because both operands flow through the same engine that rolls <a href="/manual/core-concepts/dice-expressions.html">dice expressions</a>, a Condition can compare plain numbers, dice rolls, or live values pulled from an actor's resources and measures.</p>
+<h2>Prerequisites</h2>
+<p>Read these pages first. This page builds directly on them:</p>
+<ul>
+<li><a href="/manual/guides/define-actions.html">Define actions</a> — how <code>if</code>, <code>do</code>, <code>then</code>, and <code>else</code> fit together in an action.</li>
+<li><a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a> — the actor values a Condition reads.</li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a> — the evaluator that turns an operand string into a number.</li>
+</ul>
+<h2>The three fields of a Condition</h2>
+<p>A Condition entity lives in your campaign YAML under a <code>Condition</code> block. It has three fields:</p>
+<ul>
+<li><code>left</code> — the left operand of the comparison. Optional. If you omit it or leave it empty, it evaluates to <code>0</code>.</li>
+<li><code>operator</code> — the comparison symbol. <strong>Required.</strong> This is the only required field.</li>
+<li><code>right</code> — the right operand. Optional. Same rules as <code>left</code>; an empty value evaluates to <code>0</code>.</li>
+</ul>
+<p>A Condition holds data only; it contains no logic of its own. The engine evaluates it when an action or behavior asks.</p>
+<p>Here is the <code>isHurt</code> Condition, which asks whether the target's health is below 20:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">isHurt</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@health&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;20&#39;</span>
+</code></pre></div>
+
+<p>At evaluation time the engine resolves <code>@health</code> to the target actor's <code>health</code> resource, treats <code>20</code> as the literal number twenty, and returns <code>true</code> when the resource is less than twenty.</p>
+<blockquote>
+<p>Note: An action that has no <code>if</code> Condition always runs. A missing or empty <code>if</code> auto-passes, so you only add a Condition when you want to gate something.</p>
+</blockquote>
+<h2>Operator symbols</h2>
+<p>The <code>operator</code> field takes one of these symbols:</p>
+<table>
+<thead>
+<tr>
+<th>Meaning</th>
+<th>Symbols</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Equal</td>
+<td><code>=</code>, <code>==</code></td>
+</tr>
+<tr>
+<td>Not equal</td>
+<td><code>!=</code>, <code>&lt;&gt;</code></td>
+</tr>
+<tr>
+<td>Greater than</td>
+<td><code>&gt;</code></td>
+</tr>
+<tr>
+<td>Less than</td>
+<td><code>&lt;</code></td>
+</tr>
+<tr>
+<td>Greater than or equal</td>
+<td><code>&gt;=</code></td>
+</tr>
+<tr>
+<td>Less than or equal</td>
+<td><code>&lt;=</code></td>
+</tr>
+</tbody>
+</table>
+<p>Both spellings of equal and not-equal are valid. The <code>hasTarget</code> Condition uses the single <code>=</code> form:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hasTarget</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@has_target&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;=&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+</code></pre></div>
+
+<blockquote>
+<p>Warning: If you write an operator the engine does not recognize, it logs a warning and the Condition counts as <code>true</code>. A typo in this field will silently let gated logic run, so check the symbol against the table above.</p>
+</blockquote>
+<h2>How operands resolve</h2>
+<p>Each operand string is run through the dice and expression engine. The engine handles three kinds of value in one operand:</p>
+<ol>
+<li>A literal number, such as <code>"20"</code> or <code>"0"</code>.</li>
+<li>A <a href="/manual/core-concepts/dice-expressions.html">dice expression</a>, such as <code>1d6</code>, which the engine rolls.</li>
+<li>A reference to a live actor value, marked with <code>@</code> or <code>$</code>.</li>
+</ol>
+<h3>Target and caller markers</h3>
+<p>A reference operand starts with one of two markers:</p>
+<ul>
+<li><code>@key</code> reads from the <strong>target</strong> actor — the actor the action is acting on.</li>
+<li><code>$key</code> reads from the <strong>caller</strong> actor — the actor running the action.</li>
+</ul>
+<p>For each reference, the engine looks up <code>key</code> first in that actor's <a href="/manual/getting-started/glossary.html">resources</a>, then in its <a href="/manual/getting-started/glossary.html">measures</a>. If the key is found in neither, or the actor does not exist, the operand evaluates to <code>0</code>.</p>
+<blockquote>
+<p>Note: This is the same <code>@</code>/<code>$</code> convention used by <a href="/manual/getting-started/glossary.html">dialog</a> templating. There the tokens read values for display; in a Condition they read values for comparison.</p>
+</blockquote>
+<p>For example, <code>@health</code> reads the target's <code>health</code> resource, while <code>$health</code> would read the caller's own <code>health</code>. The example Conditions all use <code>@</code>, because they gate actions and AI that act on a target.</p>
+<h3>Built-in measures</h3>
+<p>Some operands reference built-in measures rather than resources you defined. These are values the engine computes about an actor at runtime:</p>
+<ul>
+<li><code>has_target</code> — <code>1</code> if the actor has a target set, otherwise <code>0</code>.</li>
+<li><code>distance_to_target</code> — the isometric distance to the actor's current target, or <code>0</code> if there is no target.</li>
+<li><code>distance_to_destination</code> — the isometric distance to the actor's destination.</li>
+<li><code>flying</code> — <code>1</code> if the actor is currently flying, otherwise <code>0</code>. For example, gate a melee action on <code>@flying = 0</code> so it misses airborne targets.</li>
+</ul>
+<p>So the Condition <code>@has_target = 1</code> reads as "the target actor has a target."</p>
+<blockquote>
+<p>Note: When an action runs with no target, the target actor is empty and any <code>@key</code> operand resolves to <code>0</code>. Design target-dependent Conditions with that fallback in mind.</p>
+</blockquote>
+<h2>How the engine evaluates a Condition</h2>
+<p>When an action or behavior needs the answer, the engine does the following:</p>
+<ol>
+<li>Looks up the Condition entity by its key.</li>
+<li>Evaluates <code>left</code> through the dice engine, supplying the caller and target actors so <code>$</code> and <code>@</code> references resolve.</li>
+<li>Evaluates <code>right</code> the same way.</li>
+<li>Compares the two results with <code>operator</code> and returns <code>true</code> or <code>false</code>.</li>
+</ol>
+<p>Both operands are reduced to whole numbers before the comparison, and any result below <code>0</code> is treated as <code>0</code>. The comparison itself is always whole number to whole number.</p>
+<h2>Gating an action</h2>
+<p>An action names a Condition in its <code>if</code> field. When the action runs:</p>
+<ul>
+<li>If the Condition is <code>true</code>, the engine runs the action's <code>do</code>, then chains to <code>then</code> if one is set.</li>
+<li>If the Condition is <code>false</code>, the engine chains to <code>else</code> if one is set; otherwise nothing runs.</li>
+</ul>
+<p>The <code>conditionalHealAction</code> (Smart Heal) shows the full pattern. It heals only a hurt actor and reports which branch ran:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">conditionalHealAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Smart Heal</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">isHurt</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healConfirmAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">alreadyFullAction</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healResourceParam</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healAmountParam</span>
+</code></pre></div>
+
+<p>When <code>isHurt</code> passes, the action adds health and chains to <code>healConfirmAction</code>. When it fails, it skips the heal and chains to <code>alreadyFullAction</code> instead.</p>
+<blockquote>
+<p>Note: <code>parameters</code> is a flat array of KeyRefs to <code>Parameter</code> entities defined in a sibling top-level <code>Parameter</code> block. See <a href="/manual/guides/define-actions.html">Define actions</a> for how parameters are wired.</p>
+</blockquote>
+<p>A simpler case is <code>deathAction</code>, where one Condition gates one effect:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">deathAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Death Check</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">isDead</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deathMsg</span>
+</code></pre></div>
+
+<p>The <code>isDead</code> Condition (<code>@health &lt;= 0</code>) must pass before the message runs.</p>
+<h2>Gating AI behavior</h2>
+<p>A behavior's <code>goals</code> field is an array of Condition keys. The engine evaluates every goal Condition, using the behaving actor as the caller and its current target as the target. The behavior's action runs only if <strong>all</strong> goals pass — the goals are combined with logical AND.</p>
+<p>A strategy wires Conditions as AI goals:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">patrolBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hasTarget</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolAction</span>
+<span class="w">  </span><span class="nt">followBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">isNearTarget</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pursueAction</span>
+</code></pre></div>
+
+<p><code>patrolBehavior</code> runs its patrol only while the actor has a target, and <code>followBehavior</code> pursues only while the target is more than one tile away (<code>@distance_to_target &gt; 1</code>). See <a href="/manual/guides/add-npc-ai.html">Add NPC AI</a> for how behaviors combine into a <a href="/manual/getting-started/glossary.html">strategy</a>.</p>
+<h2>The example Conditions at a glance</h2>
+<p>The example campaign defines five Conditions, all reading the target actor:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Comparison</th>
+<th>Reads as</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>isDead</code></td>
+<td><code>@health &lt;= 0</code></td>
+<td>health at or below zero</td>
+</tr>
+<tr>
+<td><code>isHurt</code></td>
+<td><code>@health &lt; 20</code></td>
+<td>health below twenty</td>
+</tr>
+<tr>
+<td><code>hasTarget</code></td>
+<td><code>@has_target = 1</code></td>
+<td>the actor has a target</td>
+</tr>
+<tr>
+<td><code>isNearTarget</code></td>
+<td><code>@distance_to_target &gt; 1</code></td>
+<td>the target is more than one tile away</td>
+</tr>
+<tr>
+<td><code>isAtDestination</code></td>
+<td><code>@distance_to_destination &lt; 1</code></td>
+<td>the actor has reached its destination</td>
+</tr>
+</tbody>
+</table>
+<p>Use these as templates: change the operand key, operator, and right-hand value to ask your own question.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/define-actions.html">Define actions</a></li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a></li>
+<li><a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a></li>
+<li><a href="/manual/guides/add-npc-ai.html">Add NPC AI</a></li>
+<li><a href="/manual/guides/add-skills.html">Add skills</a></li>
+<li><a href="/manual/core-concepts/validation.html">Validation</a></li>
+<li><a href="/reference/actions.html">Action function reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Troubleshooting &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Troubleshooting</h1>
+<p>This page collects the most common problems you hit while building an Isometry campaign and gives each one a symptom, a cause, and a fix. Use it as a lookup table: find the line that matches what you see in <code>log.txt</code>, then follow the steps.</p>
+<h2>Introduction</h2>
+<p>Most campaign problems fall into a handful of categories: the campaign refuses to load, validation rejects an entity, the map looks wrong, an NPC sits still, or an asset cannot be found. Every error string quoted here is taken from the validator and engine, so you can match it character-for-character against your log. Where a behavior looks like a bug but is not, this page says so and points you at the right fix.</p>
+<p>A <a href="/manual/getting-started/glossary.html">campaign</a> is a folder of YAML <a href="/manual/getting-started/glossary.html">entities</a> plus assets, packaged as a <code>.zip</code>. When something goes wrong, the engine almost always tells you in the log. Read the log first.</p>
+<h2>Prerequisites</h2>
+<p>You should already understand how a campaign is laid out and how it is checked before it loads:</p>
+<ul>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a></li>
+<li><a href="/manual/core-concepts/validation.html">Validation</a></li>
+</ul>
+<h2>Read the log first</h2>
+<p>Nothing is logged until you ask for it. The default log level is <code>NONE</code>, so an empty log is normal, not a sign of failure. Pass <code>--log-level</code> to turn logging on.</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>The log is written to <code>log.txt</code> in the directory next to the executable, the same folder where your campaign <code>.zip</code> sits. Levels are <code>NONE</code>, <code>FATAL</code>, <code>ERROR</code>, <code>WARN</code>, <code>INFO</code>, <code>DEBUG</code>, and <code>TRACE</code>, and the value is case-insensitive, so <code>--log-level=info</code> works too.</p>
+<blockquote>
+<p>Note: Older documentation pointed at <code>~/.local/share/isometry/logs/</code> or an <code>AppData</code> path. That is wrong. The log lives beside the binary.</p>
+</blockquote>
+<p>When a campaign loads cleanly you see:</p>
+<div class="codehilite"><pre><span></span><code>Campaign validation passed
+</code></pre></div>
+
+<p>When it does not, you see a count of problems:</p>
+<div class="codehilite"><pre><span></span><code>Campaign validation failed with 3 error(s)
+</code></pre></div>
+
+<p>Each error is logged on its own line above that summary. The rest of this page explains what those lines mean.</p>
+<h2>The campaign does nothing in single-player</h2>
+<p><strong>Symptom:</strong> You run with <code>--network=none</code> (or omit <code>--network</code>) and nothing loads. No terrain, no actor, no validation output.</p>
+<p><strong>Cause:</strong> <code>--network=none</code> is currently a no-op. The startup code only handles the <code>host</code>, <code>server</code>, and <code>client</code> modes; the default branch does nothing. This is a known issue.</p>
+<p><strong>Fix:</strong> Start the game from the launcher to play single-player. To exercise the load pipeline from the command line, use <code>--network=host</code>:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>Success looks like a <code>Campaign validation passed</code> line followed by one or more <code>Successfully created Entity</code> lines. See the <a href="/reference/cli.html">CLI reference</a> for the full flag list.</p>
+<h2>Validation errors</h2>
+<p>Validation runs in four phases, and the campaign loads only if all four pass:</p>
+<ol>
+<li><strong>Schema</strong> — each entity has the right fields and types.</li>
+<li><strong>Cross-reference</strong> — every <a href="/manual/getting-started/glossary.html">KeyRef</a> (a reference to another entity by its key) resolves, there is exactly one Main entity, no key is duplicated, and action functions exist.</li>
+<li><strong>Asset paths</strong> — referenced files exist in the archive. This phase runs only when a <code>.zip</code> is loaded (host, server, or client), not for a raw directory load.</li>
+<li><strong>Dice expressions</strong> — dice fields contain valid notation.</li>
+</ol>
+<p>The sections below group the errors by phase. For the wider picture, read <a href="/manual/core-concepts/validation.html">Validation</a>.</p>
+<h3>Schema errors (phase 1)</h3>
+<p><strong><code>Unknown entity type 'X' - no schema defined</code></strong> — A top-level key in your YAML is not one of the 33 entity types. Check the spelling against <a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a>.</p>
+<p><strong><code>Required field 'X' is missing</code></strong> — Required fields are rare. The two you are most likely to hit are <code>Main.actor</code> and <code>Main.map</code>, both of which every campaign needs.</p>
+<blockquote>
+<p>Warning: An Actor does not require a <code>sprite</code>. There is no "Actor missing required field sprite" error. If a guide told you otherwise, it is out of date.</p>
+</blockquote>
+<p><strong><code>Field 'X' not defined in &lt;Type&gt; schema</code></strong> — You used a field name the schema does not know, almost always a typo. Compare against <a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a>.</p>
+<p><strong>Type mismatches</strong> — <code>Expected &lt;TYPE&gt;, got &lt;type&gt;</code> for scalars, <code>Expected KeyRef (String), got &lt;type&gt;</code>, or <code>Expected KeyRefArray (Array), got &lt;type&gt;</code>. You wrote a value of the wrong shape, for example a number where a KeyRef string belongs.</p>
+<p><strong><code>Expected INT, got FLOAT with decimal value X</code></strong> — A field typed <code>INT</code> accepts a whole number written as <code>8</code> or <code>8.0</code>; only a genuinely fractional value like <code>8.5</code> is rejected. Float fields accept whole-looking numbers like <code>20</code> without complaint, so do not "fix" them by adding a decimal point.</p>
+<p><strong>Constraint errors</strong> — <code>Value X is less than minimum Y</code>, <code>Value X exceeds maximum Y</code>, <code>Array length N exceeds maximum M</code>, and <code>String length N exceeds maximum M</code> (plus the minimum variants). For example, an actor's <code>skills</code> array may hold at most nine entries, and <code>perception</code>, <code>base</code>, <code>salience</code>, and <code>speed</code> must all be zero or greater.</p>
+<h3>Cross-reference errors (phase 2)</h3>
+<p><strong><code>Campaign requires exactly one Main entity (found 0)</code></strong> or <strong><code>(found N)</code></strong> — Every campaign needs exactly one <a href="/manual/getting-started/glossary.html">Main</a> entity. Zero means no Main file; more than one means you defined Main twice.</p>
+<p><strong><code>Duplicate key 'X' found in entity types: TypeA, TypeB</code></strong> — The same <a href="/manual/getting-started/glossary.html">entity key</a> is used by two different entity types. Keys must be unique across the whole campaign. Rename one.</p>
+<p><strong><code>KeyRef 'X' does not exist in campaign</code></strong> — A field points at an entity key that no file defines. Check for a typo in the reference or a missing entity file.</p>
+<p><strong><code>KeyRef 'X' resolves to type 'A', expected 'B'</code></strong> — The reference resolves, but to the wrong kind of entity. For example, you pointed a <code>sprite</code> field at an Actor instead of a Sprite.</p>
+<p><strong><code>Action function 'X' does not exist in actions.gd</code></strong> — An Action's <code>do</code> value is not one of the 75 built-in action functions. See the <a href="/reference/actions.html">action function reference</a> for the full list.</p>
+<p><strong><code>Action function 'X' requires parameters: a, b</code></strong> — The function needs parameters, but the action's <code>parameters</code> array is empty.</p>
+<h3>How action parameters are shaped</h3>
+<p>This last error trips people up, so it is worth showing the correct shape. An action's <code>parameters</code> is a <strong>flat array of KeyRefs</strong> to Parameter entities. The Parameter entities themselves live in a sibling top-level <code>Parameter</code> block, never nested inside the action.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">add_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pHeal</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pAmount</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">pHeal</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
+<span class="w">  </span><span class="nt">pAmount</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d6</span>
+</code></pre></div>
+
+<p>The <code>parameters</code> array lists only the keys; each key resolves to a Parameter in the sibling block. See <a href="/manual/guides/define-actions.html">Define actions</a> for the details.</p>
+<h3>Asset errors (phase 3)</h3>
+<p><strong><code>Asset 'path' not found in campaign archive</code></strong> — A field that names a file points at a path the <code>.zip</code> does not contain. Asset checks run only when a <code>.zip</code> is loaded, so this never fires on a raw directory load.</p>
+<p><strong><code>Asset 'path' has invalid extension '.x', expected one of: ...</code></strong> — The file exists but has the wrong type for that field.</p>
+<p>Path matching is suffix-based: an archive entry counts as a match when its path ends with the asset path (after stripping a leading slash). So a small difference in the leading directory is forgiven, but the filename and trailing folders must match. The accepted extensions are:</p>
+<ul>
+<li>Texture and icon fields (<code>Sprite.texture</code>, <code>Resource.icon</code>, <code>Measure.icon</code>, <code>Skill.icon</code>, <code>Waypoint.icon</code>, <code>Floor.texture</code>, <code>TileSet.texture</code>, <code>Parallax.texture</code>): <code>png</code>, <code>jpg</code>, <code>jpeg</code>.</li>
+<li><code>Sound.source</code>: <code>mp3</code>, <code>wav</code>, <code>ogg</code>.</li>
+<li><code>Layer.source</code>: <code>tmj</code>.</li>
+</ul>
+<h3>Dice errors (phase 4)</h3>
+<p><strong><code>Invalid dice expression 'E' - invalid character 'c' at position N</code></strong> — A dice field contains a character outside the allowed set <code>0123456789()*%/+-dD&lt;&gt;</code>. The fields checked are <code>Measure.expression</code>, <code>Sound.scale</code>, <code>Timer.total</code>, and <code>Timer.interval</code>. See <a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a> for valid notation.</p>
+<h2>The map is invisible or gray</h2>
+<p>A blank or gray play area has two very different causes. Diagnose which one you have before you change anything.</p>
+<h3>Ghost tiles versus fog of war</h3>
+<p>A tile marked <code>ghost: true</code> is never drawn at all: the engine skips it when painting the map, and it gets no discovery polygon. Ghost tiles are meant only for invisible navigation helpers. If you set <code>ghost: true</code> on a walkable floor tile by mistake, that terrain disappears.</p>
+<p><a href="/manual/getting-started/glossary.html">Fog of war</a> is different. Fog tiles exist and are drawn, but start hidden until the player discovers them. The player's discovery radius, based on the actor's <a href="/manual/getting-started/glossary.html">perception</a>, reveals tiles as it overlaps them. Terrain that lifts as you walk is fog of war working correctly, not a bug.</p>
+<h3>Fix invisible floor tiles</h3>
+<p><strong>Symptom:</strong> Floor that should be solid is missing entirely and never appears, even when the player stands on it.</p>
+<p><strong>Cause:</strong> The tile is flagged <code>ghost: true</code>.</p>
+<p><strong>Fix:</strong> Remove <code>ghost</code> (or set it to <code>false</code>) on floor tiles. Reserve <code>ghost: true</code> for tiles you genuinely never want rendered.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="nt">navigation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">roof</span>
+<span class="nt">ghost</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div>
+
+<h3>Fix terrain that stays dark</h3>
+<p><strong>Symptom:</strong> Terrain is dark until the player walks near it, then fades in.</p>
+<p><strong>Cause:</strong> This is fog of war. The actor's perception circle is small, or the actor spawned away from the area.</p>
+<p><strong>Fix:</strong> Raise the actor's <code>perception</code> to widen the reveal radius. The demo hero uses <code>25</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">  </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">  </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+<span class="w">  </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</code></pre></div>
+
+<blockquote>
+<p>Tip: If a wrong <code>Main.map</code> value loads the wrong (or no) terrain, you get a gray screen too. Confirm <code>Main.map</code> points at the map you expect before chasing tile flags.</p>
+</blockquote>
+<h2>An NPC never appears</h2>
+<p><strong>Symptom:</strong> An NPC you defined is nowhere on the map.</p>
+<p><strong>Cause:</strong> Defining an Actor and a Deployment is not enough. An NPC spawns only when its Deployment is listed in the Map's <code>deployments</code> array. A Deployment that no Map references spawns nothing.</p>
+<p><strong>Fix:</strong> Add the Deployment's key to the Map's <code>deployments</code> array. In the demo, <code>patrollerDeploy</code> places <code>patrollerActor</code> at <code>patrollerPos</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">patrollerDeploy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrollerActor</span>
+<span class="w">  </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrollerPos</span>
+</code></pre></div>
+
+<p>The Map entity must then reference it:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">deployments</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrollerDeploy</span>
+</code></pre></div>
+
+<p>See <a href="/manual/guides/build-a-map.html">Build a map</a> for the full Map entity.</p>
+<h2>An NPC appears but never acts</h2>
+<p><strong>Symptom:</strong> The NPC is on the map but stands still and does nothing.</p>
+<p><strong>Cause:</strong> AI runs through a chain, and any broken link stops the actor. The Actor needs a <code>strategy</code>; the <a href="/manual/getting-started/glossary.html">Strategy</a> needs <code>behaviors</code>; each <a href="/manual/getting-started/glossary.html">Behavior</a> needs <code>goals</code> (<a href="/manual/getting-started/glossary.html">Conditions</a>) that can be satisfied and an <code>action</code>. A missing strategy, an empty behaviors list, or goals that can never be true all freeze the NPC.</p>
+<p><strong>Fix:</strong> Walk the chain from the actor down.</p>
+<p>First, confirm the actor has a strategy. The demo patroller uses <code>followStrategy</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">patrollerActor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Patroller</span>
+<span class="w">  </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.8</span>
+<span class="w">  </span><span class="nt">strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">followStrategy</span>
+</code></pre></div>
+
+<p>Then confirm the strategy lists behaviors and each behavior has goals and an action:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">patrolBehavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">goals</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolGoal</span>
+<span class="w">  </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_destination_self</span>
+</code></pre></div>
+
+<p>A Behavior's <code>action</code> is special: it may be either an Action entity key or a bare action function name such as <code>set_destination_self</code>, which takes a <code>destination</code> parameter referencing a Vector. If it is neither, validation reports <code>KeyRef 'X' does not exist in campaign and is not a valid action function</code>.</p>
+<p>If the behavior still does not fire, check that its goal Conditions can actually be true. An unsatisfiable goal means the behavior never runs. See <a href="/manual/guides/add-npc-ai.html">Add NPC AI</a> for the full pattern.</p>
+<h2>Asset paths and templating</h2>
+<p>Two smaller traps round out the list.</p>
+<p><strong>Wrong asset path.</strong> When a campaign loads from a <code>.zip</code> but an icon or texture does not show, the path field probably does not match an archive entry. Because matching is suffix-based, the failure is usually a wrong filename or trailing folder rather than a wrong leading directory. Check the exact path against the files inside the <code>.zip</code>.</p>
+<p><strong>Broken dialog text.</strong> <a href="/manual/getting-started/glossary.html">Dialog</a> text shows live actor values with template placeholders. Use <code>{{@resource}}</code> for the target actor and <code>{{$resource}}</code> for the caller. Use these tokens only inside a Dialog entity's <code>text</code> field.</p>
+<div class="codehilite"><pre><span></span><code><span class="x">HP: </span><span class="cp">{{</span><span class="err">@</span><span class="nv">health</span><span class="cp">}}</span><span class="x"> / Your luck: </span><span class="cp">{{</span><span class="err">$</span><span class="nv">luck</span><span class="cp">}}</span>
+</code></pre></div>
+
+<p>Here <code>{{@health}}</code> reads the viewed actor's <code>health</code> resource and <code>{{$luck}}</code> reads the opening actor's <code>luck</code> measure.</p>
+<h2>There is no save file to delete</h2>
+<p><strong>Symptom:</strong> You read older advice to fix a problem by deleting a save file named with a numeric hash.</p>
+<p><strong>Cause:</strong> That advice does not apply. The engine has no game-save persistence; there is no save file to delete.</p>
+<p><strong>Fix:</strong> Ignore it. A gray or invisible map is explained by ghost floor tiles or fog of war (above), not by a stale save.</p>
+<h2>Networking problems</h2>
+<p>Multiplayer connection failures, credential rules, and campaign version mismatches between client and server are covered on their own page, which is the authoritative source for the exact runtime messages. See <a href="/manual/multiplayer/networking-and-security.html">Networking and security</a>.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/core-concepts/validation.html">Validation</a></li>
+<li><a href="/reference/cli.html">CLI reference</a></li>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+<li><a href="/reference/actions.html">Action function reference</a></li>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a></li>
+<li><a href="/manual/guides/add-npc-ai.html">Add NPC AI</a></li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a></li>
+<li><a href="/manual/multiplayer/networking-and-security.html">Networking and security</a></li>
+<li><a href="/manual/getting-started/install-and-run.html">Install and run</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

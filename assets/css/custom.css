@@ -1,0 +1,213 @@
+/* Isometry docs theme — Dark Mode Games. Dark, readable, single-column docs. */
+
+:root {
+  --bg: #14161c;
+  --bg-elev: #1b1e26;
+  --bg-code: #0f1116;
+  --fg: #d7dae0;
+  --fg-dim: #9aa0ac;
+  --border: #2a2e38;
+  --accent: #6ea8fe;
+  --accent-2: #c792ea;
+  --warn: #e6b450;
+  --maxw: 860px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.bar {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  width: 100%;
+}
+
+/* Header / nav */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(20, 22, 28, 0.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+}
+.site-header .bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 1.15rem;
+}
+.brand:hover { color: var(--accent); }
+.brand-logo { display: block; }
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.9rem;
+  margin-left: auto;
+}
+.site-nav a {
+  color: var(--fg-dim);
+  text-decoration: none;
+  font-size: 0.93rem;
+  padding: 0.15rem 0;
+  border-bottom: 2px solid transparent;
+}
+.site-nav a:hover { color: var(--fg); border-bottom-color: var(--accent); }
+
+.nav-toggle, .nav-toggle-label { display: none; }
+
+/* Content */
+.content {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 2.2rem 1.25rem 3rem;
+  width: 100%;
+  flex: 1 0 auto;
+}
+
+h1, h2, h3, h4 { line-height: 1.25; font-weight: 700; margin: 2rem 0 0.75rem; }
+h1 { font-size: 2rem; margin-top: 0.5rem; }
+h2 { font-size: 1.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.2rem; }
+h4 { font-size: 1.02rem; color: var(--fg-dim); }
+
+p, ul, ol, table, pre, blockquote { margin: 0 0 1rem; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul, ol { padding-left: 1.4rem; }
+li { margin: 0.2rem 0; }
+
+hr { border: 0; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+/* Inline + block code */
+code, pre, kbd {
+  font-family: "UbuntuMono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+code {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+}
+pre code { background: none; border: 0; padding: 0; }
+.codehilite { background: var(--bg-code); border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
+.codehilite pre { background: none; border: 0; margin: 0; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { border: 1px solid var(--border); padding: 0.5rem 0.7rem; text-align: left; vertical-align: top; }
+th { background: var(--bg-elev); }
+tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+
+/* Blockquotes (Note/Tip/Warning callouts authored as "> Note:") */
+blockquote {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-elev);
+  margin: 0 0 1rem;
+  padding: 0.6rem 1rem;
+  color: var(--fg);
+  border-radius: 0 6px 6px 0;
+}
+blockquote p { margin: 0; }
+
+img { max-width: 100%; height: auto; }
+
+/* Footer */
+.site-footer {
+  border-top: 1px solid var(--border);
+  color: var(--fg-dim);
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.site-footer .bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: space-between;
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+.site-footer a { color: var(--fg-dim); }
+.site-footer a:hover { color: var(--fg); }
+.site-footer .links { display: flex; gap: 1rem; flex-wrap: wrap; }
+.site-footer .lic { opacity: 0.7; }
+
+/* Landing hero (used on /) */
+.hero { text-align: center; padding: 1.5rem 0 1rem; }
+.hero-logo { width: 96px; height: 96px; display: block; margin: 0 auto 0.5rem; }
+.hero h1 { margin-top: 0; }
+.hero .tagline { font-size: 1.25rem; color: var(--fg-dim); max-width: 42ch; margin: 0.5rem auto 1.5rem; }
+.cta { display: inline-flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
+.cta a {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--fg);
+  font-weight: 600;
+}
+.cta a.primary { background: var(--accent); color: #0b0d12; border-color: var(--accent); }
+.cta a:hover { text-decoration: none; border-color: var(--accent); }
+
+/* Pygments (codehilite) — compact dark token palette */
+.codehilite .c, .codehilite .c1, .codehilite .cm, .codehilite .cs { color: #6b7280; font-style: italic; }
+.codehilite .k, .codehilite .kd, .codehilite .kn, .codehilite .kc { color: var(--accent-2); }
+.codehilite .s, .codehilite .s1, .codehilite .s2, .codehilite .sb { color: #a5d6a7; }
+.codehilite .mi, .codehilite .mf, .codehilite .m { color: var(--warn); }
+.codehilite .nt { color: var(--accent); }
+.codehilite .na { color: #80cbc4; }
+.codehilite .nf, .codehilite .nc { color: var(--accent); }
+.codehilite .nb, .codehilite .bp { color: #80cbc4; }
+.codehilite .o, .codehilite .p { color: var(--fg-dim); }
+.codehilite .err { color: #ff8a80; }
+
+@media (max-width: 720px) {
+  .nav-toggle-label { display: block; margin-left: auto; cursor: pointer; font-size: 1.4rem; color: var(--fg); }
+  .site-nav {
+    flex-basis: 100%;
+    flex-direction: column;
+    gap: 0.1rem;
+    margin-left: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease;
+  }
+  .nav-toggle:checked ~ .site-nav { max-height: 30rem; padding-top: 0.5rem; }
+}

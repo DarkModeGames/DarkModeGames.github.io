@@ -1,0 +1,9 @@
+# Global Jinja2 context variables available in every markdown page.
+# These are the single place to bump product facts; prefer referencing them in prose
+# (e.g. {{ version }}) over hardcoding numbers.
+product_name: "Isometry"
+version: "0.387"
+entity_count: 33
+action_count: 75
+license: "CC BY-NC 4.0"
+publisher: "Dark Mode Games"

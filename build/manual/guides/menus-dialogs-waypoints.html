@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menus, Dialogs, and Waypoints &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Menus, Dialogs, and Waypoints</h1>
+<p>This page covers the data entities that drive interface panels and world markers: Menu, Dialog, Waypoint, Group, and Deployment. You use them to give actors interaction options, show the player text, mark travel destinations, color factions, and place actors on a map when the campaign starts.</p>
+<h2>Introduction</h2>
+<p>The entities on this page are pure-data records, like every other <a href="/manual/getting-started/glossary.html#terms">entity</a> in Isometry. They hold no game logic. Instead, they describe what the player sees and how a campaign is laid out:</p>
+<ul>
+<li>A <strong>Menu</strong> lists the <a href="/manual/guides/define-actions.html">actions</a> an actor offers when the player interacts with it.</li>
+<li>A <strong>Dialog</strong> is a titled text panel that can show live actor values.</li>
+<li>A <strong>Waypoint</strong> marks a named, discoverable location on a map.</li>
+<li>A <strong>Group</strong> is a faction with a name and an outline color.</li>
+<li>A <strong>Deployment</strong> places an actor on the map at the start of play.</li>
+</ul>
+<p>All examples come from an example campaign.</p>
+<h2>Prerequisites</h2>
+<p>Before you read this page, you should be comfortable with:</p>
+<ul>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a> — how entities reference each other by key.</li>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a> — the actors that menus, deployments, and dialogs act on.</li>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a> — the maps that waypoints and deployments sit on.</li>
+</ul>
+<h2>Menus: actions on interaction</h2>
+<p>A Menu is a named list of <a href="/manual/getting-started/glossary.html#terms">Action</a> keys. When the player interacts with a target (the Enter key by default), the engine opens an <strong>interaction panel</strong> in the bottom-center of the screen, replacing the skill and resource blocks until the interaction ends. The panel shows the actor's <code>dialog</code> text (if it has one) above its menu options laid out as a 2×2 grid (paginated beyond four). The player moves the selection with the arrow keys and confirms with Enter; Esc closes the interaction.</p>
+<p>The <code>heroMenu</code> offers four actions: two interactions and two dialogs.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Menu</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroMenu</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Actions</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inspectAction</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">greetAction</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">showWelcomeDialog</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">showStatusDialog</span>
+</code></pre></div>
+
+<p>The <code>name</code> field is the human-readable title shown above the list. The <code>actions</code> field is a <a href="/manual/getting-started/glossary.html#terms">KeyRefArray</a> of Action keys, resolved at load time. Both fields are optional.</p>
+<blockquote>
+<p>Note: Each entry in <code>actions</code> must match an Action entity key. See <a href="/manual/guides/define-actions.html">Define actions</a> for how those actions are written.</p>
+</blockquote>
+<p>The example defines four menus: <code>heroMenu</code>, <code>guardMenu</code>, <code>merchantMenu</code>, and <code>healthMenu</code>. Each one tailors the action list to the actor that uses it.</p>
+<h3>Branching: dialog trees and combat menus</h3>
+<p>Because an option just runs an Action, and an Action can <code>open_dialog</code> (swap the panel's text), <code>open_menu</code> (swap the options), or <code>close_interaction</code> (leave), you can build decision trees and Pokémon-style combat menus without code. Each node is the text + options currently shown; an option's action moves to the next node in place. The guard shows this: it has a <code>dialog</code> (<code>guardGreeting</code>) and a <code>guardMenu</code> whose options ask about town, threaten (each swaps the text via <code>open_dialog</code>), inspect, or leave (<code>close_interaction</code>).</p>
+<h2>Dialogs: text panels</h2>
+<p>A <a href="/manual/getting-started/glossary.html#terms">dialog</a> is a titled text panel shown to the player. You use dialogs for dialogue, lore, instructions, or status readouts. A Dialog has two fields, <code>title</code> and <code>text</code>, and both are required.</p>
+<p>The <code>welcomeDialog</code> is plain text with no templating.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Dialog</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">welcomeDialog</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Welcome to Isometry</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">This is the example campaign. It showcases all entity types available in the Isometry engine.</span>
+<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">Explore the map, interact with NPCs, and try your skills.</span>
+</code></pre></div>
+
+<p>The <code>title</code> shows prominently at the top of the panel; the <code>text</code> is the body. Long body text is split across pages automatically, so you do not need to manage page breaks yourself.</p>
+<h3>Showing live actor values with templating</h3>
+<p>Dialog body text supports templating tokens that read live values from actors at the moment the dialog is shown. There are two markers:</p>
+<ul>
+<li><code>@</code> reads the <strong>target</strong> actor — the actor being viewed.</li>
+<li><code>$</code> reads the <strong>caller</strong> actor — the actor whose dialog is open, that is, the one acting.</li>
+</ul>
+<p>The two markers are not interchangeable. Each token is evaluated through the <a href="/manual/core-concepts/dice-expressions.html">dice expression</a> engine, so it can reference any of the actor's <a href="/manual/guides/add-resources-and-measures.html">resources</a> or measures.</p>
+<p>The <code>statusDialog</code> combines both markers to report the target's health and mana alongside the caller's gold.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Dialog</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">statusDialog</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Status Report</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Health:</span><span class="nv"> </span><span class="s">{{@health}}</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">20</span>
+
+<span class="w">      </span><span class="s">Mana:</span><span class="nv"> </span><span class="s">{{@mana}}</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">10</span>
+
+<span class="w">      </span><span class="s">Gold:</span><span class="nv"> </span><span class="s">{{$gold}}&#39;</span>
+</code></pre></div>
+
+<p>Here <code>{{@health}}</code> and <code>{{@mana}}</code> show the target actor's <code>health</code> and <code>mana</code> resources, while <code>{{$gold}}</code> shows the caller's <code>gold</code> resource. The literal text around each token, such as <code>/ 20</code>, is shown unchanged. The caller and target are bound when the dialog is opened, typically by an action such as <code>showStatusDialog</code> listed in <code>heroMenu</code>.</p>
+<blockquote>
+<p>Tip: Use templating tokens only inside a Dialog's <code>text</code> field. They work for both resources and measures.</p>
+</blockquote>
+<h2>Waypoints: map markers</h2>
+<p>A Waypoint is a named, discoverable location on a <a href="/manual/guides/build-a-map.html">map</a>. It gives the player a marker to recognize and travel toward. Every Waypoint field is optional.</p>
+<p>The example defines one waypoint, <code>townCenter</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Waypoint</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">townCenter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Town Center</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">townCenterPos</span>
+<span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/icons/sun.png</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The center of the example town.</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">townCenterPos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">300</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+</code></pre></div>
+
+<p>The fields are:</p>
+<ul>
+<li><code>name</code> — the human-readable label shown in the interface.</li>
+<li><code>location</code> — a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to a Vector entity that holds the position (<code>x</code>, <code>y</code>).</li>
+<li><code>icon</code> — the image path used for the marker on the map and in the interface.</li>
+<li><code>map</code> — a KeyRef to the Map entity the waypoint belongs to.</li>
+<li><code>menu</code> — an optional KeyRef to a Menu entity for interaction options.</li>
+<li><code>description</code> — text shown in the interface.</li>
+</ul>
+<p>The example co-locates the backing Vector, <code>townCenterPos</code>, in the same file. This is the common pattern: keep a waypoint and its position together so they are easy to read and edit. The <code>townCenter</code> omits the optional <code>menu</code> field, so it offers no interaction options.</p>
+<h2>Groups: factions and color</h2>
+<p>A Group is a faction or team. The engine uses a group's color to outline its actors and to identify them in the interface, so players can tell allies from enemies at a glance. Both fields are optional.</p>
+<p>The example defines three groups.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Group</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">playerGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Players</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#00FF00&#39;</span>
+<span class="w">  </span><span class="nt">enemyGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Enemies</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#FF0000&#39;</span>
+<span class="w">  </span><span class="nt">neutralGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Neutral</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#FFFF00&#39;</span>
+</code></pre></div>
+
+<p>The <code>name</code> field is the faction's label. The <code>color</code> field is a hex color string, such as <code>#00FF00</code> for green. You assign a group to an actor through the actor's group field; see <a href="/manual/guides/create-an-actor.html">Create an actor</a>.</p>
+<h2>Deployments: initial placement</h2>
+<p>A Deployment defines an actor's initial placement when a campaign starts. It pairs an actor with a spawn position. Both fields are optional.</p>
+<p>The example defines three deployments, one per non-player actor.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Deployment</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardDeploy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardPos</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardActor</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardPos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">128</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-48</span>
+</code></pre></div>
+
+<p>The <code>location</code> field is a KeyRef to a Vector entity holding the spawn position (<code>x</code>, <code>y</code>). The <code>actor</code> field is a KeyRef to the Actor entity to place there. As with waypoints, the example co-locates the spawn Vector, <code>guardPos</code>, in the same file.</p>
+<blockquote>
+<p>Note: A Deployment references only a position and an actor. The player actor's own starting placement comes from the <a href="/manual/getting-started/glossary.html#terms">Main</a> entity, not from a Deployment.</p>
+</blockquote>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a></li>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a></li>
+<li><a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a></li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a></li>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a></li>
+<li><a href="/reference/actions.html">Action function reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

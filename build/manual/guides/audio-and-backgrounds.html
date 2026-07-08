@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio and Backgrounds &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Audio and Backgrounds</h1>
+<p>This page shows you how to give a map atmosphere: a soundtrack with the Sound entity and a scrolling backdrop with the Parallax entity. You attach both to a map, so the music plays and the background drifts as soon as the player loads it.</p>
+<h2>Prerequisites</h2>
+<p>You should be comfortable with these pages before you start:</p>
+<ul>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a> — you attach audio and backgrounds to a Map entity.</li>
+<li><a href="/manual/guides/visuals-sprites-animations.html">Visuals: sprites and animations</a> — Sound can also be triggered from an animation.</li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a> — a Sound's pitch is set by a <a href="/manual/getting-started/glossary.html#terms">dice expression</a>.</li>
+</ul>
+<p>This page builds on an example campaign's sound, parallax, and map entities.</p>
+<h2>How sound and background attach to a map</h2>
+<p>A map carries its presentation through two list fields. Both are <a href="/manual/getting-started/glossary.html#terms">KeyRefArrays</a> — arrays of <a href="/manual/getting-started/glossary.html#terms">entity keys</a> that point at other entities.</p>
+<ul>
+<li><code>Map.audio</code> references Sound entities. The engine plays each one when the map loads.</li>
+<li><code>Map.background</code> references Parallax entities. Each one becomes a scrolling layer behind the world.</li>
+</ul>
+<p>The example map wires up one sound and two background layers:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Map</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMap</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Demo Map</span>
+<span class="w">    </span><span class="nt">background</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">skyParallax</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">starsParallax</span>
+<span class="w">    </span><span class="nt">audio</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bgMusic</span>
+</code></pre></div>
+
+<p>The map names the keys; the next sections define the entities behind those keys.</p>
+<h2>Add sound with the Sound entity</h2>
+<p>A Sound entity is an audio file plus playback settings. Use it for background music, ambience, or a one-shot effect.</p>
+<p>The Sound entity has three fields:</p>
+<ul>
+<li><code>source</code> — the path to the audio file inside your campaign archive.</li>
+<li><code>scale</code> — a <a href="/manual/getting-started/glossary.html#terms">dice expression</a> that sets the playback pitch.</li>
+<li><code>loop</code> — whether the stream repeats continuously.</li>
+</ul>
+<blockquote>
+<p>Note: The schema marks every Sound field optional, but a Sound with no <code>source</code> has nothing to play. Always set <code>source</code>.</p>
+</blockquote>
+<h3>Define background music</h3>
+<p>Here is a looping soundtrack:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sound</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">bgMusic</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/Audio/Crystal caverns Chimes 1.mp3</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d200</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+
+<p>The <code>source</code> path is relative to the root of the campaign archive. The engine picks the audio format from the file extension, so an <code>.mp3</code>, <code>.ogg</code>, or <code>.wav</code> all work. With <code>loop</code> set to <code>true</code>, the track restarts the moment it ends, which is what you want for background music.</p>
+<p>To attach it, list <code>bgMusic</code> in the map's <code>audio</code> array, as shown above.</p>
+<h3>Control pitch with scale</h3>
+<p>The <code>scale</code> field is a <a href="/manual/getting-started/glossary.html#terms">dice expression</a>. The engine rolls it, divides the result by <code>100.0</code>, and applies that number as the audio player's pitch scale.</p>
+<blockquote>
+<p>Warning: <code>scale</code> controls <strong>pitch</strong>, not loudness. A value of <code>1d200</code> rolls a number from 1 to 200, giving a pitch between <code>0.01</code> and <code>2.0</code> — anywhere from very low and slow to twice normal speed. Loudness is handled separately by the engine's fade, which you do not set on the entity.</p>
+</blockquote>
+<p>The expression is re-rolled every time playback finishes, so a random <code>scale</code> shifts the pitch on each repeat. Any valid dice notation works, including a plain constant for a fixed pitch. To keep the pitch unchanged, set <code>scale</code> to <code>100</code>.</p>
+<h3>Trigger a sound from an animation</h3>
+<p>A Sound does not have to live on a map. The <code>attackSound</code> is referenced from an animation instead, so it fires when that animation plays:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sound</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">attackSound</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/Audio/fx.mp3</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50+(1d100)</span>
+</code></pre></div>
+
+<p>This sound omits <code>loop</code>, so it plays once. Its <code>scale</code> of <code>50+(1d100)</code> rolls 51 to 150, giving a pitch of <code>0.51</code> to <code>1.5</code> — a small random variation that keeps a repeated effect from sounding identical each time. See <a href="/manual/guides/visuals-sprites-animations.html">Visuals: sprites and animations</a> for how an animation points at a sound.</p>
+<h2>Add a background with the Parallax entity</h2>
+<p>A Parallax entity is one scrolling background layer. <a href="https://en.wikipedia.org/wiki/Parallax">Parallax</a> is the effect where distant objects appear to move slower than near ones as the camera pans — stacking layers at different speeds gives the world depth.</p>
+<p>The Parallax entity has two fields:</p>
+<ul>
+<li><code>texture</code> — the path to the background image inside your campaign archive.</li>
+<li><code>effect</code> — how fast the layer scrolls relative to the camera.</li>
+</ul>
+<blockquote>
+<p>Note: Both fields are optional in the schema, but a layer with no <code>texture</code> has nothing to draw. Always set <code>texture</code>.</p>
+</blockquote>
+<h3>Define a layer</h3>
+<p>Here are two layers:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Parallax</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">skyParallax</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/SpaceBg/Backgrounds/Blue1.png</span>
+<span class="w">    </span><span class="nt">effect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10.0</span>
+<span class="w">  </span><span class="nt">starsParallax</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/SpaceBg/Backgrounds/BlueStars.png</span>
+<span class="w">    </span><span class="nt">effect</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20.0</span>
+</code></pre></div>
+
+<p>As with audio, the <code>texture</code> path is relative to the root of the campaign archive. List both keys in the map's <code>background</code> array to stack them.</p>
+<h3>Set the scroll speed with effect</h3>
+<p>The <code>effect</code> field is a scroll-speed factor. The engine divides it by <code>100</code> to get the layer's motion ratio against the camera:</p>
+<ul>
+<li><code>effect</code> of <code>10.0</code> gives a ratio of <code>0.1</code> — the layer moves at 10% of camera speed.</li>
+<li><code>effect</code> of <code>20.0</code> gives a ratio of <code>0.2</code> — the layer moves at 20% of camera speed.</li>
+</ul>
+<p>A lower <code>effect</code> makes a layer move slower, which reads as farther away. The distant sky (<code>10.0</code>) drifts behind the nearer stars (<code>20.0</code>), creating depth. The minimum is <code>0.0</code>, a layer that does not scroll at all.</p>
+<blockquote>
+<p>Warning: <code>effect</code> is a float. Write it with a decimal point, such as <code>10.0</code>, not <code>10</code>. The whole-number form <code>10</code> fails validation.</p>
+</blockquote>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a></li>
+<li><a href="/manual/guides/visuals-sprites-animations.html">Visuals: sprites and animations</a></li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a></li>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+<li><a href="/reference/entities.html">Entity reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command-Line Reference &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Command-Line Reference</h1>
+<p>This page documents every command-line argument the Isometry binary parses, with accepted values, defaults, and runtime effect. Use it when you run a server, automate a build, or boot a <a href="/manual/getting-started/glossary.html#terms">campaign</a> headless.</p>
+<h2>Introduction</h2>
+<p>Isometry is a single binary that reads command-line arguments at startup to pick a campaign, choose a network mode, and supply credentials. The launcher build collects the same settings through its UI, but headless and server builds rely entirely on these flags.</p>
+<p>This reference covers Isometry's own arguments. It also notes the one engine flag you commonly pair with them, <code>--headless</code>, which runs the binary without opening a window.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><a href="/manual/getting-started/install-and-run.html">Install and run</a> — how to obtain and launch the binary.</li>
+<li>The <a href="/manual/getting-started/glossary.html">glossary</a> for terms such as <em>campaign</em>.</li>
+</ul>
+<h2>How arguments are parsed</h2>
+<p>Isometry parses arguments in two passes. The network mode is read first, during startup, so that the binary knows whether to route into a session. Everything else is read immediately after and stored for the run.</p>
+<p>Use the form <code>--key=value</code>. A single-dash token such as <code>-flag</code> becomes a boolean <code>true</code>.</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>Here <code>--headless</code> is an engine flag that suppresses the window; the rest are Isometry's.</p>
+<blockquote>
+<p>Tip: Prefer the <code>--key=value</code> form. The space-separated <code>--key value</code> form mostly works, but <code>--key=value</code> is the reliable shape and the one used throughout this manual.</p>
+<p>Warning: On a launcher build, Isometry routes straight to the launcher UI and ignores every gameplay argument below. The CLI takes effect only on non-launcher builds, such as a headless server.</p>
+</blockquote>
+<h2>Argument summary</h2>
+<table>
+<thead>
+<tr>
+<th>Argument</th>
+<th>Values</th>
+<th>Default</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--campaign</code></td>
+<td>campaign name (no <code>.zip</code>)</td>
+<td><code>""</code> (empty)</td>
+<td>Selects the campaign archive to load.</td>
+</tr>
+<tr>
+<td><code>--network</code></td>
+<td><code>none</code>/<code>host</code>/<code>server</code>/<code>client</code>, <code>0</code>–<code>3</code>, or <code>n</code>/<code>h</code>/<code>s</code>/<code>c</code></td>
+<td><code>0</code> (none)</td>
+<td>Chooses the network role.</td>
+</tr>
+<tr>
+<td><code>--uri</code></td>
+<td>hostname or IP</td>
+<td><code>localhost</code></td>
+<td>Server address a client connects to.</td>
+</tr>
+<tr>
+<td><code>--port</code></td>
+<td>port number</td>
+<td><code>5000</code></td>
+<td>UDP port for both server bind and client connect.</td>
+</tr>
+<tr>
+<td><code>--username</code></td>
+<td>non-empty string</td>
+<td>(empty)</td>
+<td>Login name.</td>
+</tr>
+<tr>
+<td><code>--secret</code></td>
+<td>non-empty string</td>
+<td>(empty)</td>
+<td>Login secret (password).</td>
+</tr>
+<tr>
+<td><code>--dir</code></td>
+<td>subdirectory name</td>
+<td><code>""</code> (empty)</td>
+<td>Campaign subdirectory under the binary's directory.</td>
+</tr>
+<tr>
+<td><code>--resolution</code></td>
+<td><code>WIDTHxHEIGHT</code></td>
+<td>saved option</td>
+<td>Window size, e.g. <code>1920x1080</code>. Overrides the saved option.</td>
+</tr>
+<tr>
+<td><code>--interface_scale</code></td>
+<td>number <code>0.5</code>–<code>3.0</code></td>
+<td>saved option</td>
+<td>Scales the on-screen menus and HUD. <code>1.0</code> is normal size.</td>
+</tr>
+<tr>
+<td><code>--log-level</code></td>
+<td><code>NONE</code>/<code>FATAL</code>/<code>ERROR</code>/<code>WARN</code>/<code>INFO</code>/<code>DEBUG</code>/<code>TRACE</code></td>
+<td><code>NONE</code></td>
+<td>Minimum severity written to the log file.</td>
+</tr>
+<tr>
+<td><code>--validate</code></td>
+<td>directory or <code>.zip</code> path</td>
+<td>—</td>
+<td>Validates a campaign and exits.</td>
+</tr>
+<tr>
+<td><code>--dump-schemas</code></td>
+<td>output file path (optional)</td>
+<td>—</td>
+<td>Emits the entity/validation spec as JSON and exits.</td>
+</tr>
+<tr>
+<td><code>--print-paths</code></td>
+<td>(boolean flag)</td>
+<td>—</td>
+<td>Prints the resolved data and campaign paths and exits.</td>
+</tr>
+<tr>
+<td><code>--debug-collision-*</code></td>
+<td>(boolean flags)</td>
+<td>off</td>
+<td>Draws collision shapes for one or more layers.</td>
+</tr>
+</tbody>
+</table>
+<h2>Campaign selection</h2>
+<h3><code>--campaign=NAME</code></h3>
+<p>Names the campaign archive to load, without the <code>.zip</code> extension. The archive sits beside the binary. A campaign packaged as <code>demo.zip</code> is loaded with:</p>
+<div class="codehilite"><pre><span></span><code>--campaign<span class="o">=</span>demo
+</code></pre></div>
+
+<p>The default is an empty string, which selects no campaign.</p>
+<h3><code>--dir=PATH</code></h3>
+<p>Sets a subdirectory, relative to the binary's directory, where Isometry looks for campaign assets. The default is empty, meaning the binary's own directory is used. The value is appended onto that directory rather than replacing it, so treat <code>--dir</code> as a subfolder name, not an absolute override.</p>
+<h2>Network mode</h2>
+<h3><code>--network=MODE</code></h3>
+<p>Selects the network role for this run. This is the one argument read during startup rather than in the main argument loop.</p>
+<p>Accepted values, all case-insensitive:</p>
+<ul>
+<li><code>none</code>, <code>n</code>, or <code>0</code></li>
+<li><code>host</code>, <code>h</code>, or <code>1</code></li>
+<li><code>server</code>, <code>s</code>, or <code>2</code></li>
+<li><code>client</code>, <code>c</code>, or <code>3</code></li>
+</ul>
+<p>The default is <code>0</code> (none). An integer outside <code>0</code>–<code>3</code>, or an unrecognized name, falls back to <code>none</code> and logs a warning.</p>
+<p>Each mode behaves as follows at startup:</p>
+<ul>
+<li><strong>host</strong> — loads or creates the encryption keys, starts the server, then routes into the loading scene once the server is established.</li>
+<li><strong>server</strong> — identical to <code>host</code> at startup: it loads encryption keys and starts the server.</li>
+<li><strong>client</strong> — routes straight into the loading scene to connect to a server.</li>
+<li><strong>none</strong> — does nothing. No campaign loads.</li>
+</ul>
+<blockquote>
+<p>Warning: <code>--network=none</code> from the command line is currently a no-op. The startup match falls through without loading a campaign, so single-player only works through the launcher today. Only <code>host</code>, <code>server</code>, and <code>client</code> route into a session.</p>
+</blockquote>
+<p>For the difference between host, server, and client, see <a href="/manual/multiplayer/hosting.html">Hosting</a> and <a href="/manual/multiplayer/networking-and-security.html">Networking and security</a>.</p>
+<h2>Connection settings</h2>
+<h3><code>--uri=ADDRESS</code></h3>
+<p>The server address a client connects to. The default is <code>localhost</code>. It has no effect in host or server mode.</p>
+<div class="codehilite"><pre><span></span><code>--uri<span class="o">=</span>localhost
+</code></pre></div>
+
+<h3><code>--port=NUMBER</code></h3>
+<p>The UDP port used to bind the server and to connect a client. The default is <code>5000</code>. Both ends must agree on the port.</p>
+<p>The parser does not check the range; the value passes through to the engine's networking layer. Ports below 1024 may require elevated privileges on some systems.</p>
+<h2>Credentials</h2>
+<h3><code>--username=NAME</code> and <code>--secret=PASS</code></h3>
+<p>Supply the login name and secret for an authenticated session. The <code>--secret</code> flag is the password.</p>
+<div class="codehilite"><pre><span></span><code>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p
+</code></pre></div>
+
+<p>Both must be non-empty and must contain none of the following invalid characters:</p>
+<div class="codehilite"><pre><span></span><code>&lt;&gt;:&quot;&#39;/\|?*~!@#$%^&amp;()={}[];.`
+</code></pre></div>
+
+<p>That set includes the single quote (<code>'</code>) and the backtick (<code>`</code>). A value that is empty or contains any of these characters fails validation. See <a href="/manual/multiplayer/networking-and-security.html">Networking and security</a> for how credentials authenticate against the server.</p>
+<h2>Display settings</h2>
+<p>These let a custom launcher size the window and scale the interface without opening
+the in-game options menu. Each one overrides the matching saved option for the run.</p>
+<h3><code>--resolution=WIDTHxHEIGHT</code></h3>
+<p>Sets the window size, for example <code>--resolution=1920x1080</code>. The window switches to
+windowed mode at that size. A malformed value (anything that is not two positive whole
+numbers joined by <code>x</code>) is ignored and the saved resolution is used instead.</p>
+<div class="codehilite"><pre><span></span><code>--resolution<span class="o">=</span>1280x720
+</code></pre></div>
+
+<h3><code>--interface_scale=FACTOR</code></h3>
+<p>Scales the menus and HUD so they read well on different monitors. <code>1.0</code> is normal size;
+values above enlarge the interface and values below shrink it. The factor is clamped to
+the range <code>0.5</code>–<code>3.0</code>. The isometric world is not affected — only the interface.</p>
+<div class="codehilite"><pre><span></span><code>--interface_scale<span class="o">=</span><span class="m">1</span>.5
+</code></pre></div>
+
+<p>The same control is available in the in-game options menu as <strong>Interface Scale</strong>.</p>
+<h2>Logging</h2>
+<h3><code>--log-level=LEVEL</code></h3>
+<p>Sets the minimum severity written to the log file. The value is uppercased and matched against the level names. Valid names, from least to most verbose:</p>
+<div class="codehilite"><pre><span></span><code>NONE  FATAL  ERROR  WARN  INFO  DEBUG  TRACE
+</code></pre></div>
+
+<p>The default is <code>NONE</code>, meaning no log output until you raise the level. Logs are written to <code>log.txt</code> in the binary's directory.</p>
+<div class="codehilite"><pre><span></span><code>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>At <code>INFO</code>, a successful campaign load reports validation passing and entities being created — the signal you watch for when verifying a campaign boots.</p>
+<h2>Diagnostic and tooling flags</h2>
+<p>These flags run a one-shot task and exit instead of starting a session. They are useful for scripting and for authoring tools.</p>
+<h3><code>--validate=PATH</code></h3>
+<p>Runs the full campaign validator over a campaign directory or <code>.zip</code> and exits, without building the world. It prints <code>Campaign validation passed</code> and exits <code>0</code> on success, or prints a summary of errors and exits <code>1</code> on failure.</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--validate<span class="o">=</span>demo.zip
+</code></pre></div>
+
+<p>A directory is validated without an archive, so asset-path checks are skipped; a <code>.zip</code> runs the full pipeline, including asset validation.</p>
+<h3><code>--dump-schemas[=FILE]</code></h3>
+<p>Emits the machine-readable entity and validation spec (entity schemas, action functions, asset fields, dice fields, and key aliases) as JSON, then exits. With a file path it writes to that file; with no value it prints to standard output.</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--dump-schemas<span class="o">=</span>schema.json
+</code></pre></div>
+
+<h3><code>--print-paths</code></h3>
+<p>Prints the resolved application-data directory, the executable's base directory, whether the binary is running translocated, the resolved campaigns directory, and each candidate path the engine checked. It honors <code>--dir</code>. Use it to confirm where the binary is looking for campaigns and writing data.</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--print-paths
+</code></pre></div>
+
+<h3><code>--debug-collision-*</code></h3>
+<p>Draws collision shapes as a colored overlay, one color per layer, to show where actors can walk and interact. Each flag is a boolean. The available layers are:</p>
+<div class="codehilite"><pre><span></span><code>wall  base  hitbox  viewbox  discovery  salience  barrier  navigation
+</code></pre></div>
+
+<p>Enable one layer with <code>--debug-collision-&lt;layer&gt;</code>, or enable every layer at once with <code>--debug-collision-all</code>.</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--debug-collision-hitbox<span class="w"> </span>--debug-collision-navigation
+</code></pre></div>
+
+<h2>Booting a campaign headless</h2>
+<p>To load a campaign without a window, pair the <code>--headless</code> engine flag with Isometry's arguments. Place the campaign <code>.zip</code> beside the binary, then run:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>Because <code>--network=none</code> loads nothing, use <code>--network=host</code> to exercise the full load pipeline from the command line.</p>
+<h2>Troubleshooting</h2>
+<p>When something fails to start, raise <code>--log-level</code> to <code>INFO</code> or higher and read <code>log.txt</code>. A failure to bind the port, a missing campaign archive, or rejected credentials all surface there.</p>
+<p>The messages below are guidance, not literal program output:</p>
+<ul>
+<li><strong>No campaign loads.</strong> Check that <code>--campaign</code> names an archive that exists beside the binary, and that <code>--network</code> is <code>host</code>, <code>server</code>, or <code>client</code> — not <code>none</code>.</li>
+<li><strong>The server will not start.</strong> Another process may hold the port. Try a different <code>--port</code>.</li>
+<li><strong>Login is rejected.</strong> Confirm both <code>--username</code> and <code>--secret</code> are non-empty and free of the invalid characters listed above.</li>
+</ul>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/getting-started/install-and-run.html">Install and run</a></li>
+<li><a href="/manual/multiplayer/hosting.html">Hosting</a></li>
+<li><a href="/manual/multiplayer/networking-and-security.html">Networking and security</a></li>
+<li><a href="/reference/troubleshooting.html">Troubleshooting</a></li>
+<li><a href="/manual/getting-started/glossary.html">Glossary</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

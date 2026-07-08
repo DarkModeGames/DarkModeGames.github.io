@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hosting Multiplayer Games &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Hosting Multiplayer Games</h1>
+<p>Isometry has no separate backend, no Docker, and no admin panel. You run the same game binary in a different network mode, set with one command-line flag. This page explains the four modes and the flags that configure a session.</p>
+<h2>Introduction</h2>
+<p>Multiplayer in Isometry is entirely command-line driven. There is no hosting config file in a <a href="/manual/getting-started/glossary.html">campaign</a>; a campaign is just data, and you choose its network role when you launch it. The role is set by <code>--network</code>, which selects one of four modes: none, host, server, or client.</p>
+<p>This page covers what each mode does, the flags that start a session, their defaults, and the behavioral differences between hosting and joining. Authentication and the on-disk save format are introduced here only briefly; the full detail lives on <a href="/manual/multiplayer/networking-and-security.html">Networking and security</a>.</p>
+<h2>Prerequisites</h2>
+<p>Before hosting a game, you should be able to install the engine and load a campaign:</p>
+<ul>
+<li><a href="/manual/getting-started/install-and-run.html">Install and run</a> — get the binary in place.</li>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a> — how a <code>.zip</code> campaign is packaged and where it sits relative to the binary.</li>
+</ul>
+<h2>Network modes</h2>
+<p>A <em>network mode</em> tells the game whether it is playing, serving, or connecting. There are four modes:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Number</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NONE</code></td>
+<td><code>0</code></td>
+<td>No networking. Currently a no-op (see the limitation below).</td>
+</tr>
+<tr>
+<td><code>HOST</code></td>
+<td><code>1</code></td>
+<td>Starts a server <strong>and</strong> plays locally in the same process.</td>
+</tr>
+<tr>
+<td><code>SERVER</code></td>
+<td><code>2</code></td>
+<td>Starts a server only. Intended to run headless.</td>
+</tr>
+<tr>
+<td><code>CLIENT</code></td>
+<td><code>3</code></td>
+<td>Connects to a running server.</td>
+</tr>
+</tbody>
+</table>
+<p>You select a mode by passing <code>--network</code>. The flag accepts three forms, so all of these select host mode:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--network<span class="o">=</span>host
+isometry<span class="w"> </span>--network<span class="o">=</span>h
+isometry<span class="w"> </span>--network<span class="o">=</span><span class="m">1</span>
+</code></pre></div>
+
+<p>The name is matched case-insensitively, the single letter is the first character of the name (<code>n</code>, <code>h</code>, <code>s</code>, <code>c</code>), and the number is the value from the table above. Any value that is not one of these falls back to <code>NONE</code> with a warning.</p>
+<blockquote>
+<p>Warning: <code>--network=none</code> (and omitting <code>--network</code>, which defaults to <code>0</code>) starts nothing. The mode currently does no work: it loads no campaign and starts no server. Use <code>host</code> to run and verify a campaign locally. See <a href="/reference/troubleshooting.html">Troubleshooting</a> for this limitation.</p>
+</blockquote>
+<h3>Host vs. server</h3>
+<p>Host and server both start a server, in exactly the same way: both open a network listener on the chosen port. The difference is intent, not startup behavior.</p>
+<ul>
+<li><strong>Host</strong> is for a player who also runs the game. It renders the world and plays locally while serving other clients.</li>
+<li><strong>Server</strong> is for a dedicated, unattended process. You run it headless so it does no rendering.</li>
+</ul>
+<p>Isometry does not force a server to be headless. Headless is your choice at launch, made with the <code>--headless</code> flag:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>server<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>admin<span class="w"> </span>--secret<span class="o">=</span>secret
+</code></pre></div>
+
+<p>In every mode with a window, the title shows the campaign name followed by the mode name, for example <code>demo HOST</code> or <code>demo SERVER</code>. A headless server has no window.</p>
+<h2>Configuring a session</h2>
+<p>Beyond <code>--network</code>, a handful of flags configure the session. All values arrive as strings from the command line.</p>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Applies to</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--network</code></td>
+<td>all</td>
+<td><code>0</code> (<code>NONE</code>)</td>
+<td>The network mode.</td>
+</tr>
+<tr>
+<td><code>--campaign</code></td>
+<td>all</td>
+<td><code>""</code> (empty)</td>
+<td>The campaign key, for example <code>demo</code>.</td>
+</tr>
+<tr>
+<td><code>--port</code></td>
+<td>host, server, client</td>
+<td><code>5000</code></td>
+<td>The UDP port the server listens on / client dials.</td>
+</tr>
+<tr>
+<td><code>--uri</code></td>
+<td>client</td>
+<td><code>localhost</code></td>
+<td>The server address a client connects to.</td>
+</tr>
+<tr>
+<td><code>--username</code></td>
+<td>host, server, client</td>
+<td><code>""</code> (empty)</td>
+<td>The account name used for authentication.</td>
+</tr>
+<tr>
+<td><code>--secret</code></td>
+<td>host, server, client</td>
+<td><code>""</code> (empty)</td>
+<td>The account password.</td>
+</tr>
+<tr>
+<td><code>--dir</code></td>
+<td>all</td>
+<td>—</td>
+<td>Override the directory for campaign and save files.</td>
+</tr>
+<tr>
+<td><code>--log-level</code></td>
+<td>all</td>
+<td><code>NONE</code></td>
+<td>How much the engine logs (see below).</td>
+</tr>
+</tbody>
+</table>
+<p>Flags accept two spellings: <code>--key=value</code> (preferred) and <code>--key value</code> (space-separated). A bare <code>-flag</code> with a single dash is read as the boolean <code>true</code>. There is no short-flag aliasing for these long flags.</p>
+<h3>Ports</h3>
+<p>The server opens a port and clients dial the same port. The default is <code>5000</code>. A port must be an unused number from <code>0</code> to <code>65535</code>; ports below <code>1024</code> are privileged on most systems and usually require elevated rights.</p>
+<p>Pick the same port on both ends. On the server:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>server<span class="w"> </span>--port<span class="o">=</span><span class="m">7777</span><span class="w"> </span>--username<span class="o">=</span>admin<span class="w"> </span>--secret<span class="o">=</span>secret
+</code></pre></div>
+
+<p>On a client:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>client<span class="w"> </span>--uri<span class="o">=</span><span class="m">192</span>.168.1.20<span class="w"> </span>--port<span class="o">=</span><span class="m">7777</span><span class="w"> </span>--username<span class="o">=</span>alice<span class="w"> </span>--secret<span class="o">=</span>hunter2
+</code></pre></div>
+
+<p>Note the client uses <code>--uri</code>, not <code>--ip</code>. The address can be a hostname or an IP; it defaults to <code>localhost</code>, which is useful for testing a client and server on the same machine.</p>
+<blockquote>
+<p>Note: The network uses <strong>UDP</strong> only. If you host across a network, forward the server port as UDP and allow UDP through any firewall. This is standard UDP networking, not an Isometry-specific setting.</p>
+</blockquote>
+<h3>Usernames and passwords</h3>
+<p>Every networked session needs a username and password. Both must be non-empty and may not contain invalid characters. Player logins are encrypted automatically.</p>
+<p>The username and password together identify a player's saved data. How logins are protected and where saves are stored are covered on <a href="/manual/multiplayer/networking-and-security.html">Networking and security</a>.</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>alice<span class="w"> </span>--secret<span class="o">=</span>hunter2
+</code></pre></div>
+
+<blockquote>
+<p>Warning: In a trial build, authentication always fails, a server caps its client slots at zero, and a client returns without connecting. Use a full build for real multiplayer.</p>
+</blockquote>
+<h3>Maximum clients</h3>
+<p>A server accepts up to <code>4095</code> players. This is a fixed ceiling, not a recommended player count. The practical number of players a campaign supports depends on the campaign and your hardware.</p>
+<h2>Logging</h2>
+<p>By default the engine logs nothing. To see startup and validation output, pass <code>--log-level</code> with one of these names, matched case-insensitively:</p>
+<div class="codehilite"><pre><span></span><code>NONE  FATAL  ERROR  WARN  INFO  DEBUG  TRACE
+</code></pre></div>
+
+<p><code>NONE</code> (the default) silences all output; <code>TRACE</code> is the most verbose. Logs are written to a file named <code>log.txt</code> in the working directory, not to standard output.</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<h2>Verify a host locally</h2>
+<p>To confirm a campaign loads end to end, run it as a host with logging on. Place the campaign <code>.zip</code> beside the binary, then launch:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>The campaign <code>.zip</code> must sit in the same directory as the executable. Open <code>log.txt</code> and look for two success markers: <code>Campaign validation passed</code> and <code>Successfully created Entity</code>. If you do not see them, see <a href="/reference/troubleshooting.html">Troubleshooting</a>.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/getting-started/install-and-run.html">Install and run</a></li>
+<li><a href="/manual/multiplayer/networking-and-security.html">Networking and security</a></li>
+<li><a href="/reference/cli.html">CLI reference</a></li>
+<li><a href="/reference/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Validation</h1>
+<p>Before a campaign loads, the engine checks every entity you wrote and refuses to start the game if anything is wrong. This page explains the four checks that run, how to read the error each one produces, and how to fix the most common failures.</p>
+<h2>Introduction</h2>
+<p>Validation is the engine's safety net. Because a <a href="/manual/getting-started/glossary.html#terms">campaign</a> is pure data, a typo in a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> or a misspelled action function would otherwise surface as a confusing crash deep in gameplay. Instead, the validator inspects the whole campaign up front, gathers every problem at once, and shows you a single list. The campaign loads only when that list is empty.</p>
+<p>Validation runs as a pipeline of four phases, in this order: schema, cross-reference, asset, and dice. Each phase covers a different class of mistake. All four run when a campaign actually loads, that is, in <code>--network=host</code>, <code>--network=server</code>, or <code>--network=client</code>.</p>
+<blockquote>
+<p>Note: Validation does not run in <code>--network=none</code>. That mode is currently a no-op and loads no campaign at all (see the <a href="/reference/cli.html">CLI reference</a> and <a href="/reference/troubleshooting.html">Troubleshooting</a>). To exercise validation headless, load the campaign with <code>--network=host</code>.</p>
+</blockquote>
+<h2>Prerequisites</h2>
+<p>This page assumes you understand entities and how they reference each other:</p>
+<ul>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a></li>
+</ul>
+<h2>When validation runs</h2>
+<p>The engine first merges every <code>.json</code>, <code>.yaml</code>, and <code>.yml</code> file in the campaign into one combined record, grouped by <a href="/manual/getting-started/glossary.html#terms">entity</a> type. It then validates that combined record as a whole. Because the checks see the entire campaign at once, rules like "exactly one Main" and "no duplicate keys" span all of your files, not just one.</p>
+<p>If any phase reports an error, the load is aborted, the loading screen is hidden, and a validation error modal appears listing every problem found. The modal's title reads <code>Found N error(s)</code>, and its Close button quits the game. On success, the engine logs <code>Campaign validation passed</code> and the campaign loads.</p>
+<p>Validation never stops at the first error. It collects every problem across all four phases, so one load attempt tells you everything to fix.</p>
+<h2>How to read a validation error</h2>
+<p>Every error line follows one of two formats.</p>
+<p>When the problem concerns a specific field of an entity:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">CATEGORY</span><span class="o">]</span><span class="w"> </span><span class="n">EntityType</span><span class="p">.</span><span class="n">entityKey</span><span class="p">.</span><span class="nl">fieldName</span><span class="p">:</span><span class="w"> </span><span class="n">message</span>
+</code></pre></div>
+
+<p>When the problem concerns the entity as a whole (or the campaign as a whole):</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">CATEGORY</span><span class="o">]</span><span class="w"> </span><span class="n">EntityType</span><span class="p">.</span><span class="nl">entityKey</span><span class="p">:</span><span class="w"> </span><span class="n">message</span>
+</code></pre></div>
+
+<p>Read each part left to right:</p>
+<ul>
+<li><strong>CATEGORY</strong> names the kind of failure, such as <code>MISSING_REQUIRED_FIELD</code> or <code>KEYREF_UNRESOLVED</code>. There are 13 categories in total, listed at the end of this page.</li>
+<li><strong>EntityType.entityKey</strong> locates the entity. For example, <code>Action.attackAction</code> points at the <code>attackAction</code> entity in your <code>Action</code> block.</li>
+<li><strong>fieldName</strong>, when present, names the exact field at fault.</li>
+<li><strong>message</strong> explains what is wrong and often what was expected.</li>
+</ul>
+<p>For example, this line means the <code>Main</code> entity named <code>demoMain</code> points its <code>actor</code> field at a key that does not exist:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">KEYREF_UNRESOLVED</span><span class="o">]</span><span class="w"> </span><span class="n">Main</span><span class="p">.</span><span class="n">demoMain</span><span class="p">.</span><span class="nl">actor</span><span class="p">:</span><span class="w"> </span><span class="n">KeyRef</span><span class="w"> </span><span class="n">heroActor</span><span class="w"> </span><span class="n">does</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">exist</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">campaign</span>
+</code></pre></div>
+
+<p>To fix it, you either correct the key in <code>actor</code> or add the missing <code>heroActor</code> entity.</p>
+<h2>Phase 1: schema checks</h2>
+<p>The schema phase checks each entity against the rules for its type: which fields exist, which are required, what type each field holds, and any value constraints. Every one of the 33 entity types has a schema.</p>
+<p>Schema checks produce these categories:</p>
+<ul>
+<li><strong>UNKNOWN_TYPE</strong> — you used an entity type that has no schema, for example a typo like <code>Acter</code> instead of <code>Actor</code>. The message reads <code>Unknown entity type X - no schema defined</code>.</li>
+<li><strong>MISSING_REQUIRED_FIELD</strong> — a required field is absent.</li>
+<li><strong>EXTRA_FIELD</strong> — you included a field the schema does not define. The message reads <code>Field X not defined in &lt;Type&gt; schema</code>. This usually means a misspelled field name.</li>
+<li><strong>INVALID_TYPE</strong> — a field holds the wrong type of value.</li>
+<li><strong>CONSTRAINT_VIOLATION</strong> — a value breaks a <code>min</code>/<code>max</code> or length limit.</li>
+</ul>
+<p>The <a href="/manual/getting-started/glossary.html#terms">Main</a> entity is the smallest example. It requires <code>actor</code> and <code>map</code>, both KeyRefs:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+</code></pre></div>
+
+<p>Omit <code>map</code> and the schema phase reports:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">MISSING_REQUIRED_FIELD</span><span class="o">]</span><span class="w"> </span><span class="n">Main</span><span class="p">.</span><span class="n">demoMain</span><span class="p">.</span><span class="k">map</span><span class="err">:</span><span class="w"> </span><span class="p">...</span>
+</code></pre></div>
+
+<h3>A note on numbers</h3>
+<p>A field typed <code>INT</code> accepts a whole number written as <code>8</code> or <code>8.0</code>; only a genuinely fractional value like <code>8.5</code> is rejected. A float with a decimal part on an <code>INT</code> field fails:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">INVALID_TYPE</span><span class="o">]</span><span class="w"> </span><span class="n">Actor</span><span class="p">.</span><span class="n">heroActor</span><span class="p">.</span><span class="nl">base</span><span class="p">:</span><span class="w"> </span><span class="n">Expected</span><span class="w"> </span><span class="nc">INT</span><span class="p">,</span><span class="w"> </span><span class="n">got</span><span class="w"> </span><span class="nc">FLOAT</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="nc">decimal</span><span class="w"> </span><span class="k">value</span><span class="w"> </span><span class="mf">8.5</span>
+</code></pre></div>
+
+<p>For the full list of every type's fields, see <a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a>.</p>
+<h2>Phase 2: cross-reference checks</h2>
+<p>The cross-reference phase verifies the relationships between entities. It runs four checks in order: the required single Main, no duplicate keys, all KeyRefs resolve, and all action functions exist.</p>
+<h3>Exactly one Main</h3>
+<p>Every campaign needs exactly one Main entity, because Main names the starting <a href="/manual/getting-started/glossary.html#terms">actor</a> and starting map. Zero Mains reports:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">MAIN_ENTITY_MISSING</span><span class="o">]</span><span class="w"> </span><span class="p">...</span><span class="err">:</span><span class="w"> </span><span class="n">Campaign</span><span class="w"> </span><span class="n">requires</span><span class="w"> </span><span class="n">exactly</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="n">Main</span><span class="w"> </span><span class="n">entity</span><span class="w"> </span><span class="p">(</span><span class="k">found</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+
+<p>More than one reports <code>MAIN_ENTITY_DUPLICATE</code> with the count found. This commonly happens when two campaign files each define a Main, since validation spans all files.</p>
+<h3>No duplicate keys</h3>
+<p>Every <a href="/manual/getting-started/glossary.html#terms">entity key</a> must be unique across the entire campaign, not just within its own type. If you reuse a key in two different entity types, the engine cannot tell which one a reference means:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">DUPLICATE_KEY</span><span class="o">]</span><span class="w"> </span><span class="p">...</span><span class="err">:</span><span class="w"> </span><span class="n">Duplicate</span><span class="w"> </span><span class="k">key</span><span class="w"> </span><span class="n">heal</span><span class="w"> </span><span class="k">found</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entity</span><span class="w"> </span><span class="nl">types</span><span class="p">:</span><span class="w"> </span><span class="k">Action</span><span class="p">,</span><span class="w"> </span><span class="n">Skill</span>
+</code></pre></div>
+
+<p>Rename one of them so every key is globally unique.</p>
+<h3>KeyRefs resolve</h3>
+<p>A KeyRef check confirms two things: that the referenced key exists, and that it resolves to the type the field expects. A missing key reports:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">KEYREF_UNRESOLVED</span><span class="o">]</span><span class="w"> </span><span class="k">Action</span><span class="p">.</span><span class="n">attackAction</span><span class="p">.</span><span class="k">parameters</span><span class="err">:</span><span class="w"> </span><span class="n">KeyRef</span><span class="w"> </span><span class="n">attackDamageParam</span><span class="w"> </span><span class="n">does</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">exist</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">campaign</span>
+</code></pre></div>
+
+<p>A key that exists but points at the wrong type also reports <code>KEYREF_UNRESOLVED</code>, with a message that names both types:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">KEYREF_UNRESOLVED</span><span class="o">]</span><span class="w"> </span><span class="n">Main</span><span class="p">.</span><span class="n">demoMain</span><span class="p">.</span><span class="nl">actor</span><span class="p">:</span><span class="w"> </span><span class="n">KeyRef</span><span class="w"> </span><span class="n">demoMap</span><span class="w"> </span><span class="n">resolves</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="k">Map</span><span class="p">,</span><span class="w"> </span><span class="n">expected</span><span class="w"> </span><span class="n">Actor</span>
+</code></pre></div>
+
+<p>Empty-string KeyRefs are skipped, so an optional reference you leave blank does not error.</p>
+<h3>Action functions exist</h3>
+<p>Each <a href="/manual/getting-started/glossary.html#terms">Action</a> names a built-in action function in its <code>do</code> field. There are exactly 75 valid action functions. If <code>do</code> names one that does not exist, you get:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">INVALID_ACTION_NAME</span><span class="o">]</span><span class="w"> </span><span class="k">Action</span><span class="p">.</span><span class="n">attackAction</span><span class="p">.</span><span class="nl">do</span><span class="p">:</span><span class="w"> </span><span class="k">Action</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="n">attck_resource_target</span><span class="w"> </span><span class="n">does</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">exist</span>
+</code></pre></div>
+
+<p>Some action functions require parameters. An <code>attackAction</code> that uses <code>minus_resource_target</code> supplies its parameters as a flat array of KeyRefs to sibling <a href="/manual/getting-started/glossary.html#terms">Parameter</a> entities:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">attackAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Attack</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackResourceParam</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackDamageParam</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">attackResourceParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
+<span class="w">  </span><span class="nt">attackDamageParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">(1d6)-1</span>
+</code></pre></div>
+
+<p>The <code>parameters</code> array holds KeyRefs only; the <code>Parameter</code> entities live in their own top-level block. If an action function needs parameters and the <code>parameters</code> array is empty, you get:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">INVALID_ACTION_PARAM</span><span class="o">]</span><span class="w"> </span><span class="k">Action</span><span class="p">.</span><span class="n">attackAction</span><span class="p">.</span><span class="k">parameters</span><span class="err">:</span><span class="w"> </span><span class="k">Action</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="n">minus_resource_target</span><span class="w"> </span><span class="n">requires</span><span class="w"> </span><span class="k">parameters</span><span class="err">:</span><span class="w"> </span><span class="p">...</span>
+</code></pre></div>
+
+<blockquote>
+<p>Note: This check confirms only that <code>parameters</code> is non-empty when the function requires parameters. It does not yet verify that each specific parameter name is present, so a wrong parameter name still passes Phase 2. As an example, <code>set_destination_self</code> requires a <code>destination</code> parameter, a KeyRef to a Vector.</p>
+</blockquote>
+<p>For the full list of functions and their parameters, see <a href="/manual/guides/define-actions.html">Define actions</a>.</p>
+<h2>Phase 3: asset checks</h2>
+<p>The asset phase runs only when the campaign is loaded from a <code>.zip</code> archive. It confirms that every file an entity points to actually exists inside the archive and has an allowed extension.</p>
+<p>These fields are checked, and the allowed extensions:</p>
+<ul>
+<li>Image (<code>png</code>, <code>jpg</code>, <code>jpeg</code>): <code>Sprite.texture</code>, <code>Resource.icon</code>, <code>Measure.icon</code>, <code>Skill.icon</code>, <code>Waypoint.icon</code>, <code>Floor.texture</code>, <code>TileSet.texture</code>, <code>Parallax.texture</code>.</li>
+<li>Sound (<code>mp3</code>, <code>wav</code>, <code>ogg</code>): <code>Sound.source</code>.</li>
+<li>Tile map (<code>tmj</code>): <code>Layer.source</code>.</li>
+</ul>
+<p>Path matching is forgiving: a leading <code>/</code> is stripped, then a match succeeds if any file in the archive ends with the path you gave. So <code>/assets/icons/sun.png</code> matches a file stored at that path inside the archive.</p>
+<p>A missing file reports:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">ASSET_NOT_FOUND</span><span class="o">]</span><span class="w"> </span><span class="n">Sprite</span><span class="p">.</span><span class="n">heroSprite</span><span class="p">.</span><span class="nl">texture</span><span class="p">:</span><span class="w"> </span><span class="n">Asset</span><span class="w"> </span><span class="o">/</span><span class="n">assets</span><span class="o">/</span><span class="n">heroSprite</span><span class="p">.</span><span class="n">png</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="k">found</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">campaign</span><span class="w"> </span><span class="n">archive</span>
+</code></pre></div>
+
+<p>A file with the wrong extension also reports <code>ASSET_NOT_FOUND</code>, with a message that lists the allowed extensions:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">ASSET_NOT_FOUND</span><span class="o">]</span><span class="w"> </span><span class="n">Sound</span><span class="p">.</span><span class="n">theme</span><span class="p">.</span><span class="nl">source</span><span class="p">:</span><span class="w"> </span><span class="n">Asset</span><span class="w"> </span><span class="o">/</span><span class="n">assets</span><span class="o">/</span><span class="n">theme</span><span class="p">.</span><span class="n">txt</span><span class="w"> </span><span class="n">has</span><span class="w"> </span><span class="n">invalid</span><span class="w"> </span><span class="n">extension</span><span class="w"> </span><span class="p">.</span><span class="n">txt</span><span class="p">,</span><span class="w"> </span><span class="n">expected</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="k">of</span><span class="err">:</span><span class="w"> </span><span class="p">...</span>
+</code></pre></div>
+
+<h2>Phase 4: dice checks</h2>
+<p>The dice phase validates the character set of every <a href="/manual/getting-started/glossary.html#terms">dice expression</a> field. It checks <code>Measure.expression</code>, <code>Sound.scale</code>, <code>Timer.total</code>, and <code>Timer.interval</code>.</p>
+<p>Only the characters are validated, not the grammar. The allowed set is <code>0123456789()*%/+-dD&lt;&gt;</code>. Empty strings are skipped. A <code>luckMeasure</code> that uses a valid expression, <code>1d20</code>, and a damage parameter that uses <code>(1d6)-1</code> both pass. Any character outside the set fails:</p>
+<div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">INVALID_DICE</span><span class="o">]</span><span class="w"> </span><span class="n">Measure</span><span class="p">.</span><span class="n">luckMeasure</span><span class="p">.</span><span class="nl">expression</span><span class="p">:</span><span class="w"> </span><span class="n">Invalid</span><span class="w"> </span><span class="n">dice</span><span class="w"> </span><span class="n">expression</span><span class="w"> </span><span class="mi">1</span><span class="n">k20</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">invalid</span><span class="w"> </span><span class="k">character</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="k">position</span><span class="w"> </span><span class="mi">1</span>
+</code></pre></div>
+
+<p>For the notation itself, see <a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a>.</p>
+<h2>The error categories</h2>
+<p>The 13 categories you may see, grouped by the phase that produces them:</p>
+<ul>
+<li>Schema: <code>UNKNOWN_TYPE</code>, <code>MISSING_REQUIRED_FIELD</code>, <code>EXTRA_FIELD</code>, <code>INVALID_TYPE</code>, <code>CONSTRAINT_VIOLATION</code>.</li>
+<li>Cross-reference: <code>MAIN_ENTITY_MISSING</code>, <code>MAIN_ENTITY_DUPLICATE</code>, <code>DUPLICATE_KEY</code>, <code>KEYREF_UNRESOLVED</code>, <code>INVALID_ACTION_NAME</code>, <code>INVALID_ACTION_PARAM</code>.</li>
+<li>Asset: <code>ASSET_NOT_FOUND</code>.</li>
+<li>Dice: <code>INVALID_DICE</code>.</li>
+</ul>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a></li>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a></li>
+<li><a href="/manual/core-concepts/dice-expressions.html">Dice expressions</a></li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a></li>
+<li><a href="/reference/cli.html">CLI reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

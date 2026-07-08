@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entities and KeyRefs &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Entities and KeyRefs</h1>
+<p>This page explains Isometry's central data model: every part of your game is a typed data record, addressed by a campaign-unique key, and entities reference one another by key through KeyRefs. Understanding this shape is what lets you build an entire game in YAML without writing code.</p>
+<h2>Introduction</h2>
+<p>In Isometry, you do not write game logic. You write <em>data</em>. A hero, a map, a healing spell, a patrol route, and a damage number are all the same kind of thing under the hood: an <a href="/manual/getting-started/glossary.html#terms">entity</a>, a pure-data record loaded from YAML.</p>
+<p>There are exactly 33 entity types. Each entity carries fields that describe one piece of your game, and many of those fields point at <em>other</em> entities. A pointer from one entity to another is a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a>: the key of the target entity, stored as a plain string. The engine resolves those references when the campaign loads.</p>
+<p>Once this clicks, every other page in the manual reads the same way: define entities, wire them together with KeyRefs.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a> — you have loaded a campaign and seen its files.</li>
+<li><a href="/manual/getting-started/glossary.html">Glossary</a> — for any term used here without a full definition.</li>
+</ul>
+<h2>The shape of an entity</h2>
+<p>Every entity file follows one shape, with no exceptions:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">&lt;Type&gt;</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">&lt;key&gt;</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">&lt;field&gt;</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;value&gt;</span>
+</code></pre></div>
+
+<p>The outer key is the entity <strong>type</strong>, one of the 33 valid type names. The next key is the <strong>entity key</strong>, a name you choose that must be unique across the whole campaign. The inner dictionary holds the entity's fields.</p>
+<p>Here is an example <a href="/manual/getting-started/glossary.html#terms">Main</a> entity, the single record that defines a campaign's starting state:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+</code></pre></div>
+
+<p><code>Main</code> is the type. <code>demoMain</code> is the key. The two fields, <code>actor</code> and <code>map</code>, are both KeyRefs — covered in the next section.</p>
+<blockquote>
+<p>Note: The entity key is the top-level YAML key, not a field inside the entity. You never write a <code>"key"</code> field; the key is the name you nest the entity under.</p>
+</blockquote>
+<h3>Entities are pure data</h3>
+<p>An entity holds data and nothing else. There is no behavior inside an Actor or a Map record. Each entity type only declares its fields. Logic lives elsewhere — actions, strategies, and the engine itself act <em>on</em> entity data. This separation is why the same loader handles every type.</p>
+<h3>Many entities in one file</h3>
+<p>You are not limited to one entity per file. A single YAML file can contain several types and several keys; the loader merges every YAML and JSON file in the campaign into one dataset before validating. A <code>heroActor.yaml</code> can do exactly this — holding an <code>Actor</code> and a <code>Vector</code> side by side:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroStartPos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+</code></pre></div>
+
+<p>Organize files however suits you. The engine sees the merged whole, so file boundaries are for your convenience, not the engine's.</p>
+<h2>Referencing other entities with KeyRefs</h2>
+<p>Entities rarely stand alone. An actor needs a sprite; a campaign needs a starting map. A <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> is how one entity points at another: you write the target entity's key as a string.</p>
+<p>In the Main entity above, <code>"actor": "heroActor"</code> is a KeyRef to the Actor whose key is <code>heroActor</code>. <code>"map": "demoMap"</code> is a KeyRef to the Map whose key is <code>demoMap</code>. The field value <em>is</em> the target key — nothing more.</p>
+<p>A KeyRef resolves to a single entity. The field is just a string.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+</code></pre></div>
+
+<p>This says: the actor's sprite is the Sprite entity keyed <code>heroSprite</code>.</p>
+<h3>Pointing at many entities with a KeyRefArray</h3>
+<p>When a field needs to reference several entities, use a <a href="/manual/getting-started/glossary.html#terms">KeyRefArray</a>: an array of keys. Each element is itself a KeyRef.</p>
+<p>A hero's skills are a KeyRefArray:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">skills</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">attackSkill</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">healSkill</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p>This references two Skill entities by their keys. KeyRefArrays appear all over the Actor type — <code>resources</code>, <code>measures</code>, <code>triggers</code>, and <code>timers</code> are all lists of keys.</p>
+<blockquote>
+<p>Tip: A KeyRef holds one key string; a KeyRefArray holds an array of key strings. If a field can point at more than one entity, it is a KeyRefArray.</p>
+</blockquote>
+<h2>A worked example: the hero actor</h2>
+<p>The Actor type ties the most concepts together. Here is an example <code>heroActor</code>, the player-controlled character:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">public</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mana</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gold</span>
+<span class="w">    </span><span class="nt">skills</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackSkill</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healSkill</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroMenu</span>
+<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mana</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gold</span>
+<span class="w">    </span><span class="nt">measures</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">luckMeasure</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deathTrigger</span>
+<span class="w">    </span><span class="nt">timers</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regenTimer</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">playerGroup</span>
+</code></pre></div>
+
+<p>Read the fields by kind:</p>
+<ul>
+<li><strong>Plain values</strong> describe the actor directly. <code>name</code> is the display name <code>"Hero"</code>. <code>speed</code> is the movement rate <code>1.0</code>. <code>base</code> is the <code>8</code>-pixel footprint. <code>perception</code> is the <code>25</code>-pixel vision range. <code>salience</code> is <code>1</code>, how easily others detect this actor.</li>
+<li><strong>Single KeyRefs</strong> point at one entity each. <code>sprite</code> references <code>heroSprite</code>, <code>menu</code> references <code>heroMenu</code>, and <code>group</code> references the Group <code>playerGroup</code>.</li>
+<li><strong>KeyRefArrays</strong> point at lists. <code>skills</code>, <code>resources</code>, <code>measures</code>, <code>triggers</code>, and <code>timers</code> each name several entities by key. <code>public</code> and <code>private</code> list which <a href="/manual/getting-started/glossary.html#terms">Resource</a> entities show on which data plate.</li>
+</ul>
+<p>Every key in this file — <code>heroSprite</code>, <code>attackSkill</code>, <code>health</code>, <code>playerGroup</code>, and the rest — is defined as its own entity elsewhere in the campaign. The Actor record only points; it does not contain those entities.</p>
+<p>Each <a href="/manual/guides/create-an-actor.html">guide</a> covers the fields of the types it builds.</p>
+<h2>Keys must be unique</h2>
+<p>An entity key must be unique within its type. If two entities in the same type share a key, the loader keeps the first and warns about the conflict, dropping the duplicate's data. Choose distinct keys.</p>
+<h3>References are checked before the campaign loads</h3>
+<p>KeyRefs are checked up front. Before any entity is created, the <a href="/manual/core-concepts/validation.html">campaign validator</a> cross-checks that every referenced key actually exists. A KeyRef pointing at a key that no entity defines is a validation error, and the campaign refuses to load with a clear message. You catch broken references at load time, not mid-game.</p>
+<h2>Clean keys versus internal aliases</h2>
+<p>Always write the clean key like <code>name</code>; the underscore forms such as <code>name_</code> are internal and never used in campaign files. A resource's bounds are <code>min</code> and <code>max</code>, never <code>min_</code> or <code>max_</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+</code></pre></div>
+
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a> — how entity files and assets are organized into a campaign.</li>
+<li><a href="/manual/core-concepts/validation.html">Validation</a> — how the engine checks entities and KeyRefs before load.</li>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a> — build the Actor used as the example here.</li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a> — wire actions and their Parameter entities together.</li>
+<li><a href="/manual/getting-started/glossary.html">Glossary</a> — definitions for the terms on this page.</li>
+<li><a href="/reference/philosophy.html">Philosophy</a> — why Isometry is data-driven.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>
