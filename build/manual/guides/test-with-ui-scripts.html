@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test your campaign with UI scripts &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Test your campaign with UI scripts</h1>
+<p>Clicking through your campaign after every change gets old fast, and it misses things. A <strong>UI script</strong> plays the
+game for you: it presses keys, clicks buttons and characters, and checks what the screen shows. It prints a PASS
+or FAIL line for every check and exits with 0 (all passed) or 1, so you can run it after each change, or from a
+script, and know at once if something broke.</p>
+<h2>A first script</h2>
+<p>Save this as <code>tests/smoke.ui</code> beside your campaign:</p>
+<div class="codehilite"><pre><span></span><code># Open the Quests page and check our first quest is listed.
+ready 90                      # wait (up to 90 s) until the player is in the world
+wait 2
+press toggle_quests_view      # the Quests key, as the player has it bound
+wait 1
+expect_state MENU_QUESTS
+expect_text &quot;The Wolf Hunt&quot;
+press toggle_quests_view
+expect_state GAMEPLAY
+</code></pre></div>
+
+<p>Run it with your campaign hosted, headless:</p>
+<div class="codehilite"><pre><span></span><code>Isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>MyCampaign<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--username<span class="o">=</span>tester<span class="w"> </span>--secret<span class="o">=</span>tester<span class="w"> </span>--dir<span class="o">=</span>/path/to/folder/with/the/zip<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ui-script<span class="o">=</span>/path/to/tests/smoke.ui
+</code></pre></div>
+
+<p>The output ends with <code>UI-SCRIPT DONE: 3 passed, 0 failed</code>.</p>
+<h2>Seeing what happened</h2>
+<p>Swap <code>--headless</code> for Movie Maker to record every frame while the script runs:</p>
+<div class="codehilite"><pre><span></span><code>Isometry<span class="w"> </span>--campaign<span class="o">=</span>MyCampaign<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>...<span class="w"> </span>--ui-script<span class="o">=</span>tests/smoke.ui<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--write-movie<span class="w"> </span>/tmp/run/frame.png<span class="w"> </span>--fixed-fps<span class="w"> </span><span class="m">10</span><span class="w"> </span>--resolution<span class="o">=</span>1280x720
+</code></pre></div>
+
+<p><code>mark "&lt;text&gt;"</code> lines print the frame number they happened on, so you can find the right image.</p>
+<h2>What a script can do</h2>
+<ul>
+<li><strong>Input:</strong> <code>press</code> and <code>hold</code> a bound action (<code>press action_1</code>, <code>hold show_outlines 2</code>), <code>key</code> a raw key,
+  <code>click "&lt;text&gt;"</code> a button or dialog reply by its words, <code>click_actor</code> a character, <code>click_near_player</code> a spot,
+  <code>type "&lt;text&gt;"</code> into a text box.</li>
+<li><strong>Checks:</strong> <code>expect_state</code>, <code>expect_text</code> / <code>expect_no_text</code>, <code>expect_visible</code> / <code>expect_hidden</code>,
+  <code>expect_target</code>, <code>expect_map</code>, <code>expect_distance</code>, and <code>expect &lt;dice&gt; &lt;op&gt; &lt;dice&gt;</code> over the player's own resources
+  (<code>expect $goldResource &gt;= 10</code>).</li>
+</ul>
+<p>The full list is in the <a href="/reference/cli.html#--ui-scriptfile">CLI reference</a>.</p>
+<h2>Tips</h2>
+<ul>
+<li>Use a test username (and its own saves) so a script never touches a real character. On macOS and Linux you can
+  also run with <code>HOME=/tmp/testhome</code> to keep the test's logs and saves apart.</li>
+<li>Scripts run only when hosting (<code>--network=host</code>): they drive your own player.</li>
+<li>Start each script with <code>ready</code>: loading takes a few seconds, and input sent during the loading screen is lost.</li>
+<li>A new character may see a welcome dialog first; <code>key escape</code> closes it.</li>
+<li>Keep scripts short and focused (one feature each). They are quick to run, so run them often.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

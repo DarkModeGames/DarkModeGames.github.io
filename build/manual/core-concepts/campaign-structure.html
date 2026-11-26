@@ -62,7 +62,7 @@
 <h2>Archive layout</h2>
 <p>Every entry in the archive lives under one top-level folder whose name matches the campaign name. The demo archive is built with a command equivalent to <code>zip -r demo.zip demo/</code>, so every entry is prefixed <code>demo/</code>. That prefix is the <strong>campaign prefix</strong>.</p>
 <p>The campaign prefix matters because asset paths inside your YAML are resolved relative to it. A sprite that stores <code>assets/hero.png</code> is read from <code>demo/assets/hero.png</code> in the archive. Keep the prefix folder name consistent with the campaign name you load.</p>
-<p>At runtime the archive must sit beside the Isometry binary. The engine looks for <code>&lt;binary-dir&gt;/&lt;dir&gt;/&lt;campaign&gt;.zip</code>.</p>
+<p>At runtime the archive goes in the <code>campaigns</code> folder next to the engine, or in the folder you pass with <code>--dir</code>. See <a href="/manual/getting-started/install-and-run.html#where-files-go">Where files go</a>.</p>
 <blockquote>
 <p>Note: <code>--network=none</code> is currently a no-op that loads no campaign. To exercise the load pipeline headless, load an example campaign and run with <code>--network=host</code>. See <a href="/manual/multiplayer/hosting.html">Hosting</a> and <a href="/reference/troubleshooting.html">Troubleshooting</a>.</p>
 </blockquote>
@@ -88,15 +88,15 @@
 <span class="w">    </span><span class="nt">field</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
 </code></pre></div>
 
-<p>A single file may contain several entity types, and several files may contribute to the same type. A <code>heroActor.yaml</code> shows one file holding two types, an <code>Actor</code> and a <code>Vector</code>:</p>
+<p>A single file may contain several entity types, and several files may contribute to the same type. A <code>heroActor.yaml</code> shows one file holding two types, an <a href="/reference/entities.html#actor"><code>Actor</code></a> and a <a href="/reference/entities.html#vector"><code>Vector</code></a>:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
 <span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
 <span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
 <span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
-<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">250</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 <span class="nt">Vector</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">heroStartPos</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
@@ -107,6 +107,15 @@
 <blockquote>
 <p>Warning: Data files use <strong>clean keys</strong> only. Always write the clean key like <code>name</code>; the underscore forms such as <code>name_</code> are internal and never used in campaign files. This applies to every entity type.</p>
 </blockquote>
+<p><a id="yaml-rules"></a></p>
+<h3>YAML rules that trip people up</h3>
+<p>The engine reads a practical subset of YAML. Stick to these habits and your files will always load:</p>
+<ul>
+<li><strong>Keep each value on one line.</strong> Multi-line text (<code>|</code> or <code>&gt;</code> blocks, or a quoted string broken across lines) is not supported. For long text, use one double-quoted line with <code>\n</code> for line breaks: <code>text: "First line.\n\nSecond paragraph."</code></li>
+<li><strong>Keep a flow list on one line.</strong> <code>skills: [punchSkill, healSkill]</code> is fine; don't split <code>[...]</code> across lines. For long lists use the dash form, one item per line.</li>
+<li><strong>Quote anything that should be text but looks like something else</strong>: <code>symbol: 'y'</code>, <code>value: '0'</code>, <code>operator: '='</code>, <code>color: '#ff0000'</code>. Unquoted <code>yes</code>, <code>no</code>, <code>on</code>, <code>off</code>, <code>y</code>, and <code>n</code> can be read as true/false, and <code>#</code> starts a comment.</li>
+<li><strong>Dice fields are strings.</strong> <code>min: '0'</code>, <code>max: '20'</code>, <code>interval: '1d4'</code>.</li>
+</ul>
 <h3>YAML and JSON</h3>
 <p>You may write data files as YAML (<code>.yaml</code> / <code>.yml</code>) or JSON (<code>.json</code>), and you may mix both in one campaign. The engine chooses the parser by file extension. This manual uses YAML throughout, and both formats are accepted.</p>
 <h2>How files merge into one entity set</h2>
@@ -115,16 +124,17 @@
 <h3>Key uniqueness</h3>
 <p>Entity keys must be unique across the <strong>entire</strong> merged dictionary, not just within one type or one file. If two entities share a key, the engine warns about a naming conflict and skips the conflicting entity, which leaves the campaign missing data. The <a href="/manual/core-concepts/validation.html">validation</a> phase also rejects duplicate keys outright.</p>
 <p>When two files contribute the same key, a later-loaded entity overwrites an earlier one. Do not rely on file load order for correctness; give every entity a distinct key.</p>
+<p><a id="the-main-entity"></a></p>
 <h2>The Main entity</h2>
-<p>Every campaign requires exactly one <a href="/manual/getting-started/glossary.html#terms">Main</a> entity. Main names where the game starts: the player-controlled actor and the starting map. An example <code>Main.yaml</code>:</p>
+<p>Every campaign requires exactly one <a href="/manual/getting-started/glossary.html#terms">Main</a> entity. Main names where the game starts: the actor to control (optional — see below) and the starting map. An example <code>Main.yaml</code>:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
 <span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
 </code></pre></div>
 
-<p>Here <code>actor</code> is a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to the <code>heroActor</code> entity and <code>map</code> is a KeyRef to <code>demoMap</code>. Both fields are required.</p>
-<p>Main also accepts two optional fields:</p>
+<p>Here <code>actor</code> is a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to the <code>heroActor</code> entity and <code>map</code> is a KeyRef to <code>demoMap</code>. <code>map</code> is required. <code>actor</code> is <strong>optional</strong> — omit it and each player starts as a <strong>null actor</strong>: an invisible, immovable stand-in that sees the whole map and can select any actor from anywhere. That's the pattern for letting players pick their hero from actors you place in the world (see the <a href="/recipes/pick-your-hero.html">pick-your-hero recipe</a>).</p>
+<p>Main also accepts two more optional fields, beyond <code>actor</code>:</p>
 <ul>
 <li><code>notes</code> — a free-form description string.</li>
 <li><code>plugins</code> — an ordered list of plugin names that controls precedence. Covered in <a href="#plugins">Plugins</a> below.</li>
@@ -136,8 +146,8 @@
 <p>Asset files travel in the archive alongside your data files and are loaded on demand by the entities that reference them. The loader recognizes these extensions:</p>
 <ul>
 <li><code>.png</code>, <code>.jpg</code>, <code>.jpeg</code> — loaded as image textures.</li>
-<li><code>.wav</code> — loaded as audio. Audio must use a 44,100 Hz sample rate.</li>
-<li><code>.mp3</code> — loaded as audio.</li>
+<li><code>.mp3</code> — loaded as audio. <strong>Use MP3 for all sound.</strong></li>
+<li><code>.wav</code> and <code>.ogg</code> pass validation but are not reliable at runtime; convert them to MP3.</li>
 <li><code>.txt</code> — loaded as text, used for layer tile grids and similar data.</li>
 </ul>
 <p>Reference an asset by its path relative to the campaign prefix, for example <code>assets/hero.png</code>. The engine prepends the prefix when it reads the file.</p>
@@ -185,7 +195,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

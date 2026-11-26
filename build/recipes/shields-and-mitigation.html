@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shields and damage reduction with a hurt Trigger &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Shields and damage reduction with a hurt Trigger</h1>
+<p><strong>Problem.</strong> A ward should soak the next 50 damage, and a "guard" stance should halve damage for a few seconds,
+no matter which monster or spell deals it.</p>
+<p><strong>Pattern.</strong> Don't touch every attack. Put a <a href="/reference/entities.html#trigger"><code>Trigger</code></a> on the defender's <code>healthResource</code> and compare health with a
+<strong>shadow</strong> copy (<code>lastHealthResource</code>) to see how much was just lost. If a ward is up, take the loss off the ward
+and give the health back; if guarding, give half back. Always finish by copying health into the shadow.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Health</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span>
+<span class="w">  </span><span class="nt">lastHealthResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Last Health</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;99999&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+<span class="w">  </span><span class="nt">wardResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Ward</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Absorbs damage until it is spent.</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;200&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">guardResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Guarded</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Seconds of halved damage left.</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hurtCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$healthResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$lastHealthResource&#39;</span>
+<span class="w">  </span><span class="nt">hasWardCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$wardResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&gt;&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">hasGuardCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$guardResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&gt;&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthResource</span>
+<span class="w">  </span><span class="nt">lastHealthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lastHealthResource</span>
+<span class="w">  </span><span class="nt">wardParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wardResource</span>
+<span class="w">  </span><span class="nt">lostParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$lastHealthResource-$healthResource&#39;</span>
+<span class="w">  </span><span class="nt">halfLostParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;($lastHealthResource-$healthResource)/2&#39;</span>
+<span class="w">  </span><span class="nt">currentHealthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$healthResource&#39;</span>
+<span class="w">  </span><span class="nt">zeroValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hurtAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtCondition</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtWardAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtSyncAction</span>
+<span class="w">  </span><span class="nt">hurtWardAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hasWardCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">wardParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">lostParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtRefundAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtGuardAction</span>
+<span class="w">  </span><span class="nt">hurtRefundAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">lostParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtSyncAction</span>
+<span class="w">  </span><span class="nt">hurtGuardAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hasGuardCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">halfLostParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtSyncAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtSyncAction</span>
+<span class="w">  </span><span class="c1"># Shadow = health (set 0, then add: set takes a plain number).</span>
+<span class="w">  </span><span class="nt">hurtSyncAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">lastHealthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">zeroValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtSyncAddAction</span>
+<span class="w">  </span><span class="nt">hurtSyncAddAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">lastHealthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">currentHealthParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Trigger</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hurtTrigger</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthResource</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hurtAction</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">tankActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Tank</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">hurtTrigger</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">wardResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">guardResource</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p>A skill sets <code>wardResource</code> (for example to 50) or <code>guardResource</code> (seconds), and a 1-second <a href="/reference/entities.html#timer">Timer</a> counts the guard
+down.</p>
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#action"><code>Action</code></a>, <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#condition"><code>Condition</code></a>, <a href="/reference/entities.html#parameter"><code>Parameter</code></a>, <a href="/reference/entities.html#resource"><code>Resource</code></a>, <a href="/reference/entities.html#trigger"><code>Trigger</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li>The refund raises health, which fires the Trigger again. That run sees no loss (health isn't below the shadow)
+  and only re-syncs, so it settles.</li>
+<li>Several hits in one frame arrive as one change, so the Trigger sees their total.</li>
+<li>This simple ward refunds the whole blow even if the ward had less left. To split it, compare the loss with the
+  ward first.</li>
+<li>A killing blow lands before the refund. If something else reacts to "health is 0" in the same frame, list this
+  Trigger <strong>before</strong> it in the actor's <code>triggers</code>: sibling Triggers run in list order.</li>
+<li>The same shape gives "rage from damage taken": add rage by the loss instead of refunding.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

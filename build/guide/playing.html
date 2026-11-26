@@ -52,6 +52,10 @@ gamepad) from the options menu.</p>
   obstacles.</li>
 <li><strong>W / A / S / D</strong> — move directly in a direction (hold to keep moving).</li>
 <li><strong>Arrow Keys</strong> — change your facing direction (bearing).</li>
+<li><strong>N</strong> — switch between running and walking. Walking is half pace.</li>
+<li><strong>Flag button</strong> (left-hand HUD buttons, above the eye) — pick up a flag, then left-click to place it. On open
+  ground your character walks to the flag. On a character, yours follows them, and talks to them or opens their
+  menu on arrival. Right-click or press the button again to put the flag away.</li>
 </ul>
 <h3>Camera</h3>
 <ul>
@@ -60,16 +64,47 @@ gamepad) from the options menu.</p>
 <li><strong><code>=</code></strong> — zoom in.</li>
 <li><strong><code>-</code></strong> — zoom out.</li>
 </ul>
+<h3>Character</h3>
+<ul>
+<li><strong>U</strong> — open the Character page: what you wear in each slot, and your stats. Pick a slot to see the items you
+  carry that fit it, and pick one of those to equip or unequip it.</li>
+</ul>
+<h3>Quests</h3>
+<ul>
+<li><strong>J</strong> — open the Quests page: your quests, what to do now, and the steps already done. Tick <strong>Show completed</strong>
+  to see finished quests too.</li>
+</ul>
 <h3>Targeting</h3>
 <ul>
-<li><strong>Tab</strong> — select the nearest target.</li>
+<li><strong>Alt (hold)</strong> — outline everything you can target nearby, like Diablo's Alt. On a gamepad: the Share / capture
+  button (rebind it in the gamepad menu).</li>
+<li><strong>Tab</strong> — cycle to the next target (nearest first, then each one in view in turn).</li>
 <li><strong><code>`</code> (Grave)</strong> — move to the current target.</li>
-<li><strong>E</strong> — cycle to the next target.</li>
+<li><strong>V</strong> — follow the current target. Your character keeps walking after it and waits when close. Press
+  <strong>V</strong> again, move, or change target to stop.</li>
+<li><strong>E</strong> — select the nearest target.</li>
 <li><strong>Q</strong> — cycle to the previous target.</li>
 <li><strong>C</strong> — cycle to the next target group.</li>
 <li><strong>Z</strong> — cycle to the previous target group.</li>
 <li><strong>X</strong> — target yourself.</li>
 <li><strong>Esc</strong> — clear the current target.</li>
+<li><strong>Click the icon on a plate</strong> — interact with that character, as <strong>Enter</strong> does with a target: you walk up to
+  talk, trade, loot or fight. Works on the target plate and on focus plates.</li>
+<li><strong>Show Outlines button</strong> (bottom of the left-hand HUD buttons, an eye) — hold it down with the mouse to outline
+  everything you can target, as holding <strong>Alt</strong> does.</li>
+</ul>
+<h3>Focus</h3>
+<p>A focus plate keeps a character's plate in a corner of the screen, so you can watch a friend's health or a
+boss's while you target something else. Each corner holds one.</p>
+<ul>
+<li><strong>R / T / F / G</strong> — the four corners (top left, top right, bottom left, bottom right). Tap with a target to pin
+  it there. Tap again later to target the pinned character. Hold to clear the corner.</li>
+<li><strong>Pin icons</strong> — each corner shows a small pin. Hover it for a reminder. Click it to pin your target there
+  (replacing whoever was there); with no target, a click targets the pinned character. Right-click clears it.
+  The pins hide with the other HUD buttons (<strong>Show Menu Buttons</strong> in the options menu).</li>
+<li><strong>H</strong> — clear every focus corner and start fresh.</li>
+<li>A pinned character who leaves the world (dies and despawns, or goes where you can't see them) leaves its
+  corner by itself after a couple of seconds.</li>
 </ul>
 <h3>Skills</h3>
 <ul>
@@ -77,6 +112,11 @@ gamepad) from the options menu.</p>
 <li>Skills may require a target to be selected.</li>
 <li>Some skills are instant; others have casting animations.</li>
 <li>Hold a skill key to charge it (if the skill supports charging).</li>
+<li><strong>Mouse-over casting.</strong> With the mouse over a character, a skill key casts on that character instead of your
+  target, and your target stays selected: heal a friend under the cursor while keeping the enemy targeted. With
+  the mouse over nothing, the skill goes to your target as usual. Clicking a hotbar button always uses your
+  target (ctrl+click casts on yourself). Turn it off with <strong>Mouse-over Casting</strong> in the options menu (the
+  default is <strong>ON</strong>).</li>
 </ul>
 <h3>Menus &amp; Views</h3>
 <ul>
@@ -84,9 +124,33 @@ gamepad) from the options menu.</p>
 <li><strong>Backspace</strong> — open the global menu.</li>
 <li><strong>M</strong> — toggle the map view.</li>
 <li><strong>O</strong> — toggle the resources view.</li>
-<li><strong>K</strong> — toggle the skills view.</li>
+<li><strong>Q / E</strong> (left / right shoulder on a gamepad) — step through the category chips over the list.</li>
+<li><strong>/</strong> (<strong>Y</strong> on a gamepad) — search by name. Esc clears the search; a second Esc closes the view.</li>
+<li><strong>Page Up / Page Down</strong> (the triggers) — turn the page.</li>
+<li><strong>K</strong> — toggle the skills view. Pick a skill up (click or accept) and put it on another key to swap them.</li>
+<li><strong>P</strong> — toggle the talents view: your talent trees, read from the bottom up. Click a talent to put a point in.</li>
+<li><strong>Minions</strong> (only while you have some): a strip under the target plate lists them with their orders. Click chips to
+  pick some (none = all), then Attack, Follow or Stay. <strong>F1 / F2 / F3</strong> give the orders, <strong>F4</strong> picks the next minion,
+  <strong>I</strong> hides or shows the strip. On a gamepad, <strong>Back</strong> enters command mode: <strong>D-pad left/right</strong> pick, <strong>X / A / Y</strong>
+  give Attack / Follow / Stay; <strong>Back</strong> or <strong>B</strong> leaves it.</li>
 <li><strong>Esc</strong> — close the current menu.</li>
 </ul>
+<h3>Typing with a gamepad</h3>
+<p>Chat and the resources search can be typed into with a gamepad alone. When one of them takes the cursor and
+your last press was on a gamepad, an on-screen keyboard opens at the bottom of the screen (at the top if the
+text box is low). It never opens for keyboard or mouse players.</p>
+<ul>
+<li><strong>D-pad / left stick</strong> — move between keys; rows wrap round at the edges.</li>
+<li><strong>A</strong> — press the selected key.</li>
+<li><strong>B</strong> — delete the letter before the cursor; on an empty box, cancel.</li>
+<li><strong>X</strong> — space.</li>
+<li><strong>Y</strong> — shift, for one capital letter. The <strong>Caps</strong> key keeps capitals on.</li>
+<li><strong>Start</strong> — done: chat sends the line, the search returns to the list.</li>
+<li><strong>Left / right shoulder</strong> — move the cursor.</li>
+<li><strong>Cancel</strong> puts the text back the way it was. In chat it also closes the chat.</li>
+</ul>
+<p>The keys can also be clicked. To turn the keyboard off, set <strong>On-Screen Keyboard</strong> to <strong>OFF</strong> in the options
+menu (the default is <strong>AUTO</strong>).</p>
 <h2>Gameplay Mechanics</h2>
 <h3>Resources</h3>
 <p>Resources are numeric values tracked on your character (health, mana, gold, and
@@ -118,7 +182,7 @@ targeting and determines the colored outline on characters.</p>
 <h2>Multiplayer</h2>
 <h3>Hosting a Game</h3>
 <ol>
-<li>Launch with <code>--network=host</code>, or click <strong>HOST</strong> in the launcher.</li>
+<li>Launch with <code>--network=host</code> (or use your campaign's own launcher, if it has one).</li>
 <li>Share your IP address and port with players.</li>
 <li>Players connect with <code>--network=client</code> pointing at your address.</li>
 </ol>
@@ -156,7 +220,7 @@ their username and password to join and spawn.</p>
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

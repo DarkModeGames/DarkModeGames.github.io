@@ -43,7 +43,7 @@
 
     <main class="content">
         <h1>Audio and Backgrounds</h1>
-<p>This page shows you how to give a map atmosphere: a soundtrack with the Sound entity and a scrolling backdrop with the Parallax entity. You attach both to a map, so the music plays and the background drifts as soon as the player loads it.</p>
+<p>This page shows you how to give a map atmosphere: a soundtrack with the Sound entity and a scrolling backdrop with the <a href="/reference/entities.html#parallax">Parallax</a> entity. You attach both to a map, so the music plays and the background drifts as soon as the player loads it.</p>
 <h2>Prerequisites</h2>
 <p>You should be comfortable with these pages before you start:</p>
 <ul>
@@ -72,11 +72,13 @@
 <p>The map names the keys; the next sections define the entities behind those keys.</p>
 <h2>Add sound with the Sound entity</h2>
 <p>A Sound entity is an audio file plus playback settings. Use it for background music, ambience, or a one-shot effect.</p>
-<p>The Sound entity has three fields:</p>
+<p>The Sound entity has five fields:</p>
 <ul>
 <li><code>source</code> — the path to the audio file inside your campaign archive.</li>
-<li><code>scale</code> — a <a href="/manual/getting-started/glossary.html#terms">dice expression</a> that sets the playback pitch.</li>
+<li><code>scale</code> — a <a href="/manual/getting-started/glossary.html#terms">dice expression</a> that sets the playback pitch, in percent.</li>
 <li><code>loop</code> — whether the stream repeats continuously.</li>
+<li><code>volume</code> — how loud it plays, in percent (default 100).</li>
+<li><code>range</code> — how far a sound placed in the world carries, in pixels (default 2000).</li>
 </ul>
 <blockquote>
 <p>Note: The schema marks every Sound field optional, but a Sound with no <code>source</code> has nothing to play. Always set <code>source</code>.</p>
@@ -90,14 +92,25 @@
 <span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 </code></pre></div>
 
-<p>The <code>source</code> path is relative to the root of the campaign archive. The engine picks the audio format from the file extension, so an <code>.mp3</code>, <code>.ogg</code>, or <code>.wav</code> all work. With <code>loop</code> set to <code>true</code>, the track restarts the moment it ends, which is what you want for background music.</p>
+<p>The <code>source</code> path is relative to the root of the campaign archive. Use <strong><code>.mp3</code></strong> files. <code>.ogg</code> and <code>.wav</code> pass validation but are not reliable at runtime, so convert them to MP3 first. With <code>loop</code> set to <code>true</code>, the track restarts the moment it ends, which is what you want for background music.</p>
 <p>To attach it, list <code>bgMusic</code> in the map's <code>audio</code> array, as shown above.</p>
 <h3>Control pitch with scale</h3>
 <p>The <code>scale</code> field is a <a href="/manual/getting-started/glossary.html#terms">dice expression</a>. The engine rolls it, divides the result by <code>100.0</code>, and applies that number as the audio player's pitch scale.</p>
 <blockquote>
-<p>Warning: <code>scale</code> controls <strong>pitch</strong>, not loudness. A value of <code>1d200</code> rolls a number from 1 to 200, giving a pitch between <code>0.01</code> and <code>2.0</code> — anywhere from very low and slow to twice normal speed. Loudness is handled separately by the engine's fade, which you do not set on the entity.</p>
+<p>Warning: <code>scale</code> controls <strong>pitch</strong>, not loudness. A value of <code>1d200</code> rolls a number from 1 to 200, giving a pitch between <code>0.01</code> and <code>2.0</code> — anywhere from very low and slow to twice normal speed. Loudness is the separate <code>volume</code> field, below.</p>
 </blockquote>
 <p>The expression is re-rolled every time playback finishes, so a random <code>scale</code> shifts the pitch on each repeat. Any valid dice notation works, including a plain constant for a fixed pitch. To keep the pitch unchanged, set <code>scale</code> to <code>100</code>.</p>
+<h3>Set volume and range</h3>
+<p><code>volume</code> is a whole number of percent from 0 to 400: 100 plays the file as recorded, 50 at half amplitude, 200 at double. Fades end at this volume, so map music set to 40 fades in to 40.</p>
+<p><code>range</code> is how far, in pixels, a sound placed in the world can be heard: an animation's sound, or one played by <code>play_sound_self</code> / <code>play_sound_target</code>. It is ignored for map audio, which is heard everywhere on its map.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sound</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">pickupSound</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/Audio/pickup.mp3</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;92+1d16&#39;</span>
+<span class="w">    </span><span class="nt">volume</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+<span class="w">    </span><span class="nt">range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">900</span>
+</code></pre></div>
+
 <h3>Trigger a sound from an animation</h3>
 <p>A Sound does not have to live on a map. The <code>attackSound</code> is referenced from an animation instead, so it fires when that animation plays:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Sound</span><span class="p">:</span>
@@ -107,6 +120,9 @@
 </code></pre></div>
 
 <p>This sound omits <code>loop</code>, so it plays once. Its <code>scale</code> of <code>50+(1d100)</code> rolls 51 to 150, giving a pitch of <code>0.51</code> to <code>1.5</code> — a small random variation that keeps a repeated effect from sounding identical each time. See <a href="/manual/guides/visuals-sprites-animations.html">Visuals: sprites and animations</a> for how an animation points at a sound.</p>
+<p>When the actor leaves the animation's state, a one-shot sound plays to its end, so a swing is never cut short. A looping sound stops with a short fade, so a looping footstep sound on a walk animation plays while the actor walks and stops when it halts. Entering the state again starts the sound over.</p>
+<h3>Play a sound from an action</h3>
+<p><code>play_sound_self</code> and <code>play_sound_target</code> play a Sound once at the caller or the target. With <code>audience: public</code> (the default) every player who can see that actor hears it; with <code>private</code> only the caller's own player does. The sound is placed in the map, not on the actor, so it plays on if the actor despawns straight after, as a loot bag does when it is picked up.</p>
 <h2>Add a background with the Parallax entity</h2>
 <p>A Parallax entity is one scrolling background layer. <a href="https://en.wikipedia.org/wiki/Parallax">Parallax</a> is the effect where distant objects appear to move slower than near ones as the camera pans — stacking layers at different speeds gives the world depth.</p>
 <p>The Parallax entity has two fields:</p>
@@ -151,7 +167,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

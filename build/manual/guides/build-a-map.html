@@ -109,7 +109,7 @@
 
 <p>Each <a href="/reference/entities.html#tile">Tile</a> field controls one thing:</p>
 <ul>
-<li><code>symbol</code> is the character matched against the layer grid. It is a string by schema, but the engine reads one character at a time, so use a single character such as <code>"G"</code>.</li>
+<li><code>symbol</code> is the character matched against the layer grid. It is a string by schema, but the engine reads one character at a time, so use a single character such as <code>"G"</code>. Symbols are matched <strong>across the whole campaign</strong>, so two tiles in different tilesets must not share a symbol.</li>
 <li><code>index</code> picks which cell in the grid to use, counting left to right then top to bottom, starting at <code>0</code>. With <code>columns</code> set to 8, grass <code>0</code> is the top-left cell, water <code>46</code> is column 6 row 5, and wall <code>52</code> is column 4 row 6.</li>
 <li><code>navigation</code> points at a <a href="/reference/entities.html#face">Face</a> entity that marks the tile as walkable. Here <code>grass</code> references <code>roof</code>, so actors can walk across grass and avoid everything else.</li>
 <li><code>obstacle</code> points at a <code>Face</code> entity that marks the tile as solid. The <code>wall</code> references the same <code>roof</code>. A tile's faces just say which parts are walkable versus solid.</li>
@@ -156,7 +156,18 @@ GGG
 <p>Note: Layers draw in the order you list them. Put your floor first and features such as walls after, so the features sit on top.</p>
 </blockquote>
 <h3>How grid characters become tile positions</h3>
-<p>The engine walks the grid in a fixed direction. Each row advances the tile position by one step along the map's X axis, and each character within a row steps by one along the Y axis. You do not set these coordinates yourself; you only arrange characters in the file. The result is that the shape you type in the text file is the shape you walk in the game.</p>
+<p>The engine reads the grid like this:</p>
+<ul>
+<li><strong>Line number <code>L</code> of the file is map column <code>x = L</code></strong> (the first line is <code>x = 0</code>).</li>
+<li><strong>Character number <code>C</code> on that line is map row <code>y = -C</code></strong> (the first character is <code>y = 0</code>, the next <code>y = -1</code>, and so on).</li>
+</ul>
+<p>On screen, <code>x</code> runs down-right and <code>y</code> runs down-left, so the shape in your text file appears <strong>rotated</strong> in game: each line of the file becomes a diagonal running up-right. Expect to check your layout in game rather than trusting the text file's look.</p>
+<p>To place things (spawn points, deployments) on a cell, convert the cell to pixels. The centre of the walkable top of cell <code>(x, y)</code> is:</p>
+<div class="codehilite"><pre><span></span><code>pixel x = 16 <span class="gs">* (x - y) + 16</span>
+<span class="gs">pixel y = 8 *</span> (x + y)
+</code></pre></div>
+
+<p>Each cell is 32 px wide and 16 px tall on screen.</p>
 <h2>Place the spawn point</h2>
 <p>The player needs somewhere to enter. The Map's <code>spawn</code> field is a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to a <a href="/reference/entities.html#vector">Vector</a> entity that holds an <code>x</code> and <code>y</code> position in pixels. It is the fallback location for the player actor when no saved position or action override applies.</p>
 <p>The spawn Vector sits beside the Map entity in the same file:</p>
@@ -192,7 +203,7 @@ GGG
 <span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
 </code></pre></div>
 
-<p>Each <code>actor</code> is a full Actor entity defined elsewhere in the campaign. To give a deployed NPC its own behavior, give that actor a strategy; see <a href="/manual/guides/add-npc-ai.html">Add NPC AI</a>.</p>
+<p>Each <code>actor</code> is a full <a href="/reference/entities.html#actor">Actor</a> entity defined elsewhere in the campaign. To give a deployed NPC its own behavior, give that actor a strategy; see <a href="/manual/guides/add-npc-ai.html">Add NPC AI</a>.</p>
 <h2>Assemble the map</h2>
 <p>With the tiles, layers, spawn, and deployments in place, the Map entity ties them together:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Map</span><span class="p">:</span>
@@ -212,6 +223,41 @@ GGG
 
 <p>This Map names itself for the interface, draws its terrain from <code>demoTileMap</code>, enters the player at <code>demoSpawn</code>, and deploys the three NPCs. To make this map the one a campaign starts on, point the Main entity's map field at it; see <a href="/manual/core-concepts/campaign-structure.html">Campaign structure</a>.</p>
 <p>The Map also carries <code>background</code> and <code>audio</code> fields for parallax scenery and music. Those are covered in <a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a>.</p>
+<h2>Walls, trees, and other tall things</h2>
+<p>Tiles are for <strong>flat ground</strong>. Anything that stands up (a wall, a tree, a lamp post, a house, a chest) should be an <strong>Actor</strong> with a single still image, placed with a Deployment. Actors are depth-sorted against the player, so the player correctly walks behind a tree and in front of it. A tall tile can't do that.</p>
+<p>Set <code>targetable: false</code> on these scenery actors so players can't tab-target or click them, and give them <code>salience</code> of at least <code>1</code> (salience <code>0</code> is never drawn).</p>
+<p>Actors never block movement, so a solid prop also needs an invisible wall under it: a tile with <code>obstacle</code> set to a Face and <code>ghost: true</code>, in a layer under the prop's footprint. <code>ghost</code> hides the tile while it still blocks movement.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Tile</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">blockerTile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#&#39;</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">obstacle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">roof</span>
+<span class="w">    </span><span class="nt">ghost</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">oakTreeActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Oak</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oakTreeSprite</span>
+<span class="w">    </span><span class="nt">targetable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</code></pre></div>
+
+<blockquote>
+<p>Tip: Don't hide important actors (quest givers, shopkeepers) behind tall props. Players can't see them through the art, so leave them a clear spot in front.</p>
+</blockquote>
+<h2>Help walkers round corners (optional)</h2>
+<p>Walkers plan their routes over the walkable tiles and bend their path at corners. The corners of walls and
+obstacles are found for you. Where a route still looks wrong, such as a narrow doorway or a gap between props, add a
+<a href="/reference/entities.html#nav"><code>Nav</code></a> point: a <a href="/reference/entities.html#vector"><code>Vector</code></a> on a given
+<a href="/reference/entities.html#map"><code>Map</code></a> where walkers may also bend their path.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Nav</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">smithyDoorNav</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">townMap</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithyDoorVector</span>
+</code></pre></div>
+
+<p>Put the point in the middle of the opening, on walkable ground: a point off the walkable area or inside an
+obstacle is skipped with a warning when the map is built. See
+<a href="/recipes/corner-pathing-with-nav.html">Help pathfinding round corners with Nav points</a>.</p>
 <h2>Add floor overlays (optional)</h2>
 <p>A <a href="/reference/entities.html#floor">Floor</a> draws a single texture image at a fixed position, beneath the tiles. Use it for a backdrop or a decorative surface that the tile grid sits on top of. A Floor has a <code>texture</code> path and a <code>location</code> KeyRef to a Vector for its top-left corner. The Map's <code>floor</code> field lists the floor overlays to draw. The example map uses none, so you can skip this until you need a painted backdrop.</p>
 <h2>Verify the map loads</h2>
@@ -235,7 +281,7 @@ GGG
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

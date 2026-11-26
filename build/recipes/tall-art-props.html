@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trees, walls and other tall art &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Trees, walls and other tall art</h1>
+<p><strong>Problem.</strong> A tree drawn into the tile layer looks wrong: the player walks "on top of" it instead of behind it,
+and nothing stops them walking through the trunk.</p>
+<p><strong>Pattern.</strong> Tiles are for flat ground. Anything tall is an <strong>actor</strong>, so it is depth-sorted with the characters:
+a static actor with <code>targetable: false</code>, so it is never picked by clicks, Tab or monsters. Actors don't block each
+other, so put a <strong>ghost obstacle tile</strong> under the trunk. It blocks movement but stays invisible and doesn't block
+sight.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Face</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">roofFace</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">northeast</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">northwest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">Tile</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">grassTile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">g</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">navigation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">roofFace</span>
+<span class="w">  </span><span class="c1"># Same picture as grass, but nobody can walk on it, and it doesn&#39;t block sight.</span>
+<span class="w">  </span><span class="nt">trunkTile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">t</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">obstacle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">roofFace</span>
+<span class="w">    </span><span class="nt">ghost</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">TileSet</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">groundTileset</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">columns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/ground.png</span>
+<span class="w">    </span><span class="nt">tiles</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">grassTile</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">trunkTile</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">oakTreeActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Oak</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oakTreeSprite</span>
+<span class="w">    </span><span class="nt">targetable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">260</span>
+
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">oakVector</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">400</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">24</span>
+
+<span class="nt">Deployment</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">oakDeployment</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oakTreeActor</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oakVector</span>
+</code></pre></div>
+
+<p>In the layer grid, write <code>t</code> in the cell under the trunk instead of <code>g</code>.</p>
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#deployment"><code>Deployment</code></a>, <a href="/reference/entities.html#face"><code>Face</code></a>, <a href="/reference/entities.html#tile"><code>Tile</code></a>, <a href="/reference/entities.html#tileset"><code>TileSet</code></a>, <a href="/reference/entities.html#vector"><code>Vector</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li>Give props a <code>salience</code>. It is how far away they can be seen, so with too small a value the prop pops in late.</li>
+<li>Depth sorting uses one point per actor (its feet). Split a long wall into short pieces, one actor each, so the
+  player sorts correctly against every piece.</li>
+<li>Ghost tiles under walls stop walking; an <code>obstacle</code> face without <code>ghost</code> would also block line of sight.</li>
+<li>Area effects still reach <code>targetable: false</code> actors. Filter area effects by tags (see
+  <a href="/recipes/tags-and-area-filters.html">Tags and area filters</a>).</li>
+<li>Many hundreds of props are fine, but obstacle tiles cost load time. Put them only along the edges of solid
+  areas.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

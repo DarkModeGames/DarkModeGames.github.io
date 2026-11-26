@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Items as resources: equip, use, drop &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Items as resources: equip, use, drop</h1>
+<p><strong>Problem.</strong> You want an inventory: swords to equip (one weapon at a time), potions to drink, and anything can be
+dropped.</p>
+<p><strong>Pattern.</strong> Every item is its own <a href="/reference/entities.html#resource"><code>Resource</code></a> holding how many you own, with <code>reveal: 1</code> so it appears in the
+inventory only while you have one. Gear also gets an <code>..._equipped</code> resource (0 or 1). A Resource's <code>menu</code> gives it
+options in the inventory. Each option first closes the panel (<code>close_interaction</code>), then does the work:</p>
+<ul>
+<li><strong>Equip:</strong> clear every other item in the same slot, then set this one's flag.</li>
+<li><strong>Use:</strong> take one away, then apply the effect.</li>
+<li><strong>Drop:</strong> take one away, and clear the equipped flag if none are left.</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Health</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span>
+<span class="w">  </span><span class="nt">ironSwordResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Iron Sword</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Plain, heavy, honest.</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ironSwordMenu</span>
+<span class="w">  </span><span class="nt">ironSwordEquippedResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Iron Sword (equipped)</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ironSwordEquippedMenu</span>
+<span class="w">  </span><span class="nt">oakStaffEquippedResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Oak Staff (equipped)</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">healingDraughtResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Healing Draught</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Restores 30 health.</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;5&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healingDraughtMenu</span>
+
+<span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">ownsIronSwordCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$ironSwordResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&gt;=&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">noIronSwordCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$ironSwordResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">ownsDraughtCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$healingDraughtResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&gt;=&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthResource</span>
+<span class="w">  </span><span class="nt">ironSwordParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ironSwordResource</span>
+<span class="w">  </span><span class="nt">ironSwordEquippedParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ironSwordEquippedResource</span>
+<span class="w">  </span><span class="nt">oakStaffEquippedParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oakStaffEquippedResource</span>
+<span class="w">  </span><span class="nt">healingDraughtParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healingDraughtResource</span>
+<span class="w">  </span><span class="nt">oneValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">zeroValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">oneExpressionParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">draughtHealParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;30&#39;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Equip: one weapon at a time.</span>
+<span class="w">  </span><span class="nt">equipIronSwordAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Equip</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">close_interaction</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equipIronSwordRunAction</span>
+<span class="w">  </span><span class="nt">equipIronSwordRunAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ownsIronSwordCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">oakStaffEquippedParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">zeroValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">equipIronSwordSetAction</span>
+<span class="w">  </span><span class="nt">equipIronSwordSetAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ironSwordEquippedParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">unequipIronSwordAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Unequip</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">close_interaction</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unequipIronSwordRunAction</span>
+<span class="w">  </span><span class="nt">unequipIronSwordRunAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ironSwordEquippedParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">zeroValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="c1"># Drop: lose one; if none are left, it can&#39;t stay equipped.</span>
+<span class="w">  </span><span class="nt">dropIronSwordAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Drop</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">close_interaction</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dropIronSwordRunAction</span>
+<span class="w">  </span><span class="nt">dropIronSwordRunAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ownsIronSwordCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ironSwordParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneExpressionParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dropIronSwordCleanupAction</span>
+<span class="w">  </span><span class="nt">dropIronSwordCleanupAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">noIronSwordCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ironSwordEquippedParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">zeroValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="c1"># Use a consumable.</span>
+<span class="w">  </span><span class="nt">drinkDraughtAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Drink</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">close_interaction</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">drinkDraughtRunAction</span>
+<span class="w">  </span><span class="nt">drinkDraughtRunAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ownsDraughtCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healingDraughtParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneExpressionParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">drinkDraughtHealAction</span>
+<span class="w">  </span><span class="nt">drinkDraughtHealAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">draughtHealParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Menu</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">ironSwordMenu</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Iron Sword</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">equipIronSwordAction</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">dropIronSwordAction</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">ironSwordEquippedMenu</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Iron Sword</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">unequipIronSwordAction</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">healingDraughtMenu</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Healing Draught</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">drinkDraughtAction</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#action"><code>Action</code></a>, <a href="/reference/entities.html#condition"><code>Condition</code></a>, <a href="/reference/entities.html#menu"><code>Menu</code></a>, <a href="/reference/entities.html#parameter"><code>Parameter</code></a>, <a href="/reference/entities.html#resource"><code>Resource</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li>An inventory menu runs with the player as both caller and target, so <code>*_self</code> actions act on the player.</li>
+<li>The engine does not refresh a menu after an option runs. Close it first, or the old options stay on screen.</li>
+<li>Always re-check ownership (<code>if</code>) in the run step. A stale menu or a double click must not equip or drink
+  something you no longer have.</li>
+<li>With several items per slot, the equip step clears every other item in that slot. A generator script keeps this
+  tidy.</li>
+<li>If gear raises <strong>maximum</strong> health (health <code>max: '$maxHealthMeasure'</code>), taking it off doesn't lower the current
+  value by itself. End each equip, unequip and drop chain with <code>minus_resource_self</code> on health with expression
+  <code>'0'</code>: any change re-applies the bounds, so health drops to the new maximum.</li>
+<li>Stats follow the flags through <a href="/recipes/derived-stats-with-measures.html">Measures</a>.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scale a boss to the party &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Scale a boss to the party</h1>
+<p><strong>Problem.</strong> A boss tuned for four players is a wall for one and a pushover for six of them.</p>
+<p><strong>Pattern.</strong> When the boss engages, it counts the players near it. An <code>area_of_effect_at_self</code> runs a sub-action
+on every actor in range with the <strong>boss</strong> as caller, so a sub-action that does <code>plus_resource_self</code> on
+<code>partyResource</code> (filtered to players) counts them on the boss. Maximum health is a
+<a href="/reference/entities.html#measure"><code>Measure</code></a> of that count, and a final <code>set</code> to a huge number refills health to
+the new maximum.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">isPlayerResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Is Player</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+<span class="w">  </span><span class="nt">partyResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Party Size</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;8&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+<span class="w">  </span><span class="nt">healthResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Health</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2900</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$maxHealthMeasure&#39;</span>
+<span class="w">  </span><span class="nt">engagedResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Engaged</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+
+<span class="nt">Measure</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">maxHealthMeasure</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Maximum Health</span>
+<span class="w">    </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1000+$partyResource*1900&#39;</span>
+
+<span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">targetIsPlayerCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@isPlayerResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">notEngagedCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$engagedResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">partyParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">partyResource</span>
+<span class="w">  </span><span class="nt">engagedParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">engagedResource</span>
+<span class="w">  </span><span class="nt">healthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthResource</span>
+<span class="w">  </span><span class="nt">zeroValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">oneValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">fullHealthValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;999999&#39;</span>
+<span class="w">  </span><span class="nt">oneExpressionParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">countRadiusParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">radius</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;650&#39;</span>
+<span class="w">  </span><span class="nt">countEachParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">action</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">countPlayerAction</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Run once, from the boss&#39;s acquire step.</span>
+<span class="w">  </span><span class="nt">bossEngageAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">notEngagedCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">engagedParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bossCountResetAction</span>
+<span class="w">  </span><span class="nt">bossCountResetAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">partyParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">zeroValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bossCountAction</span>
+<span class="w">  </span><span class="nt">bossCountAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">area_of_effect_at_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">countRadiusParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">countEachParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bossRefillAction</span>
+<span class="w">  </span><span class="nt">countPlayerAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">targetIsPlayerCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">partyParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneExpressionParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">bossRefillAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">fullHealthValueParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">bossActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The Warden</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wolfSprite</span>
+<span class="w">    </span><span class="nt">public</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthResource</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#action"><code>Action</code></a>, <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#condition"><code>Condition</code></a>, <a href="/reference/entities.html#measure"><code>Measure</code></a>, <a href="/reference/entities.html#parameter"><code>Parameter</code></a>, <a href="/reference/entities.html#resource"><code>Resource</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li>The whole area effect finishes before <code>then</code> runs, so the refill sees the final count.</li>
+<li>A <a href="/reference/entities.html#resource">Resource</a>'s <code>max</code> can be dice. Here it reads the Measure, so health is capped by the party count.</li>
+<li><code>set_resource_*</code> takes a plain number, not dice. To set a computed value, set 0 and then <code>plus</code> the expression,
+  or, as here, let the bounds do the work.</li>
+<li>Count once per pull. Clear <code>engagedResource</code> on a leash so the next pull counts again.</li>
+<li>The radius is in isometric pixels: 650 reaches 650 px sideways and 325 px up or down the screen.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

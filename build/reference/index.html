@@ -47,16 +47,212 @@
 from the engine's own documentation comments, so they stay in sync with the build.</p>
 <ul>
 <li><a href="/reference/entities.html">Entities</a> — all 33 entity types and their fields.</li>
-<li><a href="/reference/actions.html">Action functions</a> — all 75 action functions and their parameters.</li>
+<li><a href="/reference/actions.html">Action functions</a> — all 79 action functions and their parameters.</li>
+<li><a href="/reference/units.html">Distances and sizes</a> — the one distance measure every field and action uses.</li>
 <li><a href="/reference/cli.html">CLI reference</a> — every command-line flag and network mode.</li>
 <li><a href="/reference/troubleshooting.html">Troubleshooting</a> — symptoms, causes, and fixes.</li>
 <li><a href="/reference/philosophy.html">Philosophy</a> — why Isometry is built this way.</li>
 </ul>
+<p><a id="all-entity-types"></a></p>
+<h2>All entity types</h2>
+<p>One row per entity type. The first link goes to its fields in the generated reference; the second to the
+page that shows it in use.</p>
+<table>
+<thead>
+<tr>
+<th>Entity</th>
+<th>What it is for</th>
+<th>Learn it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="/reference/entities.html#action"><code>Action</code></a></td>
+<td>One step of game logic: an optional <code>if</code>, a <code>do</code> function with parameters, then <code>then</code> / <code>else</code>.</td>
+<td><a href="/manual/guides/define-actions.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#actor"><code>Actor</code></a></td>
+<td>Anything that stands in the world: players, monsters, NPCs, props.</td>
+<td><a href="/manual/guides/create-an-actor.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#animation"><code>Animation</code></a></td>
+<td>One clip: frame lists for all eight directions, speed, looping, an optional sound.</td>
+<td><a href="/manual/guides/visuals-sprites-animations.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#animationset"><code>AnimationSet</code></a></td>
+<td>The clips a sprite can play, and which ones play when idle, walking and running.</td>
+<td><a href="/manual/guides/visuals-sprites-animations.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#behavior"><code>Behavior</code></a></td>
+<td>One step of a Strategy: goals, and the action to run while they are not met.</td>
+<td><a href="/manual/guides/add-npc-ai.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#condition"><code>Condition</code></a></td>
+<td>A comparison of two dice expressions, used as an action's <code>if</code> or a behavior's goal.</td>
+<td><a href="/manual/guides/conditions-and-logic.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#deployment"><code>Deployment</code></a></td>
+<td>Places an actor on a map at a Vector when the world is built.</td>
+<td><a href="/manual/guides/build-a-map.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#dialog"><code>Dialog</code></a></td>
+<td>A titled text panel shown to the player; text can show live values.</td>
+<td><a href="/manual/guides/menus-dialogs-waypoints.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#face"><code>Face</code></a></td>
+<td>Which of a tile's six faces count as walkable, wall or boundary.</td>
+<td><a href="/manual/guides/build-a-map.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#floor"><code>Floor</code></a></td>
+<td>A picture drawn under a map's tiles at a Vector.</td>
+<td><a href="/recipes/backgrounds-and-floors.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#group"><code>Group</code></a></td>
+<td>A faction with a name and outline colour; used for targeting by group.</td>
+<td><a href="/manual/guides/menus-dialogs-waypoints.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#inset"><code>Inset</code></a></td>
+<td>Padding on a sprite frame's four edges; seats the art's feet on the ground.</td>
+<td><a href="/manual/guides/visuals-sprites-animations.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#layer"><code>Layer</code></a></td>
+<td>One grid of tile symbols in a TileMap.</td>
+<td><a href="/manual/guides/build-a-map.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#main"><code>Main</code></a></td>
+<td>The campaign's entry point: the starting map and the players' starting actor.</td>
+<td><a href="/manual/core-concepts/campaign-structure.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#map"><code>Map</code></a></td>
+<td>A playable area: its tiles, spawn point, deployments, background, overlays and audio.</td>
+<td><a href="/manual/guides/build-a-map.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#mask"><code>Mask</code></a></td>
+<td>Swaps one colour for another inside a Skin.</td>
+<td><a href="/recipes/recolour-with-skins.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#measure"><code>Measure</code></a></td>
+<td>A value worked out from a dice expression each time it is read.</td>
+<td><a href="/manual/guides/add-resources-and-measures.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#menu"><code>Menu</code></a></td>
+<td>A list of actions offered as options in the interaction panel.</td>
+<td><a href="/manual/guides/menus-dialogs-waypoints.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#nav"><code>Nav</code></a></td>
+<td>An extra point where walkers may bend their path, such as a doorway.</td>
+<td><a href="/recipes/corner-pathing-with-nav.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#overlay"><code>Overlay</code></a></td>
+<td>A full-screen animated effect between the world and the interface, such as rain.</td>
+<td><a href="/manual/guides/effects-overlays-particles.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#parallax"><code>Parallax</code></a></td>
+<td>A scrolling background layer behind a map.</td>
+<td><a href="/manual/guides/audio-and-backgrounds.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#parameter"><code>Parameter</code></a></td>
+<td>A key and value passed to an action's function.</td>
+<td><a href="/manual/guides/define-actions.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#particle"><code>Particle</code></a></td>
+<td>A small animated sprite attached to one actor, such as a glow.</td>
+<td><a href="/manual/guides/effects-overlays-particles.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#resource"><code>Resource</code></a></td>
+<td>A stored number every actor holds: health, gold, an item count, a flag.</td>
+<td><a href="/manual/guides/add-resources-and-measures.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#skill"><code>Skill</code></a></td>
+<td>A hotbar ability: the action run on press, an optional one on release, and an optional charge.</td>
+<td><a href="/manual/guides/add-skills.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#skin"><code>Skin</code></a></td>
+<td>A list of Masks that recolours an actor's sprite.</td>
+<td><a href="/recipes/recolour-with-skins.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#sound"><code>Sound</code></a></td>
+<td>An audio file with looping and pitch, for a map's ambience or an animation.</td>
+<td><a href="/manual/guides/audio-and-backgrounds.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#sprite"><code>Sprite</code></a></td>
+<td>A sprite sheet: texture, frame size, margin and its AnimationSet.</td>
+<td><a href="/manual/guides/visuals-sprites-animations.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#strategy"><code>Strategy</code></a></td>
+<td>An NPC's AI: an ordered list of Behaviors.</td>
+<td><a href="/manual/guides/add-npc-ai.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#tile"><code>Tile</code></a></td>
+<td>One cell type in a TileSet: its symbol, picture and faces.</td>
+<td><a href="/manual/guides/build-a-map.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#tilemap"><code>TileMap</code></a></td>
+<td>A map's ground: a TileSet and its Layers.</td>
+<td><a href="/manual/guides/build-a-map.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#tileset"><code>TileSet</code></a></td>
+<td>A tile atlas texture and the Tiles cut from it.</td>
+<td><a href="/manual/guides/build-a-map.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#timer"><code>Timer</code></a></td>
+<td>Runs an action on an actor every <code>interval</code> seconds.</td>
+<td><a href="/manual/guides/triggers-and-timers.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#trigger"><code>Trigger</code></a></td>
+<td>Runs an action whenever one of the actor's Resources changes.</td>
+<td><a href="/manual/guides/triggers-and-timers.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#vector"><code>Vector</code></a></td>
+<td>A position (x, y) on a map, or a size.</td>
+<td><a href="/manual/guides/build-a-map.html">guide</a></td>
+</tr>
+<tr>
+<td><a href="/reference/entities.html#waypoint"><code>Waypoint</code></a></td>
+<td>A discoverable, named place on a map, with an optional menu for fast travel.</td>
+<td><a href="/recipes/fast-travel-waypoints.html">guide</a></td>
+</tr>
+</tbody>
+</table>
     </main>
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

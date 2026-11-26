@@ -26,15 +26,20 @@ Read getting-started in order, then branch into guides and reference as needed.
 - [Add skills](/manual/guides/add-skills.html)
 - [Build a map](/manual/guides/build-a-map.html)
 - [Add NPC AI](/manual/guides/add-npc-ai.html)
+- [Minions and formations](/manual/guides/minions-and-formations.html)
 - [Triggers and timers](/manual/guides/triggers-and-timers.html)
 - [Visuals: sprites and animations](/manual/guides/visuals-sprites-animations.html)
 - [Audio and backgrounds](/manual/guides/audio-and-backgrounds.html)
+- [Screen effects and particles](/manual/guides/effects-overlays-particles.html)
 - [Menus, dialogs, and waypoints](/manual/guides/menus-dialogs-waypoints.html)
+- [Test your campaign with UI scripts](/manual/guides/test-with-ui-scripts.html)
 
 ## Multiplayer
 
 - [Hosting a session](/manual/multiplayer/hosting.html)
 - [Networking and security](/manual/multiplayer/networking-and-security.html)
+- [Server administration](/manual/multiplayer/server-administration.html)
+- [LAN setups: host, server, and clients](/manual/multiplayer/lan-setup.html)
 
 ## Tutorial
 

@@ -44,11 +44,11 @@ When the problem concerns the entity as a whole (or the campaign as a whole):
 Read each part left to right:
 
 - **CATEGORY** names the kind of failure, such as `MISSING_REQUIRED_FIELD` or `KEYREF_UNRESOLVED`. There are 13 categories in total, listed at the end of this page.
-- **EntityType.entityKey** locates the entity. For example, `Action.attackAction` points at the `attackAction` entity in your `Action` block.
+- **EntityType.entityKey** locates the entity. For example, `Action.attackAction` points at the `attackAction` entity in your [`Action`](/reference/entities.html#action) block.
 - **fieldName**, when present, names the exact field at fault.
 - **message** explains what is wrong and often what was expected.
 
-For example, this line means the `Main` entity named `demoMain` points its `actor` field at a key that does not exist:
+For example, this line means the [`Main`](/reference/entities.html#main) entity named `demoMain` points its `actor` field at a key that does not exist:
 
 ```
 [KEYREF_UNRESOLVED] Main.demoMain.actor: KeyRef heroActor does not exist in campaign
@@ -62,13 +62,13 @@ The schema phase checks each entity against the rules for its type: which fields
 
 Schema checks produce these categories:
 
-- **UNKNOWN_TYPE** — you used an entity type that has no schema, for example a typo like `Acter` instead of `Actor`. The message reads `Unknown entity type X - no schema defined`.
+- **UNKNOWN_TYPE** — you used an entity type that has no schema, for example a typo like `Acter` instead of [`Actor`](/reference/entities.html#actor). The message reads `Unknown entity type X - no schema defined`.
 - **MISSING_REQUIRED_FIELD** — a required field is absent.
 - **EXTRA_FIELD** — you included a field the schema does not define. The message reads `Field X not defined in <Type> schema`. This usually means a misspelled field name.
 - **INVALID_TYPE** — a field holds the wrong type of value.
 - **CONSTRAINT_VIOLATION** — a value breaks a `min`/`max` or length limit.
 
-The [Main](/manual/getting-started/glossary.html#terms) entity is the smallest example. It requires `actor` and `map`, both KeyRefs:
+The [Main](/manual/getting-started/glossary.html#terms) entity is the smallest example. It requires `map`; `actor` is optional:
 
 ```yaml
 Main:
@@ -160,13 +160,13 @@ Parameter:
     value: (1d6)-1
 ```
 
-The `parameters` array holds KeyRefs only; the `Parameter` entities live in their own top-level block. If an action function needs parameters and the `parameters` array is empty, you get:
+The `parameters` array holds KeyRefs only; the [`Parameter`](/reference/entities.html#parameter) entities live in their own top-level block. If an action function needs parameters and the `parameters` array is empty, you get:
 
 ```
 [INVALID_ACTION_PARAM] Action.attackAction.parameters: Action function minus_resource_target requires parameters: ...
 ```
 
-> Note: This check confirms only that `parameters` is non-empty when the function requires parameters. It does not yet verify that each specific parameter name is present, so a wrong parameter name still passes Phase 2. As an example, `set_destination_self` requires a `destination` parameter, a KeyRef to a Vector.
+> Note: This check confirms only that `parameters` is non-empty when the function requires parameters. It does not yet verify that each specific parameter name is present, so a wrong parameter name still passes Phase 2. As an example, `set_destination_self` requires a `destination` parameter, a KeyRef to a [Vector](/reference/entities.html#vector).
 
 For the full list of functions and their parameters, see [Define actions](/manual/guides/define-actions.html).
 
@@ -177,8 +177,8 @@ The asset phase runs only when the campaign is loaded from a `.zip` archive. It 
 These fields are checked, and the allowed extensions:
 
 - Image (`png`, `jpg`, `jpeg`): `Sprite.texture`, `Resource.icon`, `Measure.icon`, `Skill.icon`, `Waypoint.icon`, `Floor.texture`, `TileSet.texture`, `Parallax.texture`.
-- Sound (`mp3`, `wav`, `ogg`): `Sound.source`.
-- Tile map (`tmj`): `Layer.source`.
+- Sound (`mp3`, `wav`, `ogg`): `Sound.source`. Use `mp3`; the other two pass validation but are unreliable at runtime.
+- Layer grids: `Layer.source`. A grid file has **no extension** (for example `/maps/town/ground`), and extensionless files are not extension-checked.
 
 Path matching is forgiving: a leading `/` is stripped, then a match succeeds if any file in the archive ends with the path you gave. So `/assets/icons/sun.png` matches a file stored at that path inside the archive.
 
@@ -196,9 +196,9 @@ A file with the wrong extension also reports `ASSET_NOT_FOUND`, with a message t
 
 ## Phase 4: dice checks
 
-The dice phase validates the character set of every [dice expression](/manual/getting-started/glossary.html#terms) field. It checks `Measure.expression`, `Sound.scale`, `Timer.total`, and `Timer.interval`.
+The dice phase validates every [dice expression](/manual/getting-started/glossary.html#terms) field: `Measure.expression`, `Resource.min`/`max`, `Condition.left`/`right`, `Timer.total`/`interval`, and `Sound.scale`. Dice-typed action parameters are checked in phase 2.
 
-Only the characters are validated, not the grammar. The allowed set is `0123456789()*%/+-dD<>`. Empty strings are skipped. A `luckMeasure` that uses a valid expression, `1d20`, and a damage parameter that uses `(1d6)-1` both pass. Any character outside the set fails:
+Each expression must be well-formed, use only `0123456789()*%/+-dD<>`, and every `$key`/`@key` must name a real [Resource](/reference/entities.html#resource), [Measure](/reference/entities.html#measure), or built-in value. Empty strings are skipped. A `luckMeasure` that uses a valid expression, `1d20`, and a damage parameter that uses `(1d6)-1` both pass. Any character outside the set fails:
 
 ```
 [INVALID_DICE] Measure.luckMeasure.expression: Invalid dice expression 1k20 - invalid character k at position 1

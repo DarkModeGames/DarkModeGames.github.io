@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choices that change dialog and shops &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Choices that change dialog and shops</h1>
+<p><strong>Problem.</strong> The player sides with the smith or the ferryman. Afterwards the smith should greet them differently,
+and sell a blade only to friends.</p>
+<p><strong>Pattern.</strong> Record the choice in one resource (<code>sideResource</code>: 0 undecided, 1 smith, 2 ferryman) and the
+relationship in another (<code>smithFavourResource</code>). An actor's own <code>dialog</code> is fixed, so give the NPC a "Talk" menu
+option that branches on the choice with <code>if</code> and opens one of several <a href="/reference/entities.html#dialog"><code>Dialog</code></a>s
+with <code>open_dialog</code>. Shop options check favour the same way.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">sideResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sided With</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;2&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+<span class="w">  </span><span class="nt">smithFavourResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Smith&#39;s Favour</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+<span class="w">  </span><span class="nt">goldResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gold</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;99999&#39;</span>
+<span class="w">  </span><span class="nt">fineBladeResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Fine Blade</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">undecidedCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$sideResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">sidedWithSmithCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$sideResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">smithFriendCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$smithFavourResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&gt;=&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
+<span class="w">  </span><span class="nt">affordBladeCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$goldResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&gt;=&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;60&#39;</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">sideParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sideResource</span>
+<span class="w">  </span><span class="nt">smithFavourParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithFavourResource</span>
+<span class="w">  </span><span class="nt">goldParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">goldResource</span>
+<span class="w">  </span><span class="nt">fineBladeParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fineBladeResource</span>
+<span class="w">  </span><span class="nt">smithSideValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">ferrymanSideValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;2&#39;</span>
+<span class="w">  </span><span class="nt">favourGainParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
+<span class="w">  </span><span class="nt">bladePriceParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;60&#39;</span>
+<span class="w">  </span><span class="nt">oneExpressionParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">smithAskDialogParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dialog</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithAskDialog</span>
+<span class="w">  </span><span class="nt">smithWarmDialogParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dialog</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithWarmDialog</span>
+<span class="w">  </span><span class="nt">smithColdDialogParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dialog</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithColdDialog</span>
+<span class="w">  </span><span class="nt">smithRefuseDialogParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dialog</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithRefuseDialog</span>
+
+<span class="nt">Dialog</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">smithAskDialog</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The Smith</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">ferryman</span><span class="nv"> </span><span class="s">says</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">iron</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">bad.</span><span class="nv"> </span><span class="s">Will</span><span class="nv"> </span><span class="s">you</span><span class="nv"> </span><span class="s">tell</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">village</span><span class="nv"> </span><span class="s">otherwise?&quot;</span>
+<span class="w">  </span><span class="nt">smithWarmDialog</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The Smith</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Ah,</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">friend.</span><span class="nv"> </span><span class="s">Come</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">out</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">cold.&quot;</span>
+<span class="w">  </span><span class="nt">smithColdDialog</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The Smith</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;The</span><span class="nv"> </span><span class="s">ferryman&#39;s</span><span class="nv"> </span><span class="s">friend.</span><span class="nv"> </span><span class="s">Buy</span><span class="nv"> </span><span class="s">what</span><span class="nv"> </span><span class="s">you</span><span class="nv"> </span><span class="s">need</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">go.&quot;</span>
+<span class="w">  </span><span class="nt">smithRefuseDialog</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The Smith</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;That</span><span class="nv"> </span><span class="s">blade</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">friends</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">this</span><span class="nv"> </span><span class="s">forge.&quot;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">smithTalkAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Talk</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">undecidedCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open_dialog</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">smithAskDialogParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithTalkSidedAction</span>
+<span class="w">  </span><span class="nt">smithTalkSidedAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sidedWithSmithCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open_dialog</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">smithWarmDialogParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithTalkColdAction</span>
+<span class="w">  </span><span class="nt">smithTalkColdAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open_dialog</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">smithColdDialogParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">sideWithSmithAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Speak up for the smith</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">undecidedCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">sideParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">smithSideValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sideWithSmithFavourAction</span>
+<span class="w">  </span><span class="nt">sideWithSmithFavourAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">smithFavourParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">favourGainParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithTalkSidedAction</span>
+<span class="w">  </span><span class="nt">sideWithFerrymanAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Side with the ferryman</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">undecidedCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">sideParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">ferrymanSideValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithTalkColdAction</span>
+<span class="w">  </span><span class="nt">buyBladeAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Buy the Fine Blade (60g)</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithFriendCondition</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">buyBladePayAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">buyBladeRefusedAction</span>
+<span class="w">  </span><span class="nt">buyBladePayAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">affordBladeCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">goldParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">bladePriceParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">buyBladeTakeAction</span>
+<span class="w">  </span><span class="nt">buyBladeTakeAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fineBladeParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneExpressionParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">buyBladeRefusedAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open_dialog</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">smithRefuseDialogParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Menu</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">smithMenu</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The Smith</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">smithTalkAction</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">sideWithSmithAction</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">sideWithFerrymanAction</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">buyBladeAction</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">smithActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The Smith</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">villagerSprite</span>
+<span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smithMenu</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#action"><code>Action</code></a>, <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#condition"><code>Condition</code></a>, <a href="/reference/entities.html#dialog"><code>Dialog</code></a>, <a href="/reference/entities.html#menu"><code>Menu</code></a>, <a href="/reference/entities.html#parameter"><code>Parameter</code></a>, <a href="/reference/entities.html#resource"><code>Resource</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li><code>open_dialog</code> swaps the text in the open panel, so the menu stays usable underneath.</li>
+<li>Make choices one-way: every choice option checks "undecided" first.</li>
+<li>Favour is a number, not a flag, so later deeds can add to it and different shops can ask for different amounts.</li>
+<li>Dialog text can show live numbers with <code>{{$smithFavourResource}}</code> (<code>$</code> is the player).</li>
+<li>The ferryman reads the same <code>sideResource</code> for his side of the story.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

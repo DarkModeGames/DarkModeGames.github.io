@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sounds on animations and map ambience &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Sounds on animations and map ambience</h1>
+<p><strong>Problem.</strong> A swing should make a sound, and the moor should have wind blowing in the background.</p>
+<p><strong>Pattern.</strong> A <a href="/reference/entities.html#sound"><code>Sound</code></a> is an audio file with <code>loop</code> and a pitch <code>scale</code>.</p>
+<ul>
+<li><code>scale</code> is the <strong>pitch</strong>, as a dice expression divided by 100: <code>'100'</code> is normal, <code>'90+1d20'</code> varies it a little
+  on each play. It does not change loudness.</li>
+<li>Attach a one-shot Sound to an <a href="/reference/entities.html#animation"><code>Animation</code></a> with its <code>sound</code> field. It plays
+  each time that clip starts.</li>
+<li>List looping Sounds in a <a href="/reference/entities.html#map"><code>Map</code></a>'s <code>audio</code>. They play while a player is on that
+  map.</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sound</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">swingSound</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/sound.mp3</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;90+1d20&#39;</span>
+<span class="w">  </span><span class="nt">moorWindSound</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/sound.mp3</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">scale</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span>
+
+<span class="nt">Animation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroSwingAnimation</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">N</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">NE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">E</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">SE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">S</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">SW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">W</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">NW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">sound</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">swingSound</span>
+
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">moorSpawnVector</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">384</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+
+<span class="nt">Map</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">moorMap</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The Moor</span>
+<span class="w">    </span><span class="nt">tilemap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">groundTilemap</span>
+<span class="w">    </span><span class="nt">spawn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">moorSpawnVector</span>
+<span class="w">    </span><span class="nt">audio</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">moorWindSound</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#animation"><code>Animation</code></a>, <a href="/reference/entities.html#map"><code>Map</code></a>, <a href="/reference/entities.html#sound"><code>Sound</code></a>, <a href="/reference/entities.html#vector"><code>Vector</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li>Use <strong>MP3</strong> files. WAV files don't load reliably.</li>
+<li><code>scale</code> is re-rolled each time the sound finishes, so a looping sound with a random <code>scale</code> changes pitch on each
+  repeat. Use a plain <code>'100'</code> for ambience.</li>
+<li>Sounds are easy to overdo. Put them on key moments (big attacks, deaths, a door) rather than every footstep.</li>
+<li>A clip with a sound plays to the end even when started as a keyframe.</li>
+<li>Asset paths are relative to the campaign root, as for textures.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

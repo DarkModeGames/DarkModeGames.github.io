@@ -11,6 +11,10 @@ gamepad) from the options menu.
   obstacles.
 - **W / A / S / D** — move directly in a direction (hold to keep moving).
 - **Arrow Keys** — change your facing direction (bearing).
+- **N** — switch between running and walking. Walking is half pace.
+- **Flag button** (left-hand HUD buttons, above the eye) — pick up a flag, then left-click to place it. On open
+  ground your character walks to the flag. On a character, yours follows them, and talks to them or opens their
+  menu on arrival. Right-click or press the button again to put the flag away.
 
 ### Camera
 
@@ -19,16 +23,48 @@ gamepad) from the options menu.
 - **`=`** — zoom in.
 - **`-`** — zoom out.
 
+### Character
+
+- **U** — open the Character page: what you wear in each slot, and your stats. Pick a slot to see the items you
+  carry that fit it, and pick one of those to equip or unequip it.
+
+### Quests
+
+- **J** — open the Quests page: your quests, what to do now, and the steps already done. Tick **Show completed**
+  to see finished quests too.
+
 ### Targeting
 
-- **Tab** — select the nearest target.
+- **Alt (hold)** — outline everything you can target nearby, like Diablo's Alt. On a gamepad: the Share / capture
+  button (rebind it in the gamepad menu).
+- **Tab** — cycle to the next target (nearest first, then each one in view in turn).
 - **`` ` `` (Grave)** — move to the current target.
-- **E** — cycle to the next target.
+- **V** — follow the current target. Your character keeps walking after it and waits when close. Press
+  **V** again, move, or change target to stop.
+- **E** — select the nearest target.
 - **Q** — cycle to the previous target.
 - **C** — cycle to the next target group.
 - **Z** — cycle to the previous target group.
 - **X** — target yourself.
 - **Esc** — clear the current target.
+- **Click the icon on a plate** — interact with that character, as **Enter** does with a target: you walk up to
+  talk, trade, loot or fight. Works on the target plate and on focus plates.
+- **Show Outlines button** (bottom of the left-hand HUD buttons, an eye) — hold it down with the mouse to outline
+  everything you can target, as holding **Alt** does.
+
+### Focus
+
+A focus plate keeps a character's plate in a corner of the screen, so you can watch a friend's health or a
+boss's while you target something else. Each corner holds one.
+
+- **R / T / F / G** — the four corners (top left, top right, bottom left, bottom right). Tap with a target to pin
+  it there. Tap again later to target the pinned character. Hold to clear the corner.
+- **Pin icons** — each corner shows a small pin. Hover it for a reminder. Click it to pin your target there
+  (replacing whoever was there); with no target, a click targets the pinned character. Right-click clears it.
+  The pins hide with the other HUD buttons (**Show Menu Buttons** in the options menu).
+- **H** — clear every focus corner and start fresh.
+- A pinned character who leaves the world (dies and despawns, or goes where you can't see them) leaves its
+  corner by itself after a couple of seconds.
 
 ### Skills
 
@@ -36,6 +72,11 @@ gamepad) from the options menu.
 - Skills may require a target to be selected.
 - Some skills are instant; others have casting animations.
 - Hold a skill key to charge it (if the skill supports charging).
+- **Mouse-over casting.** With the mouse over a character, a skill key casts on that character instead of your
+  target, and your target stays selected: heal a friend under the cursor while keeping the enemy targeted. With
+  the mouse over nothing, the skill goes to your target as usual. Clicking a hotbar button always uses your
+  target (ctrl+click casts on yourself). Turn it off with **Mouse-over Casting** in the options menu (the
+  default is **ON**).
 
 ### Menus & Views
 
@@ -43,8 +84,34 @@ gamepad) from the options menu.
 - **Backspace** — open the global menu.
 - **M** — toggle the map view.
 - **O** — toggle the resources view.
-- **K** — toggle the skills view.
+  - **Q / E** (left / right shoulder on a gamepad) — step through the category chips over the list.
+  - **/** (**Y** on a gamepad) — search by name. Esc clears the search; a second Esc closes the view.
+  - **Page Up / Page Down** (the triggers) — turn the page.
+- **K** — toggle the skills view. Pick a skill up (click or accept) and put it on another key to swap them.
+- **P** — toggle the talents view: your talent trees, read from the bottom up. Click a talent to put a point in.
+- **Minions** (only while you have some): a strip under the target plate lists them with their orders. Click chips to
+  pick some (none = all), then Attack, Follow or Stay. **F1 / F2 / F3** give the orders, **F4** picks the next minion,
+  **I** hides or shows the strip. On a gamepad, **Back** enters command mode: **D-pad left/right** pick, **X / A / Y**
+  give Attack / Follow / Stay; **Back** or **B** leaves it.
 - **Esc** — close the current menu.
+
+### Typing with a gamepad
+
+Chat and the resources search can be typed into with a gamepad alone. When one of them takes the cursor and
+your last press was on a gamepad, an on-screen keyboard opens at the bottom of the screen (at the top if the
+text box is low). It never opens for keyboard or mouse players.
+
+- **D-pad / left stick** — move between keys; rows wrap round at the edges.
+- **A** — press the selected key.
+- **B** — delete the letter before the cursor; on an empty box, cancel.
+- **X** — space.
+- **Y** — shift, for one capital letter. The **Caps** key keeps capitals on.
+- **Start** — done: chat sends the line, the search returns to the list.
+- **Left / right shoulder** — move the cursor.
+- **Cancel** puts the text back the way it was. In chat it also closes the chat.
+
+The keys can also be clicked. To turn the keyboard off, set **On-Screen Keyboard** to **OFF** in the options
+menu (the default is **AUTO**).
 
 ## Gameplay Mechanics
 
@@ -85,7 +152,7 @@ targeting and determines the colored outline on characters.
 
 ### Hosting a Game
 
-1. Launch with `--network=host`, or click **HOST** in the launcher.
+1. Launch with `--network=host` (or use your campaign's own launcher, if it has one).
 2. Share your IP address and port with players.
 3. Players connect with `--network=client` pointing at your address.
 

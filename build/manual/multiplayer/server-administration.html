@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Administration &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Server Administration</h1>
+<p>A running server (<code>--network=server</code> or <code>--network=host</code>) answers three admin commands: <strong>info</strong>, <strong>restart</strong> and <strong>shutdown</strong>. A launcher or a script uses them to see who is playing, and to stop or restart the server without losing anyone's progress.</p>
+<h2>Introduction</h2>
+<p>Stopping a server by killing its process loses every connected player's unsaved progress: players are saved when they disconnect or when the window is closed, and a killed process does neither. The admin commands save every connected player first, warn them, and then stop or restart the server cleanly.</p>
+<p>The commands are sent with the game binary itself in a one-shot <em>control mode</em> (<code>--control=…</code>), or by any program that can open a TCP connection.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><a href="/manual/multiplayer/hosting.html">Hosting</a>: how to start a server or host.</li>
+<li>The <a href="/reference/cli.html">command-line reference</a> for every flag.</li>
+</ul>
+<h2>Starting a server with admin access</h2>
+<p>The admin endpoint starts with the server. It listens on <strong>127.0.0.1 only</strong> (the same machine), on the game port + 1, or on <code>--admin-port</code>.</p>
+<p>Give it a secret, preferably in the <code>ISOMETRY_ADMIN_SECRET</code> environment variable, which other users can't read from the process list the way they can read command-line flags:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">ISOMETRY_ADMIN_SECRET</span><span class="o">=</span>change-me<span class="w"> </span>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>server<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span>
+</code></pre></div>
+
+<p>The server takes the first of these it finds:</p>
+<ol>
+<li><code>--admin-secret=…</code> on the command line;</li>
+<li>the <code>ISOMETRY_ADMIN_SECRET</code> environment variable;</li>
+<li>the <code>admin_token</code> file in its data folder (the folder <code>--print-paths</code> shows as <code>app_data</code>). If there is none, the server generates a random token and writes it there, readable only by the user who started it.</li>
+</ol>
+<p>A control call looks for its secret in the same order, so a call made by the same user on the same machine finds the token file automatically.</p>
+<h2>The commands</h2>
+<p>Run the binary in control mode. It connects, sends one command, prints the JSON reply on one line, and exits.</p>
+<div class="codehilite"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">ISOMETRY_ADMIN_SECRET</span><span class="o">=</span>change-me
+isometry<span class="w"> </span>--headless<span class="w"> </span>--control<span class="o">=</span>info<span class="w">     </span>--port<span class="o">=</span><span class="m">5000</span>
+isometry<span class="w"> </span>--headless<span class="w"> </span>--control<span class="o">=</span>restart<span class="w">  </span>--port<span class="o">=</span><span class="m">5000</span>
+isometry<span class="w"> </span>--headless<span class="w"> </span>--control<span class="o">=</span>shutdown<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span>
+</code></pre></div>
+
+<p><code>--port</code> is the server's <em>game</em> port (the admin port is worked out from it), or pass <code>--admin-port</code> directly. <code>--uri</code> defaults to <code>127.0.0.1</code>.</p>
+<p>Exit status: <code>0</code> when the server answered <code>"ok": true</code>, <code>1</code> when it refused (for example a wrong secret), <code>2</code> when no server answered.</p>
+<h3>info</h3>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;ok&quot;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="nt">&quot;result&quot;</span><span class="p">:{</span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="s2">&quot;running&quot;</span><span class="p">,</span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="s2">&quot;0.400&quot;</span><span class="p">,</span><span class="nt">&quot;campaign&quot;</span><span class="p">:</span><span class="s2">&quot;demo&quot;</span><span class="p">,</span><span class="nt">&quot;mode&quot;</span><span class="p">:</span><span class="s2">&quot;server&quot;</span><span class="p">,</span><span class="nt">&quot;uptime_s&quot;</span><span class="p">:</span><span class="mi">312</span><span class="p">,</span><span class="nt">&quot;port&quot;</span><span class="p">:</span><span class="mi">5000</span><span class="p">,</span><span class="nt">&quot;admin_port&quot;</span><span class="p">:</span><span class="mi">5001</span><span class="p">,</span><span class="nt">&quot;maps&quot;</span><span class="p">:[</span><span class="s2">&quot;town_map&quot;</span><span class="p">,</span><span class="s2">&quot;moor_map&quot;</span><span class="p">],</span><span class="nt">&quot;players&quot;</span><span class="p">:[{</span><span class="nt">&quot;peer_id&quot;</span><span class="p">:</span><span class="mi">148613813</span><span class="p">,</span><span class="nt">&quot;username&quot;</span><span class="p">:</span><span class="s2">&quot;brann&quot;</span><span class="p">,</span><span class="nt">&quot;map&quot;</span><span class="p">:</span><span class="s2">&quot;moor_map&quot;</span><span class="p">}]}}</span>
+</code></pre></div>
+
+<p><code>players</code> lists every connected player. A dedicated server has no player of its own; a host lists its own player as peer <code>1</code>.</p>
+<p><code>status</code> is <code>booting</code> while the server is still loading the campaign, spawning its actors and building its maps, and <code>running</code> after that. The endpoint answers from the moment the server starts, even while loading keeps the game busy; until loading finishes the other fields may be incomplete (no maps or players yet).</p>
+<h3>shutdown</h3>
+<p>While the server is booting, shutdown and restart answer <code>{"ok":false,"error":"booting"}</code>: nobody can be connected yet, so stopping the process loses nothing.</p>
+<p>Saves every connected player (the same save as a disconnect), tells the clients "The server is shutting down.", answers with the saved usernames, then exits with code <code>0</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;ok&quot;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="nt">&quot;result&quot;</span><span class="p">:{</span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;shutdown&quot;</span><span class="p">,</span><span class="nt">&quot;saved&quot;</span><span class="p">:[</span><span class="s2">&quot;brann&quot;</span><span class="p">]}}</span>
+</code></pre></div>
+
+<h3>restart</h3>
+<p>Saves and warns like shutdown ("The server is restarting. Reconnect in a moment."), closes its ports, and starts a fresh server process with the same flags and the same admin secret. The secret is passed to the new process in <code>ISOMETRY_ADMIN_SECRET</code>, never on its command line, even if the old server was given <code>--admin-secret</code>. The reply carries the new process id; the old process exits with code <code>0</code>. Players reconnect to the new server.</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;ok&quot;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="nt">&quot;result&quot;</span><span class="p">:{</span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;restart&quot;</span><span class="p">,</span><span class="nt">&quot;pid&quot;</span><span class="p">:</span><span class="mi">21997</span><span class="p">,</span><span class="nt">&quot;saved&quot;</span><span class="p">:[</span><span class="s2">&quot;brann&quot;</span><span class="p">]}}</span>
+</code></pre></div>
+
+<p>A launcher that tracks the server process should switch to the new <code>pid</code>. Engine-only flags the engine does not pass on to the game (for example <code>--fixed-fps</code>) are not carried over; <code>--headless</code> is.</p>
+<h2>Calling the endpoint without the game binary</h2>
+<p>The protocol is one line of JSON each way over TCP to <code>127.0.0.1:&lt;admin port&gt;</code>:</p>
+<div class="codehilite"><pre><span></span><code>→ {&quot;secret&quot;:&quot;change-me&quot;,&quot;command&quot;:&quot;info&quot;}
+← {&quot;ok&quot;:true,&quot;result&quot;:{...}}
+</code></pre></div>
+
+<p>A request ends at its newline. A request sent without one is answered as soon as it is a complete JSON object, so a client may also close its sending side right after the request (as <code>nc</code> does) and still get the reply.</p>
+<p>Errors come back as <code>{"ok":false,"error":"unauthorized"}</code>, <code>"unknown command"</code>, <code>"bad request"</code> or <code>"booting"</code>. The server closes the connection after replying.</p>
+<h2>Security</h2>
+<ul>
+<li>The endpoint binds 127.0.0.1 only; it can't be reached from another machine.</li>
+<li>Every command needs the secret, compared in constant time. Players never see it.</li>
+<li>Prefer <code>ISOMETRY_ADMIN_SECRET</code> to <code>--admin-secret</code>: other users on the machine can see a process's command line. Keep the secret out of shared logs and screenshots. The generated <code>admin_token</code> file is readable only by its owner.</li>
+</ul>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/multiplayer/hosting.html">Hosting</a></li>
+<li><a href="/manual/multiplayer/networking-and-security.html">Networking and security</a></li>
+<li><a href="/reference/cli.html">Command-line reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

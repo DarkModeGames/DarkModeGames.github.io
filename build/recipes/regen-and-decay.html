@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regenerate mana, decay rage &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Regenerate mana, decay rage</h1>
+<p><strong>Problem.</strong> A caster's mana should refill slowly, and a fighter's rage should build on hits and drain away when
+the fighting stops.</p>
+<p><strong>Pattern.</strong> Each class resource gets its own repeating <a href="/reference/entities.html#timer"><code>Timer</code></a> on the actor: one adds to mana, one takes from
+rage. The fighter's hit action adds rage with a <code>then</code> step. The resource's bounds keep it in range, so a full
+pool or an empty one needs no special case.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Health</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span>
+<span class="w">  </span><span class="nt">manaResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Mana</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;50&#39;</span>
+<span class="w">  </span><span class="nt">rageResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Rage</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span>
+<span class="w">  </span><span class="nt">levelResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Level</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;20&#39;</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthResource</span>
+<span class="w">  </span><span class="nt">manaParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">manaResource</span>
+<span class="w">  </span><span class="nt">rageParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rageResource</span>
+<span class="w">  </span><span class="nt">manaRegenParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;2+$levelResource&#39;</span>
+<span class="w">  </span><span class="nt">rageDecayParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;3&#39;</span>
+<span class="w">  </span><span class="nt">rageGainParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;8&#39;</span>
+<span class="w">  </span><span class="nt">hitDamageParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1d6+2&#39;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">manaRegenAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">manaParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">manaRegenParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">rageDecayAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">rageParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">rageDecayParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="c1"># A fighter&#39;s blow: damage, then rage.</span>
+<span class="w">  </span><span class="nt">rageHitAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">hitDamageParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rageGainAction</span>
+<span class="w">  </span><span class="nt">rageGainAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">rageParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">rageGainParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Timer</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">manaRegenTimer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;2&#39;</span>
+<span class="w">    </span><span class="nt">total</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">manaRegenAction</span>
+<span class="w">  </span><span class="nt">rageDecayTimer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">total</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rageDecayAction</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">casterActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Caster</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">timers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">manaRegenTimer</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">manaResource</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">fighterActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Fighter</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">timers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">rageDecayTimer</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">rageResource</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#action"><code>Action</code></a>, <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#parameter"><code>Parameter</code></a>, <a href="/reference/entities.html#resource"><code>Resource</code></a>, <a href="/reference/entities.html#timer"><code>Timer</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li>A Timer runs with its owner as caller and the owner's current target as target. Use <code>*_self</code> actions in timers
+  unless you mean the target.</li>
+<li>The first tick comes one <code>interval</code> after the actor spawns.</li>
+<li>Timers keep running while the actor casts or is rooted; a skill never pauses them.</li>
+<li>Only actors that list the Timer get it, so a caster never gains rage.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

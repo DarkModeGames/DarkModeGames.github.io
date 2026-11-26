@@ -24,13 +24,26 @@ Download the build for your platform and unzip it. The download contains the eng
 
 ## Run the engine
 
-Launch the engine executable to open the **launcher**, where you pick a campaign, log in, and host or join a session. The engine reads campaign `.zip` files from a folder beside the binary, so a campaign you want to play is placed next to the executable before you launch.
+Run the engine executable with command-line flags that name the campaign, the network mode (host or join), and your username and password; see the [CLI reference](/reference/cli.html) and the host boot command below. There is no built-in launcher screen, though a campaign may ship its own launcher that passes these flags for you.
+
+<a id="where-files-go"></a>
+### Where files go
+
+Two locations matter, and they are different:
+
+- **Campaigns** go in a folder named `campaigns` next to the engine executable (on macOS, next to `Isometry.app`). To use another folder, pass `--dir=/absolute/path/to/folder`.
+- **The log, saves, and keys** go in the engine's data folder:
+  - macOS: `~/Library/Application Support/isometry/`
+  - Linux: `~/.local/share/isometry/`
+  - Windows: `%APPDATA%\isometry\`
+
+Not sure where the engine is looking? Run `isometry --print-paths`. It prints the data folder and every campaign folder it checks, then exits.
 
 Throughout this manual, command examples call the engine as `isometry`; use the actual file name of the executable you downloaded for your platform.
 
 ## Load an example campaign
 
-A campaign's [Main](/manual/getting-started/glossary.html#terms) entity is the single required entry point that names the player actor and the starting map. A minimal `Main.yaml` defines one Main entity:
+A campaign's [Main](/manual/getting-started/glossary.html#terms) entity is the single required entry point that names the starting map, and optionally the player actor. A minimal `Main.yaml` defines one Main entity:
 
 ```yaml
 Main:
@@ -51,7 +64,7 @@ Actor:
 
 `speed` is the actor's movement rate and `base` is the footprint size in pixels.
 
-To play a campaign, package its folder into a `.zip` (see [Your first campaign](/manual/getting-started/your-first-campaign.html) for packaging), place the zip beside the engine binary, and launch.
+To play a campaign, package its folder into a `.zip` (see [Your first campaign](/manual/getting-started/your-first-campaign.html) for packaging), put the zip in the `campaigns` folder (see [Where files go](#where-files-go)), and launch.
 
 ## Verify a campaign loads (headless)
 
@@ -71,19 +84,19 @@ Use this in scripts and quick iteration: a zero exit code means every entity, Ke
 
 To exercise the full load-and-validate pipeline, boot in host mode. The `--network` flag selects the multiplayer mode: `none`, `host`, `server`, or `client`. Host mode runs the pipeline you want to exercise.
 
-> Warning: `--network=none` currently loads no campaign. The engine boots but does nothing, so single-player from the command line does not work yet. Single-player today works only through the launcher. To boot a campaign from the CLI, use `--network=host`.
+> Warning: `--network=none` currently loads no campaign. The engine boots but does nothing. To play single-player or boot a campaign, use `--network=host`.
 
-Place the campaign zip next to the engine binary, then run the boot:
+Put the campaign zip in the `campaigns` folder, then run the boot:
 
 ```bash
 isometry --campaign=demo --network=host --port=5000 --username=p --secret=p --log-level=INFO
 ```
 
-The campaign zip must sit beside the binary because the engine resolves campaign files relative to the executable's directory. The `--campaign` flag names the zip without its extension.
+The `--campaign` flag names the zip without its extension, so `--campaign=demo` loads `campaigns/demo.zip`.
 
 > Note: The log level defaults to `NONE`, which produces an essentially empty log. You must pass `--log-level=INFO` (or higher) to see the verification lines. Valid levels, from quietest to loudest, are `NONE`, `FATAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`.
 
-The engine writes to a file named `log.txt` in the same directory as the binary. Open that file and look for two lines that confirm success:
+The engine writes to `log.txt` in its data folder (see [Where files go](#where-files-go)). Open that file and look for two lines that confirm success:
 
 - `Campaign validation passed`
 - `Successfully created Entity`

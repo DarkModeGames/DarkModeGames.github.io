@@ -28,27 +28,27 @@ Main:
     map: demoMap
 ```
 
-Read this as: a `Main` entity, keyed `demoMain`, with two fields. The values `"heroActor"` and `"demoMap"` are not actors and maps themselves; they are **[KeyRefs](/manual/getting-started/glossary.html#terms)**, that is, the keys of other entities the engine resolves at load time. Entity keys must be unique across the whole campaign, so a key used for an Actor cannot be reused for a Map.
+Read this as: a [`Main`](/reference/entities.html#main) entity, keyed `demoMain`, with two fields. The values `"heroActor"` and `"demoMap"` are not actors and maps themselves; they are **[KeyRefs](/manual/getting-started/glossary.html#terms)**, that is, the keys of other entities the engine resolves at load time. Entity keys must be unique across the whole campaign, so a key used for an [Actor](/reference/entities.html#actor) cannot be reused for a Map.
 
-> Note: You may put several entities, even of different types, in one file. The loader merges every YAML file in the campaign into a single set of entities. An example campaign typically splits entities across files for clarity (`Main.yaml`, `heroActor.yaml`, `map.yaml`, and so on) but co-locates helpers, for example a `map.yaml` that also defines the `Vector` that the map's spawn point points to.
+> Note: You may put several entities, even of different types, in one file. The loader merges every YAML file in the campaign into a single set of entities. An example campaign typically splits entities across files for clarity (`Main.yaml`, `heroActor.yaml`, `map.yaml`, and so on) but co-locates helpers, for example a `map.yaml` that also defines the [`Vector`](/reference/entities.html#vector) that the map's spawn point points to.
 
 ## Main: the one required entity
 
-Every campaign must contain **exactly one** Main entity. It defines the campaign's starting state, and only two of its fields are required:
+Every campaign must contain **exactly one** Main entity. It defines the campaign's starting state, but only one of its fields is required:
 
 | Field | Type | Points to |
 | --- | --- | --- |
-| `actor` | KeyRef | the player-controlled Actor |
-| `map` | KeyRef | the starting Map |
+| `map` | KeyRef | the starting Map (required) |
+| `actor` | KeyRef | the player-controlled Actor (optional — omit it and the player starts as an invisible, immovable [null actor](/manual/core-concepts/campaign-structure.html#the-main-entity)) |
 
 If Main is missing or duplicated, validation stops with an error such as `Campaign requires exactly one Main entity (found 0)`.
 
-Main also accepts two optional fields:
+Main also accepts two more optional fields:
 
 - `notes` — a free-text campaign description, empty by default.
 - `plugins` — an ordered list of nested campaign zips to merge in; earlier entries win, and the host campaign always takes priority.
 
-Because `Main.actor` and `Main.map` are the only required values anywhere in a minimal campaign, your next two files just need to exist under the keys Main names.
+This walkthrough builds a campaign with a controllable Actor, so `Main.map` and `Main.actor` are both the values you need — your next two files just need to exist under the keys Main names.
 
 ## Actor: a character in the world
 
@@ -63,18 +63,18 @@ Actor:
     sprite: heroSprite
     base: 8
     speed: 1.0
-    perception: 25
-    salience: 1
+    perception: 250
+    salience: 10
 ```
 
 Each field is doing one job:
 
 - `name` is the display name. Always write the clean key `name`; the underscore form `name_` is internal and never used in campaign files.
-- `sprite` is a KeyRef to a Sprite entity.
+- `sprite` is a KeyRef to a [Sprite](/reference/entities.html#sprite) entity.
 - `base` is the actor's footprint size in pixels (minimum 0).
 - `speed` is movement speed (minimum 0.0).
 - `perception` is the vision range in pixels (minimum 0).
-- `salience` is how easily others detect this actor (minimum 0).
+- `salience` is how far away, in pixels, others can notice this actor (minimum 0).
 
 > Warning: `speed` is a Float field, so it must carry a decimal point. Write `1.0`, not `1`. Integer fields like `base` and `perception` accept whole-number floats such as `8.0`, but a Float field rejects a bare integer.
 
@@ -129,17 +129,19 @@ The fastest check is a quick validate, which runs the validator and exits `0` on
 isometry --validate=mycampaign.zip
 ```
 
-To run the full load pipeline headless, place the zip next to the engine binary and boot with `--network=host`:
+To run the full load pipeline headless, put the zip in the `campaigns` folder next to the engine (see [Where files go](/manual/getting-started/install-and-run.html#where-files-go)) and boot with `--network=host`:
 
 ```bash
 isometry --campaign=mycampaign --network=host --port=5000 --username=p --secret=p --log-level=INFO
 ```
 
-The campaign zip must sit in the same directory as the engine executable. Logs write to `log.txt` in that directory. A successful boot shows `Campaign validation passed` followed by `Successfully created Entity` lines.
+Logs write to `log.txt` in the engine's data folder. A successful boot shows `Campaign validation passed` followed by `Successfully created Entity` lines.
 
 > Note: `--network=none` currently loads no campaign; it is a no-op. Use `--network=host` to exercise the load pipeline. See [CLI reference](/reference/cli.html) for every flag.
 
-If validation fails, the log names the entity and field at fault. Fix the YAML and rerun the boot command; you do not need to repackage unless you changed which files are in the zip.
+If validation fails, the log names the entity and field at fault. Fix the YAML, **zip the campaign again**, and rerun. The engine only ever reads the zip, so an edit to a loose file does nothing until you repackage.
+
+> Tip: Make a one-line script that zips, validates, and boots. You will run it hundreds of times.
 
 ## See also
 

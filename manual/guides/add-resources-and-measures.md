@@ -1,6 +1,6 @@
 # Add Resources and Measures
 
-This page explains the two ways an actor carries a number: a **Resource**, a stored value the game tracks and changes over time, and a **Measure**, a value the engine computes fresh from a [dice expression](/manual/getting-started/glossary.html#terms) each time it is read. You will learn the fields of each entity, how an actor wires them up, and how to choose between them.
+This page explains the two ways an actor carries a number: a **[Resource](/reference/entities.html#resource)**, a stored value the game tracks and changes over time, and a **[Measure](/reference/entities.html#measure)**, a value the engine computes fresh from a [dice expression](/manual/getting-started/glossary.html#terms) each time it is read. You will learn the fields of each entity, how an actor wires them up, and how to choose between them.
 
 ## Prerequisites
 
@@ -14,9 +14,11 @@ This page assumes you have read:
 
 A [Resource](/manual/getting-started/glossary.html#terms) is a trackable numeric value that the engine stores on each actor and changes as the game runs. Health, mana, and gold are resources: they have a current value, they go up and down, and that value persists between reads.
 
-A [Measure](/manual/getting-started/glossary.html#terms) is a value computed on demand from a dice expression. It is not stored. Every time the engine reads a measure it rolls the expression again, so a measure can be different each time and can be random.
+A [Measure](/manual/getting-started/glossary.html#terms) is a value computed on demand from a dice expression. It is not stored. Every time the engine reads a measure it works the expression out again from the actor's current values.
 
-Choose a Resource when the value is owned and mutated: a pool that drains, fills, or transfers. Choose a Measure when the value is derived or rolled in the moment and you do not need to remember it, such as a luck roll.
+Choose a Resource when the value is owned and changed: a pool that drains, fills, or transfers. Choose a Measure when the value is **derived** from other values, such as maximum health from level and gear, or attack power from strength and an equipped weapon.
+
+> Tip: Resources can model far more than health and gold. Cooldowns, quest steps, flags ("has met the blacksmith"), tags ("is an enemy"), threat, and every item a player can carry are all just Resources. See [Recipes](/recipes/) for these patterns.
 
 > Note: Every field on both entities is optional. Provide only the ones your campaign needs.
 
@@ -29,8 +31,8 @@ Resource:
   health:
     name: Health
     default: 20
-    min: 0
-    max: 20
+    min: '0'
+    max: '20'
     icon: /assets/icons/health.png
     description: Hit points. Reach 0 and you're done.
     menu: healthMenu
@@ -40,12 +42,18 @@ Each field, in plain terms:
 
 - `name` — the display name shown in the UI, here `"Health"`.
 - `default` — the value the actor starts with. The hero starts at `20` health.
-- `min` — the lowest the value may reach. All three example resources use `0`.
-- `max` — the highest the value may reach. Health caps at `20`.
+- `min` — the lowest the value may reach. All three example resources use `'0'`.
+- `max` — the highest the value may reach. Health caps at `'20'`.
 - `icon` — a path to an icon image for the UI.
-- `description` — tooltip text describing the resource.
-- `menu` — a [KeyRef](/manual/getting-started/glossary.html#terms) to a Menu entity for interaction options. See [Menus, dialogs, and waypoints](/manual/guides/menus-dialogs-waypoints.html).
+- `description` — tooltip text describing the resource. BBCode formatting (`[b]`, `[color=#...]`, `[br]`) shows as formatting.
+- `menu` — a [KeyRef](/manual/getting-started/glossary.html#terms) to a [Menu](/reference/entities.html#menu) entity for interaction options. See [Menus, dialogs, and waypoints](/manual/guides/menus-dialogs-waypoints.html).
 - `reveal` — a visibility threshold. The resource is shown only when its value is at least `reveal`; `0` (the default) means always visible.
+- `combat_text`, `gain_color`, `loss_color` — set `combat_text: true` to float the change (`+5`, `-12`) over the actor whenever this value changes, in the given hex colours. Good for health, gold, and experience.
+- `tags` — a list of short words that sort the resource into categories, such as `[gear, head]` or `[material, ore]`. The resources view shows one filter chip per tag, so a player can list only their gear or only their ore. Tags are shown title-cased ("Material"). An entry with no tags appears only under "All".
+
+> Warning: `min` and `max` are **dice expressions, written as quoted strings**: `max: '20'`, not `max: 20`. That lets a bound be live, like `max: $maxHealthMeasure`, where `$` means the actor that owns the resource. Always set both: a resource with no `max` is clamped to `0`.
+
+> Tip: For internal bookkeeping (cooldowns, quest flags, tags) that players should never see in their resources list, set `reveal` to a huge number like `999999`.
 
 > Note: Write the clean YAML keys `name`, `min`, and `max`. The trailing-underscore forms (`name_`, `min_`, `max_`) are internal to the engine and never appear in a campaign file.
 
@@ -56,22 +64,35 @@ Resource:
   mana:
     name: Mana
     default: 10
-    min: 0
-    max: 10
+    min: '0'
+    max: '10'
     icon: /assets/icons/sun.png
     description: Magical energy for casting skills.
   gold:
     name: Gold
     default: 5
-    min: 0
-    max: 999
+    min: '0'
+    max: '999'
     icon: /assets/icons/sun.png
     description: Currency for trading with merchants.
 ```
 
 ## Define measures
 
-Measures are declared under a top-level `Measure` block. The example defines one, `luckMeasure`.
+Measures are declared under a top-level `Measure` block. A typical measure derives a stat from other values:
+
+```yaml
+Measure:
+  maxHealthMeasure:
+    name: Maximum Health
+    description: Grows with level and armour.
+    expression: $level*10+$armourMeasure*2+20
+    private: true
+```
+
+`$level` reads the actor's own `level` resource; `$armourMeasure` reads another measure. Then point a resource's bound at it: `max: $maxHealthMeasure`.
+
+A measure can also include dice, which roll fresh on every read. The example defines one, `luckMeasure`.
 
 ```yaml
 Measure:
@@ -91,6 +112,7 @@ Each field:
 - `private` — when `true`, the measure appears on the actor's own data plate. The example sets it `true`.
 - `reveal` — a visibility threshold, the same as on a resource. `0` means always visible.
 - `menu` — a KeyRef to a Menu entity. Omitted in the example.
+- `tags` — a list of short words for the resources view's filter chips, the same as on a resource.
 
 > Note: Measure visibility lives on the measure itself, through its own `public` and `private` booleans. Resource visibility works differently and lives on the actor, as the next section shows.
 
@@ -128,7 +150,7 @@ You do not edit a resource value directly; you change it by running an [action](
 
 Each takes two [parameters](/manual/getting-started/glossary.html#terms): `resource`, a KeyRef to the Resource to change, and `expression`, a dice expression for the amount. The new value is capped at the resource's own `min` and `max`, so a `plus` that would exceed `max` stops at the cap.
 
-An action lists its parameters as a flat array of KeyRefs, with the Parameter entities defined in a sibling top-level `Parameter` block. The shape looks like this.
+An action lists its parameters as a flat array of KeyRefs, with the [Parameter](/reference/entities.html#parameter) entities defined in a sibling top-level `Parameter` block. The shape looks like this.
 
 ```yaml
 Action:
@@ -150,7 +172,7 @@ Measures take no such functions: there is nothing to change, because the engine 
 
 ## Show a value on a dialog
 
-Dialog text can print a live resource or measure value with templating tokens. The `@` token reads the target actor; the `$` token reads the caller. The names after the token are entity keys.
+[Dialog](/reference/entities.html#dialog) text can print a live resource or measure value with templating tokens. The `@` token reads the target actor; the `$` token reads the caller. The names after the token are entity keys.
 
 {% raw %}
 ```

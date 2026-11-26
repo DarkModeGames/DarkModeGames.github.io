@@ -76,7 +76,7 @@ Tile:
 
 Each [Tile](/reference/entities.html#tile) field controls one thing:
 
-- `symbol` is the character matched against the layer grid. It is a string by schema, but the engine reads one character at a time, so use a single character such as `"G"`.
+- `symbol` is the character matched against the layer grid. It is a string by schema, but the engine reads one character at a time, so use a single character such as `"G"`. Symbols are matched **across the whole campaign**, so two tiles in different tilesets must not share a symbol.
 - `index` picks which cell in the grid to use, counting left to right then top to bottom, starting at `0`. With `columns` set to 8, grass `0` is the top-left cell, water `46` is column 6 row 5, and wall `52` is column 4 row 6.
 - `navigation` points at a [Face](/reference/entities.html#face) entity that marks the tile as walkable. Here `grass` references `roof`, so actors can walk across grass and avoid everything else.
 - `obstacle` points at a `Face` entity that marks the tile as solid. The `wall` references the same `roof`. A tile's faces just say which parts are walkable versus solid.
@@ -131,7 +131,21 @@ The `ysort` field controls what draws in front, so taller terrain like walls dra
 
 ### How grid characters become tile positions
 
-The engine walks the grid in a fixed direction. Each row advances the tile position by one step along the map's X axis, and each character within a row steps by one along the Y axis. You do not set these coordinates yourself; you only arrange characters in the file. The result is that the shape you type in the text file is the shape you walk in the game.
+The engine reads the grid like this:
+
+- **Line number `L` of the file is map column `x = L`** (the first line is `x = 0`).
+- **Character number `C` on that line is map row `y = -C`** (the first character is `y = 0`, the next `y = -1`, and so on).
+
+On screen, `x` runs down-right and `y` runs down-left, so the shape in your text file appears **rotated** in game: each line of the file becomes a diagonal running up-right. Expect to check your layout in game rather than trusting the text file's look.
+
+To place things (spawn points, deployments) on a cell, convert the cell to pixels. The centre of the walkable top of cell `(x, y)` is:
+
+```
+pixel x = 16 * (x - y) + 16
+pixel y = 8 * (x + y)
+```
+
+Each cell is 32 px wide and 16 px tall on screen.
 
 ## Place the spawn point
 
@@ -177,7 +191,7 @@ Vector:
     y: 0
 ```
 
-Each `actor` is a full Actor entity defined elsewhere in the campaign. To give a deployed NPC its own behavior, give that actor a strategy; see [Add NPC AI](/manual/guides/add-npc-ai.html).
+Each `actor` is a full [Actor](/reference/entities.html#actor) entity defined elsewhere in the campaign. To give a deployed NPC its own behavior, give that actor a strategy; see [Add NPC AI](/manual/guides/add-npc-ai.html).
 
 ## Assemble the map
 
@@ -202,6 +216,49 @@ Vector:
 This Map names itself for the interface, draws its terrain from `demoTileMap`, enters the player at `demoSpawn`, and deploys the three NPCs. To make this map the one a campaign starts on, point the Main entity's map field at it; see [Campaign structure](/manual/core-concepts/campaign-structure.html).
 
 The Map also carries `background` and `audio` fields for parallax scenery and music. Those are covered in [Audio and backgrounds](/manual/guides/audio-and-backgrounds.html).
+
+## Walls, trees, and other tall things
+
+Tiles are for **flat ground**. Anything that stands up (a wall, a tree, a lamp post, a house, a chest) should be an **Actor** with a single still image, placed with a Deployment. Actors are depth-sorted against the player, so the player correctly walks behind a tree and in front of it. A tall tile can't do that.
+
+Set `targetable: false` on these scenery actors so players can't tab-target or click them, and give them `salience` of at least `1` (salience `0` is never drawn).
+
+Actors never block movement, so a solid prop also needs an invisible wall under it: a tile with `obstacle` set to a Face and `ghost: true`, in a layer under the prop's footprint. `ghost` hides the tile while it still blocks movement.
+
+```yaml
+Tile:
+  blockerTile:
+    symbol: '#'
+    index: 0
+    obstacle: roof
+    ghost: true
+Actor:
+  oakTreeActor:
+    name: Oak
+    sprite: oakTreeSprite
+    targetable: false
+    salience: 1
+```
+
+> Tip: Don't hide important actors (quest givers, shopkeepers) behind tall props. Players can't see them through the art, so leave them a clear spot in front.
+
+## Help walkers round corners (optional)
+
+Walkers plan their routes over the walkable tiles and bend their path at corners. The corners of walls and
+obstacles are found for you. Where a route still looks wrong, such as a narrow doorway or a gap between props, add a
+[`Nav`](/reference/entities.html#nav) point: a [`Vector`](/reference/entities.html#vector) on a given
+[`Map`](/reference/entities.html#map) where walkers may also bend their path.
+
+```yaml
+Nav:
+  smithyDoorNav:
+    map: townMap
+    location: smithyDoorVector
+```
+
+Put the point in the middle of the opening, on walkable ground: a point off the walkable area or inside an
+obstacle is skipped with a warning when the map is built. See
+[Help pathfinding round corners with Nav points](/recipes/corner-pathing-with-nav.html).
 
 ## Add floor overlays (optional)
 

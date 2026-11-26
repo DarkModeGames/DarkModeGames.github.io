@@ -1,13 +1,13 @@
 # Conditions and Logic
 
-A [Condition](/manual/getting-started/glossary.html) is a single yes-or-no comparison that the engine uses to decide whether an [action](/manual/getting-started/glossary.html) runs and which branch it takes, and to decide what an AI actor does next. This page explains the three fields of a Condition, the operator symbols you can use, how operands resolve to live actor values, and how the engine evaluates the result.
+A [Condition](/manual/getting-started/glossary.html) is a single yes-or-no comparison that the engine uses to decide whether an [action](/manual/getting-started/glossary.html) runs and which branch it takes, and to decide what an AI actor does next. This page explains the three fields of a [Condition](/reference/entities.html#condition), the operator symbols you can use, how operands resolve to live actor values, and how the engine evaluates the result.
 
 ## Introduction
 
 Most gameplay logic comes down to a question: is this actor hurt? do I have a target? am I close enough to attack? A Condition answers one such question by comparing a left value to a right value with an operator. The answer, `true` or `false`, gates two things:
 
 - An action's branching. An action runs its `do` only when its `if` Condition passes, then chains to `then` or `else`.
-- An AI actor's behavior. A [behavior](/manual/getting-started/glossary.html) lists Conditions as goals, and runs its action only when all goals pass.
+- An AI actor's behavior. A [behavior](/manual/getting-started/glossary.html) lists Conditions as goals, and keeps running its action **until** all goals pass.
 
 Because both operands flow through the same engine that rolls [dice expressions](/manual/core-concepts/dice-expressions.html), a Condition can compare plain numbers, dice rolls, or live values pulled from an actor's resources and measures.
 
@@ -29,17 +29,17 @@ A Condition entity lives in your campaign YAML under a `Condition` block. It has
 
 A Condition holds data only; it contains no logic of its own. The engine evaluates it when an action or behavior asks.
 
-Here is the `isHurt` Condition, which asks whether the target's health is below 20:
+Here is the `isHurt` Condition, which asks whether the caller's own health is below 20:
 
 ```yaml
 Condition:
   isHurt:
-    left: '@health'
+    left: $health
     operator: <
     right: '20'
 ```
 
-At evaluation time the engine resolves `@health` to the target actor's `health` resource, treats `20` as the literal number twenty, and returns `true` when the resource is less than twenty.
+At evaluation time the engine resolves `$health` to the caller's `health` resource, treats `20` as the literal number twenty, and returns `true` when the resource is less than twenty.
 
 > Note: An action that has no `if` Condition always runs. A missing or empty `if` auto-passes, so you only add a Condition when you want to gate something.
 
@@ -61,7 +61,7 @@ Both spellings of equal and not-equal are valid. The `hasTarget` Condition uses 
 ```yaml
 Condition:
   hasTarget:
-    left: '@has_target'
+    left: $has_target
     operator: '='
     right: '1'
 ```
@@ -87,18 +87,24 @@ For each reference, the engine looks up `key` first in that actor's [resources](
 
 > Note: This is the same `@`/`$` convention used by [dialog](/manual/getting-started/glossary.html) templating. There the tokens read values for display; in a Condition they read values for comparison.
 
-For example, `@health` reads the target's `health` resource, while `$health` would read the caller's own `health`. The example Conditions all use `@`, because they gate actions and AI that act on a target.
+For example, `@health` reads the target's `health` resource, while `$health` reads the caller's own `health`. Pick the marker by asking *whose* value you mean: a self-heal checks `$health`; a finishing move checks `@health`.
 
 ### Built-in measures
 
 Some operands reference built-in measures rather than resources you defined. These are values the engine computes about an actor at runtime:
 
 - `has_target` — `1` if the actor has a target set, otherwise `0`.
-- `distance_to_target` — the isometric distance to the actor's current target, or `0` if there is no target.
-- `distance_to_destination` — the isometric distance to the actor's destination.
+- `distance_to_target` — the distance to the actor's current target in pixels on the isometric ground, or `0` if there is no target. Vertical distance counts double (the same ellipse as sight and bases): 100 px above reads `200`, 100 px beside reads `100`. The value keeps its fraction; dice round the final result.
+- `distance_to_destination` — the distance to the actor's destination, in pixels on the same ellipse as `distance_to_target`.
+- `distance_to_home` — the distance to where the actor spawned (its Deployment, or where it was spawned), on the same ellipse; a very large number on another map. `move_home_self` walks it back.
+- `order` — a minion's order from its master in the Minions menu: 0 Follow (the default), 1 Attack (it is also pointed at the master's target), 2 Stay (its current spot also becomes its home).
 - `flying` — `1` if the actor is currently flying, otherwise `0`. For example, gate a melee action on `@flying = 0` so it misses airborne targets.
+- `can_land` — `1` if the actor is over walkable ground, so a flier could land where it is (a walker on the ground reads `1`), otherwise `0`.
+- `minions` — how many of the actor's [minions](/manual/guides/minions-and-formations.html) are in the world: actors its `spawn_actor_*` actions spawned.
+- `has_master` — `1` if the actor was spawned by another actor that is still in the world, otherwise `0`.
+- `mine` — `1` when the *target* is the *caller's* minion, otherwise `0`. Read it as `@mine`: it relates the two actors, so `$mine` is always `0`. It works anywhere a target is in hand: an action's `if`, an area-of-effect sub-action, a menu, a behavior goal.
 
-So the Condition `@has_target = 1` reads as "the target actor has a target."
+So `$has_target = 1` reads as "I have a target", while `@has_target = 1` would ask whether *my target* has a target.
 
 > Note: When an action runs with no target, the target actor is empty and any `@key` operand resolves to `0`. Design target-dependent Conditions with that fallback in mind.
 
@@ -112,6 +118,8 @@ When an action or behavior needs the answer, the engine does the following:
 4. Compares the two results with `operator` and returns `true` or `false`.
 
 Both operands are reduced to whole numbers before the comparison, and any result below `0` is treated as `0`. The comparison itself is always whole number to whole number.
+
+> Tip: `$` vs `@` in AI goals. In a behavior, the caller is the AI actor itself, so `$has_target` asks "do **I** have a target?" and `$distance_to_target` is "how far is **my** target?". `@health` reads the target's health.
 
 ## Gating an action
 
@@ -137,7 +145,7 @@ Action:
 
 When `isHurt` passes, the action adds health and chains to `healConfirmAction`. When it fails, it skips the heal and chains to `alreadyFullAction` instead.
 
-> Note: `parameters` is a flat array of KeyRefs to `Parameter` entities defined in a sibling top-level `Parameter` block. See [Define actions](/manual/guides/define-actions.html) for how parameters are wired.
+> Note: `parameters` is a flat array of KeyRefs to [`Parameter`](/reference/entities.html#parameter) entities defined in a sibling top-level `Parameter` block. See [Define actions](/manual/guides/define-actions.html) for how parameters are wired.
 
 A simpler case is `deathAction`, where one Condition gates one effect:
 
@@ -155,7 +163,7 @@ The `isDead` Condition (`@health <= 0`) must pass before the message runs.
 
 ## Gating AI behavior
 
-A behavior's `goals` field is an array of Condition keys. The engine evaluates every goal Condition, using the behaving actor as the caller and its current target as the target. The behavior's action runs only if **all** goals pass — the goals are combined with logical AND.
+A behavior's `goals` field is an array of Condition keys. The engine evaluates every goal Condition, using the behaving actor as the caller and its current target as the target. The goals describe the state the behavior is trying to **reach**: the behavior's action runs while any goal is still unmet, and once **all** goals pass, the strategy moves on to the next behavior.
 
 A strategy wires Conditions as AI goals:
 
@@ -167,23 +175,23 @@ Behavior:
     action: patrolAction
   followBehavior:
     goals:
-    - isNearTarget
+    - isCloseToTarget
     action: pursueAction
 ```
 
-`patrolBehavior` runs its patrol only while the actor has a target, and `followBehavior` pursues only while the target is more than one tile away (`@distance_to_target > 1`). See [Add NPC AI](/manual/guides/add-npc-ai.html) for how behaviors combine into a [strategy](/manual/getting-started/glossary.html).
+`patrolBehavior` patrols **until** the actor has a target. `followBehavior` pursues **until** the target is within 32 px (`$distance_to_target <= 32`, about one tile across). See [Add NPC AI](/manual/guides/add-npc-ai.html) for how behaviors combine into a [strategy](/manual/getting-started/glossary.html).
 
 ## The example Conditions at a glance
 
-The example campaign defines five Conditions, all reading the target actor:
+The example campaign defines these Conditions:
 
 | Key | Comparison | Reads as |
 | --- | --- | --- |
-| `isDead` | `@health <= 0` | health at or below zero |
-| `isHurt` | `@health < 20` | health below twenty |
-| `hasTarget` | `@has_target = 1` | the actor has a target |
-| `isNearTarget` | `@distance_to_target > 1` | the target is more than one tile away |
-| `isAtDestination` | `@distance_to_destination < 1` | the actor has reached its destination |
+| `isDead` | `$health <= 0` | my health is at or below zero (for a trigger on my own health) |
+| `isHurt` | `$health < 20` | my health is below twenty |
+| `hasTarget` | `$has_target = 1` | I have a target |
+| `isCloseToTarget` | `$distance_to_target <= 32` | my target is within 32 px (about one tile across) |
+| `isAtDestination` | `$distance_to_destination < 1` | I have reached my destination |
 
 Use these as templates: change the operand key, operator, and right-hand value to ask your own question.
 

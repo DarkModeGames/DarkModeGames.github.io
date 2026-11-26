@@ -45,7 +45,7 @@
         <h1>Create an Actor</h1>
 <p>This page shows you how to author an <a href="/manual/getting-started/glossary.html">Actor</a> entity in campaign YAML, building from a minimal definition up to a full player and NPC actor. An actor is a character in the game world, so getting its fields right is the first step toward a playable campaign.</p>
 <h2>Introduction</h2>
-<p>An Actor entity describes one character: how it looks, how fast it moves, what it can see, what it can do, and which resources it tracks. The same entity type covers both the player and AI-driven enemies; the difference comes from the fields you set.</p>
+<p>An <a href="/reference/entities.html#actor">Actor</a> entity describes one character: how it looks, how fast it moves, what it can see, what it can do, and which resources it tracks. The same entity type covers both the player and AI-driven enemies; the difference comes from the fields you set.</p>
 <p>This page uses two actors from an example campaign. The <code>heroActor</code> is the canonical player. The <code>guardActor</code> is the canonical NPC. By the end you will understand every Actor field and when to set it.</p>
 <blockquote>
 <p>Note: Every Actor field is optional. You can spawn a valid actor with no fields at all, then add only what your character needs.</p>
@@ -70,6 +70,9 @@
 <p>Note: In YAML you always write the clean key <code>name</code>. The internal alias <code>name_</code> exists only inside the engine's GDScript; campaign files never use it.</p>
 </blockquote>
 <h2>Footprint and collision</h2>
+<blockquote>
+<p>Note: Actors never block each other's movement. Two actors can stand in the same spot. To make something solid (a wall, a well, a statue), put an obstacle tile under it; see <a href="/manual/guides/build-a-map.html">Build a map</a>.</p>
+</blockquote>
 <p>Two fields control how the actor occupies space on the map.</p>
 <p><code>base</code> is the size, in pixels, of the actor's footprint circle — the circle used for placement and selection. The example uses <code>8</code> for both actors.</p>
 <p>The actor's click/touch area is taken automatically from its sprite (shaped to the visible art, sitting at the feet) — there is no field to author.</p>
@@ -80,22 +83,22 @@
 <span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
 </code></pre></div>
 
-<p>The <code>base</code> value must be <code>0</code> or greater.</p>
+<p>The <code>base</code> value must be <code>0</code> or greater. An actor with <code>base: 0</code> (the default) has no base collider, so area effects never hit it.</p>
 <h2>Sight: perception and salience</h2>
 <p>Two fields govern how actors detect one another.</p>
-<p><a href="/manual/getting-started/glossary.html">perception</a> is the actor's vision range in pixels for detecting other actors. The hero sees farther than the guard: <code>25</code> versus <code>15</code>.</p>
-<p><a href="/manual/getting-started/glossary.html">salience</a> is how easily other actors detect this actor — its detection difficulty, where a higher number means more visible. Both example actors use <code>1</code>.</p>
+<p><a href="/manual/getting-started/glossary.html">perception</a> is the actor's vision range in pixels for detecting other actors. The hero sees farther than the guard: <code>250</code> versus <code>150</code> pixels. The sight area is an ellipse, as wide as the number to each side and half that up and down, to match the isometric ground.</p>
+<p><a href="/manual/getting-started/glossary.html">salience</a> is how easily other actors detect this actor — its detection difficulty, where a higher number means more visible. Both example actors use <code>10</code>. Salience is also a radius in pixels: an observer sees this actor when its perception ellipse overlaps this one.</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
 <span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
-<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
-<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">250</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 </code></pre></div>
 
 <p>Both fields must be <code>0</code> or greater. Together they decide whether one actor can see another: a target with high <code>salience</code> is spotted from farther away, while an observer with high <code>perception</code> spots more.</p>
 <h2>Movement: speed and bearing</h2>
-<p><code>speed</code> is movement speed in pixels per second. The hero moves at <code>1.0</code>; the slower guard at <code>0.5</code>.</p>
+<p><code>speed</code> is a movement multiplier: <code>1.0</code> is normal walking pace. The hero moves at <code>1.0</code>; the slower guard at <code>0.5</code> moves at half that pace.</p>
 <p><code>bearing</code> is the current facing direction in degrees, from <code>0</code> to <code>360</code>, where <code>0</code> is north. It defaults to <code>0</code>, and neither example actor sets it.</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
@@ -106,7 +109,10 @@
 
 <p>The <code>speed</code> value must be <code>0.0</code> or greater.</p>
 <h2>Resources and visibility</h2>
-<p>An actor's numeric values — health, mana, gold — are <a href="/manual/guides/add-resources-and-measures.html">Resource</a> entities listed in the <code>resources</code> field. The hero tracks three; the guard tracks one.</p>
+<p>An actor's numeric values — health, mana, gold — are <a href="/manual/guides/add-resources-and-measures.html">Resource</a> entities.</p>
+<blockquote>
+<p>Important: <strong>Every actor automatically holds every <a href="/reference/entities.html#resource">Resource</a> defined in the campaign</strong>, starting at that resource's <code>default</code>. You don't need to list them. The <code>resources</code> field is accepted but the engine does not read it. To give one actor a different starting value (a boss with more health, a tag like "is an enemy"), set it when the actor spawns; see the <a href="/recipes/">spawn-hook recipe</a>.</p>
+</blockquote>
 <p>Two more fields control who sees which resources:</p>
 <ul>
 <li><code>public</code> lists resources shown on the target focus <a href="/manual/getting-started/glossary.html">plate</a> when another actor views this actor.</li>
@@ -117,10 +123,6 @@
 <span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
 <span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
-<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mana</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gold</span>
 <span class="w">    </span><span class="nt">public</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
 <span class="w">    </span><span class="nt">private</span><span class="p">:</span>
@@ -129,10 +131,10 @@
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gold</span>
 </code></pre></div>
 
-<p>The guard sets <code>resources</code> and <code>public</code> to <code>["health"]</code> and omits <code>private</code>. Omit any of these fields when the actor has nothing to put in it.</p>
-<p>You can also attach <a href="/manual/guides/add-resources-and-measures.html">Measure</a> entities through <code>measures</code> — values rolled from a <a href="/manual/getting-started/glossary.html">dice expression</a>. The hero carries <code>["luckMeasure"]</code>; the guard carries none.</p>
+<p>The guard sets <code>public</code> to <code>[health]</code> and omits <code>private</code>. Keep these lists short: the plate is for values a player needs at a glance in combat (health, the main power resource, cooldowns). Everything else can live in the resources menu.</p>
+<p>You can also list <a href="/manual/guides/add-resources-and-measures.html">Measure</a> entities in <code>measures</code> — values computed from a <a href="/manual/getting-started/glossary.html">dice expression</a>. Every actor can read every measure; the <code>measures</code> list decides which ones may show on this actor's own plate (a measure with <code>private: true</code> appears only if it is listed here).</p>
 <blockquote>
-<p>Tip: Resources and measures appear on plates. Dialog text reads live values with templating tokens — <code>@</code> for the viewed target and <code>$</code> for the caller. See <a href="/manual/guides/menus-dialogs-waypoints.html">Menus, dialogs, and waypoints</a>.</p>
+<p>Tip: Resources and measures appear on plates. <a href="/reference/entities.html#dialog">Dialog</a> text reads live values with templating tokens — <code>@</code> for the viewed target and <code>$</code> for the caller. See <a href="/manual/guides/menus-dialogs-waypoints.html">Menus, dialogs, and waypoints</a>.</p>
 </blockquote>
 <h2>Skills, group, and menu</h2>
 <p><code>skills</code> is a list of <a href="/manual/guides/add-skills.html">Skill</a> entities the actor can use, up to nine. The hero has <code>["attackSkill", "healSkill"]</code>; the guard has none.</p>
@@ -163,16 +165,17 @@
 </code></pre></div>
 
 <h2>Event hooks</h2>
-<p>An actor can run an <a href="/manual/guides/define-actions.html">Action</a> in response to four world events. Each field is a KeyRef to an Action:</p>
+<p>An actor can run an <a href="/manual/guides/define-actions.html">Action</a> in response to world events. Each field is a KeyRef to an Action:</p>
 <ul>
-<li><code>on_touch</code> — another actor touches this actor.</li>
+<li><code>on_start</code> — runs once, for a <strong>player</strong> actor, on that username's very first login. It does not run for NPCs or on later logins. For setup that every actor needs when it appears, use a <a href="/reference/entities.html#trigger">Trigger</a> instead (see the spawn-hook recipe in <a href="/recipes/">Recipes</a>).</li>
+<li><code>on_touch</code> — the local player touches this actor (the action runs with this actor as the caller and the player as the target).</li>
 <li><code>on_view</code> — another actor views this actor.</li>
 <li><code>on_map_entered</code> — this actor enters a map.</li>
 <li><code>on_map_exited</code> — this actor exits a map.</li>
 </ul>
 <p>Neither example actor sets these, so they are shown here only for completeness. Wire them up when a character should react automatically to contact, sight, or map changes.</p>
 <blockquote>
-<p>Note: An Action's <code>parameters</code> field is a flat array of KeyRefs to Parameter entities, paired with a sibling top-level <code>Parameter</code> block. See <a href="/manual/guides/define-actions.html">Define actions</a> for the exact shape.</p>
+<p>Note: An Action's <code>parameters</code> field is a flat array of KeyRefs to <a href="/reference/entities.html#parameter">Parameter</a> entities, paired with a sibling top-level <code>Parameter</code> block. See <a href="/manual/guides/define-actions.html">Define actions</a> for the exact shape.</p>
 </blockquote>
 <h2>Player versus NPC</h2>
 <p>The single field that turns an actor into an AI-driven NPC is <code>strategy</code> — a KeyRef to a <a href="/manual/guides/add-npc-ai.html">Strategy</a> entity that decides what the actor does. The player actor has no strategy because the human controls it.</p>
@@ -192,13 +195,9 @@
 <span class="w">    </span><span class="nt">skills</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackSkill</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healSkill</span>
-<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
-<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">250</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 <span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroMenu</span>
-<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mana</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gold</span>
 <span class="w">    </span><span class="nt">measures</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">luckMeasure</span>
 <span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
@@ -212,7 +211,7 @@
 <span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
 </code></pre></div>
 
-<p>Note that this file holds a second entity, the <code>heroStartPos</code> Vector. A single entity file can define multiple entity types and keys.</p>
+<p>Note that this file holds a second entity, the <code>heroStartPos</code> <a href="/reference/entities.html#vector">Vector</a>. A single entity file can define multiple entity types and keys.</p>
 <p>And here is the complete <code>guardActor</code>, an NPC. It is leaner — no skills, measures, timers, or private resources — and it sets <code>strategy</code>:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">guardActor</span><span class="p">:</span>
@@ -222,11 +221,9 @@
 <span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
 <span class="w">    </span><span class="nt">public</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
-<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
-<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">150</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 <span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardMenu</span>
-<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
 <span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deathTrigger</span>
 <span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enemyGroup</span>
@@ -250,7 +247,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

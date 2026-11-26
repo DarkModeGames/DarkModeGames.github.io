@@ -1,6 +1,6 @@
 # Sprites and Animations
 
-This page shows how an actor gets its on-screen appearance from three entities: a [Sprite](/reference/entities.html#sprite) that names a sprite sheet and frame size, an AnimationSet that groups animations, and Animation entities that list the frames to play for each of the eight directions an actor can face.
+This page shows how an actor gets its on-screen appearance from three entities: a [Sprite](/reference/entities.html#sprite) that names a sprite sheet and frame size, an [AnimationSet](/reference/entities.html#animationset) that groups animations, and [Animation](/reference/entities.html#animation) entities that list the frames to play for each of the eight directions an actor can face.
 
 ## Introduction
 
@@ -53,8 +53,8 @@ Inset:
 The fields:
 
 - `texture` is the path to the sheet image inside the campaign archive.
-- `size` is a [KeyRef](/manual/getting-started/glossary.html) to a Vector giving one frame's width and height in pixels. Here each frame is `64` by `64`. This is the number the engine uses to slice the grid.
-- `margin` is a KeyRef to an Inset giving the empty padding around the visible art on each edge (`top`/`right`/`bottom`/`left`). The bottom edge seats the art's feet on the tile, the left/right center it, and all four edges size the actor's footprint so it hugs the body instead of the empty frame.
+- `size` is a [KeyRef](/manual/getting-started/glossary.html) to a [Vector](/reference/entities.html#vector) giving one frame's width and height in pixels. Here each frame is `64` by `64`. This is the number the engine uses to slice the grid.
+- `margin` is a KeyRef to an [Inset](/reference/entities.html#inset) giving the empty padding around the visible art on each edge (`top`/`right`/`bottom`/`left`). The bottom edge seats the art's feet on the tile, the left/right center it, and all four edges size the actor's footprint so it hugs the body instead of the empty frame.
 - `animation_set` is a KeyRef to the AnimationSet whose animations are built into this sprite. Without it, the sprite has no directional animations.
 
 All four fields are optional in the schema, but a sprite with no `texture`, `size`, or `animation_set` produces nothing visible. Always set them.
@@ -196,9 +196,9 @@ Animation:
     - 1
 ```
 
-The `sound` field is a KeyRef to a [Sound](/manual/guides/audio-and-backgrounds.html) entity. The engine builds an audio node named after the animation key and plays it when the animation starts. See [Audio and backgrounds](/manual/guides/audio-and-backgrounds.html) for how Sound entities are defined.
+The `sound` field is a KeyRef to a [Sound](/manual/guides/audio-and-backgrounds.html) entity. The engine builds an audio node named after the animation key and plays it when the animation starts. When the animation's state ends, a looping sound fades out and a one-shot plays to its end. See [Audio and backgrounds](/manual/guides/audio-and-backgrounds.html) for how Sound entities are defined.
 
-An `Animation` also accepts an optional `loop` boolean. In the current build animations loop on their own, so this flag has no effect yet.
+An `Animation` also accepts an optional `loop` boolean, which defaults to `true`. Leave it out and the animation repeats, as `idle`, `walk` and `run` should. Set `loop: false` for a clip that plays once and holds its last frame, such as a death pose. A skill whose action uses a one-shot clip holds that last frame until the action's `time` runs out, then the actor returns to idle.
 
 ## How states and headings choose what plays
 
@@ -206,10 +206,10 @@ At runtime the engine names each playable animation by combining the state with 
 
 Two inputs drive the choice:
 
-1. **The state.** Movement uses the built-in states `idle`, `walk`, and `run`. When the actor is moving, the engine selects `run` if its speed is high enough, otherwise `walk`; when it stops, it returns to `idle`. A skill can also set a state from its action's animation (the example attack uses `tool`).
+1. **The state.** Movement uses the built-in states `idle`, `walk`, `run`, `fly`, and `hover`. On the ground, the engine selects `run` if the actor's speed is high enough, otherwise `walk`; when it stops, it returns to `idle`. While flying (toggled with the `fly_self`/`land_self` actions), the same movement/stopped split uses `fly` while moving and `hover` while stationary instead. A flier only lands over walkable ground: `land_self` and `land_target` do nothing over a wall, water or the edge of the map, and `$can_land` reads `1` when landing would work. Check `$can_land` before a `change_actor` into a body that can't fly, which isn't stopped this way. A skill can also set a state from its action's animation (the example attack uses `tool`).
 2. **The heading.** The actor's facing maps to one of the eight directions.
 
-Because of this, an AnimationSet should normally include `idle` plus `walk` and/or `run` so movement has frames to play. The example provides `idle` and `run`.
+Because of this, an AnimationSet should normally include `idle` plus `walk` and/or `run` so ground movement has frames to play, and `fly`/`hover` if the actor can ever fly. The example provides `idle` and `run`; a flying actor would add `fly` and `hover` the same way.
 
 > Note: If a requested `<state>:<heading>` animation does not exist, the actor falls back to `idle:<heading>` for that direction. A missing run animation simply shows the idle pose while moving, so define the states you actually use.
 
@@ -229,6 +229,47 @@ Actor:
 
 That single KeyRef pulls in the whole chain: `heroSprite` names the sheet and frame size and points at `heroAnimSet`, which lists `idle`, `run`, and `tool`. At load time the engine slices the sheet into frames and builds a directional animation for each state-and-heading pair. See [Create an actor](/manual/guides/create-an-actor.html) for the rest of the actor's fields.
 
+## Reusing one sprite with skins
+
+A Skin recolors an actor's sprite at render time, so many [Actor](/reference/entities.html#actor) entities can share one Sprite (and one texture) while each showing up as a different color — no duplicate art or duplicate Sprite entities needed.
+
+A Skin is a named list of Masks, and each Mask maps one hex color to another:
+
+```yaml
+Mask:
+  redToBlue:
+    from_color: "#B23A2E"
+    to_color: "#2E5DB2"
+  redToYellow:
+    from_color: "#B23A2E"
+    to_color: "#D9C23A"
+Skin:
+  blueTeam:
+    title: Blue Team
+    masks:
+    - redToBlue
+  yellowTeam:
+    title: Yellow Team
+    masks:
+    - redToYellow
+```
+
+Point an actor's `skin` field at one:
+
+```yaml
+Actor:
+  heroBlue:
+    sprite: heroSprite
+    skin: blueTeam
+  heroYellow:
+    sprite: heroSprite
+    skin: yellowTeam
+```
+
+Both actors above use the exact same `heroSprite` texture. `heroBlue` and `heroYellow` each swap the sprite's red for a different color, entirely on the GPU — the underlying image is never duplicated or re-exported. `skin` is optional: an actor with no `skin` renders the sprite's original, unmodified colors.
+
+`skin` is fixed campaign data — set it when you define the Actor, not something changed mid-game. A Skin holds up to 16 Masks; colors are matched exactly (small anti-aliasing differences are tolerated automatically).
+
 ## Checklist for a new actor sprite
 
 1. Add the sheet image to your campaign's `assets` folder.
@@ -237,6 +278,7 @@ That single KeyRef pulls in the whole chain: `heroSprite` names the sheet and fr
 4. Define an AnimationSet listing your Animation keys.
 5. Define `idle` plus `walk` and/or `run` Animations, with all eight directions filled in.
 6. Point the actor's `sprite` field at your Sprite.
+7. Optional: to reuse the same Sprite with a different coloring, define a Skin (and its Masks) and point the actor's `skin` field at it.
 
 ## See also
 

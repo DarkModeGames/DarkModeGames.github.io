@@ -48,7 +48,70 @@
 <p>Adding a release: copy the most recent <code>## vX.Y — date</code> block to the top and fill in
 grouped bullets in plain language.</p>
 </blockquote>
-<h2>v0.387 — Open beta</h2>
+<h2>v0.402 — Release candidate (still beta)</h2>
+<p><strong>Isometry 0.402 is a release candidate.</strong> It is still a beta, but everything below is finished, tested (1,990
+automated tests, all passing) and played in a full campaign, <strong>Aurelia</strong>. This is
+everything since 0.401.</p>
+<h3>For players</h3>
+<ul>
+<li><strong>Quests page (J).</strong> Every quest you've started, what to do now, and the steps you've done. Tick
+  <em>Show completed</em> to see finished ones.</li>
+<li><strong>Character page (U).</strong> What you wear in each slot and your key stats. Pick a slot to swap gear.</li>
+<li><strong>Talent trees (P).</strong> Spend points from the bottom row up; each talent shows what it does.</li>
+<li><strong>Auto-attack.</strong> Right-click an enemy and your character keeps swinging until it dies, you change target or you
+  walk away. Casting a skill in between doesn't reset your swing.</li>
+<li><strong>Tab cycles targets</strong>, <strong>E</strong> picks the nearest, and <strong>hold Alt</strong> (or the new eye button) to outline everything
+  you can target, as in Diablo.</li>
+<li><strong>Focus corners (R T F G)</strong> keep a character's plate in a corner of the screen. Each corner now shows a pin:
+  click it to pin your target, right-click to clear it, and press <strong>H</strong> to clear them all. A pinned character who
+  leaves the world now leaves its corner too.</li>
+<li><strong>Click the icon on any plate</strong> to interact with that character.</li>
+<li><strong>Skill tooltips show real numbers</strong>, worked out from your own stats ("12–17 damage"), and skills you can't use
+  right now (no resource, on cooldown, out of range) are darkened on the hotbar.</li>
+<li><strong>Conversations are a list of spoken replies</strong>, with stat checks such as <code>[CHA 12]</code> shown up front.</li>
+<li>Minions: a strip under your target shows them with their orders (F1–F4).</li>
+<li>Smaller things: a walk/run toggle (N), a follow key (V), dimmer HUD icons, five HUD buttons a side, an Interact
+  flag, an on-screen keyboard for gamepads, long names that fit their plates, and campaign credits in the System
+  menu.</li>
+</ul>
+<h3>For campaign creators</h3>
+<ul>
+<li><strong>New entities:</strong> <code>Quest</code> and <code>Step</code> (the Quests page), <code>Sheet</code>, <code>Slot</code> and <code>Stat</code> (the Character page),
+  <code>Tree</code> and <code>Talent</code> (talent trees) and <code>Nav</code> (extra pathfinding points).</li>
+<li><strong>New fields:</strong> <code>Actor.auto_attack</code> / <code>auto_attack_interval</code> / <code>auto_attack_range</code>, <code>Actor.on_interact</code>,
+  <code>Actor.icon</code> and <code>Group.icon</code> (shown on plates), <code>Deployment.respawn</code> (monsters come back), <code>Skill.ready</code> and
+  <code>Skill.in_range</code> (hotbar readiness), <code>Condition.all</code>, <code>Menu.hide_unavailable</code>, <code>Resource.combat_text</code> and
+  <code>tags</code>, <code>Sound.volume</code> and <code>range</code>, and <code>Main.credits</code>.</li>
+<li><strong>New actions:</strong> <code>start_auto_attack</code>, <code>stop_auto_attack_self</code>, <code>play_sound_self</code> / <code>play_sound_target</code>,
+  <code>move_home_self</code>, minion commands (<code>follow_master</code> with formations, <code>each_minion</code>, <code>target_master</code>), and
+  <code>echo_*</code> gained a public/private audience, a colour and a duration.</li>
+<li>Skill descriptions accept <code>{{range: &lt;dice&gt;}}</code> and <code>{{dice: &lt;dice&gt;}}</code>.</li>
+<li><strong>Test your campaign with scripts:</strong> <code>--ui-script</code> plays keys and clicks and checks the screen, with PASS/FAIL
+  lines. See <a href="/manual/guides/test-with-ui-scripts.html">Test your campaign with UI scripts</a>.</li>
+<li>The validator now rejects a map without a tilemap, a tilemap without a tileset, and an incomplete tileset.</li>
+<li><strong>Seven new recipes:</strong> <a href="/recipes/quest-log.html">quest log</a>, <a href="/recipes/talent-trees.html">talent trees</a>,
+  <a href="/recipes/character-page.html">character page</a>, <a href="/recipes/auto-attack.html">auto-attack</a>,
+  <a href="/recipes/respawning-monsters.html">monsters that come back</a>,
+  <a href="/recipes/skill-tooltips-and-readiness.html">skill tooltips and readiness</a> and
+  <a href="/recipes/campaign-credits.html">credits</a>. Every recipe's example is validated against this release.</li>
+</ul>
+<h3>Multiplayer</h3>
+<ul>
+<li>Tested end to end with real processes: host alone, host with two clients, a dedicated server with two clients,
+  a client quitting and rejoining, and a client crashing mid-fight (the others carry on and the lost player is
+  removed).</li>
+<li>Fixed: late joiners now see current values; appearance changes reach every player; a change of form no longer
+  leaves ghost bodies or hides the world; discovered waypoints survive a respawn; any-peer messages check who sent
+  them.</li>
+</ul>
+<h3>Performance</h3>
+<p>Measured on an Apple M5 with the full Aurelia campaign (about 1,000 actors over three maps), per frame at 60 fps
+(the budget is 16.7 ms): idle 0.4 ms, walking the moor 2.5 ms, a four-player fight 4.5 ms. On average a host stays
+under budget with 8 players in one fight (8.7 ms) and with 500 monsters awake at once (14 ms).</p>
+<h3>Isometry Editor</h3>
+<p>The editor now matches this release: every new entity and field appears in the inspector, options with a fixed
+set of words (such as a message's audience) are drop-downs, and <code>Nav</code> points can be placed on the map painter.</p>
+<h2>v0.401 — Open beta</h2>
 <p><strong>Isometry is now in open beta.</strong> This release covers roughly three months of work bringing
 the framework to a public, playable state — gameplay, multiplayer, authoring, and a brand-new
 documentation site.</p>
@@ -66,6 +129,9 @@ documentation site.</p>
 <li><strong>Flying actors</strong>: actors can be set to fly over walls and obstacles, stopped only by a
   new impassable <strong>boundary</strong> terrain — with fly/land actions and a flying state you can
   check in your own logic.</li>
+<li><strong>Null actor</strong>: leave a campaign's starting actor unset and players begin as an invisible,
+  immovable spectator — ideal for letting players pick their hero. See
+  <a href="/manual/core-concepts/campaign-structure.html#the-main-entity">Campaign structure</a>.</li>
 </ul>
 <h3>Camera &amp; map view</h3>
 <ul>
@@ -123,7 +189,7 @@ documentation site.</p>
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

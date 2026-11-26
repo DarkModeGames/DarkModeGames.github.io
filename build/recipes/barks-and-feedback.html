@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambient barks and failure feedback &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Ambient barks and failure feedback</h1>
+<p><strong>Problem.</strong> Townsfolk should say something now and then when a player walks by, and a refused action should tell
+the player why, without filling the screen with text.</p>
+<p><strong>Pattern.</strong> <code>echo_self</code> floats a short line above the caller. Its <code>audience</code> decides who sees it:</p>
+<ul>
+<li><code>public</code> (the default): every player who can see the speaker. Use it for <strong>barks</strong>. Fire them from <code>on_view</code>
+  (when a player comes into the NPC's sight), gated by a cooldown resource so they stay rare.</li>
+<li><code>private</code>: only the caller's own player. Use it for <strong>failure feedback</strong> ("Out of range"), so other players
+  aren't spammed with your mistakes.</li>
+</ul>
+<p><code>duration</code> sets how long the line stays up, in seconds (0.2 to 30; default 1.6, the same as combat numbers). Give
+a bark a few seconds so it can be read; keep refusals short.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">barkCooldownResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Bark Cooldown</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;120&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+
+<span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">barkReadyCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$barkCooldownResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">inSpellRangeCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$distance_to_target&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;=&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;260&#39;</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">barkCooldownParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">barkCooldownResource</span>
+<span class="w">  </span><span class="nt">barkCooldownValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;60&#39;</span>
+<span class="w">  </span><span class="nt">oneExpressionParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">barkMessageParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">message</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Mind</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">bog</span><span class="nv"> </span><span class="s">after</span><span class="nv"> </span><span class="s">dark.&#39;</span>
+<span class="w">  </span><span class="nt">outOfRangeMessageParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">message</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Out</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">range&#39;</span>
+<span class="w">  </span><span class="nt">privateAudienceParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">audience</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">private</span>
+<span class="w">  </span><span class="nt">publicAudienceParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">audience</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">public</span>
+<span class="w">  </span><span class="nt">barkDurationParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">duration</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;4&#39;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Villager: on seeing a player, bark if not barked for a minute.</span>
+<span class="w">  </span><span class="nt">villagerBarkAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">barkReadyCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">barkMessageParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">publicAudienceParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">barkDurationParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">villagerBarkCooldownAction</span>
+<span class="w">  </span><span class="nt">villagerBarkCooldownAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">barkCooldownParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">barkCooldownValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">barkTickAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">barkCooldownParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneExpressionParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="c1"># Player skill: a range check with a private refusal.</span>
+<span class="w">  </span><span class="nt">boltAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Bolt</span>
+<span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inSpellRangeCondition</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">boltHitAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">outOfRangeAction</span>
+<span class="w">  </span><span class="nt">boltHitAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wait</span>
+<span class="w">  </span><span class="nt">outOfRangeAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">outOfRangeMessageParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">privateAudienceParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Timer</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">barkTickTimer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">total</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">barkTickAction</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">villagerActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Villager</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">villagerSprite</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">160</span>
+<span class="w">    </span><span class="nt">on_view</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">villagerBarkAction</span>
+<span class="w">    </span><span class="nt">timers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">barkTickTimer</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#action"><code>Action</code></a>, <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#condition"><code>Condition</code></a>, <a href="/reference/entities.html#parameter"><code>Parameter</code></a>, <a href="/reference/entities.html#resource"><code>Resource</code></a>, <a href="/reference/entities.html#timer"><code>Timer</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li><code>on_view</code> runs on the NPC (caller) with the player it saw as the target, and only for a player's own character,
+  so NPCs seeing each other never bark.</li>
+<li>Keep barks rare (a long cooldown) and short. Never echo on every hit; use
+  <a href="/recipes/combat-text.html">combat text</a> for numbers.</li>
+<li>A floating line belongs to the actor it floats from. If that actor is despawned or changes form, its text goes
+  with it.</li>
+<li>A private echo goes to the <strong>caller's</strong> player. When the caller is an NPC (a bark, a gate's <code>on_touch</code>), a
+  private line reaches nobody. Use public for NPC lines, or a dialog.</li>
+<li>A public line reaches only players who can see the speaker.</li>
+<li><code>echo</code> (no <code>_self</code>) only writes to the log. It is useful for debugging.</li>
+<li><code>color</code> takes a hex code (<code>'#ffd040'</code>) or a colour name.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {% raw %}
 # Entity Reference
 
-Every one of the 33 entity types and its fields. Each block is a ready-to-copy YAML scaffold — required fields carry a default, optional fields are `null` (and dissolve away on load). Generated from the engine.
+Every one of the 36 entity types and its fields. Each block is a ready-to-copy YAML scaffold — required fields carry a default, optional fields are `null` (and dissolve away on load). Generated from the engine.
 
 <a id="action"></a>
 ## Action
@@ -25,7 +25,7 @@ Action:
     parameters: null  # Array[Parameter]
     # KeyRef to anther action. To be run if the `if` condition succeeds after the `do` action function is complete.
     then: null  # Action
-    # The time this action takes to execute in seconds. Expressed as a float.
+    # Seconds, as a float. On a skill's start action, how long the caster is locked. On a `wait` action, how long before its `then` runs. Elsewhere unused.
     time: 0.0  # Float
 ```
 
@@ -37,7 +37,7 @@ Actor Entity A controllable or AI-driven character in the game world.
 ```yaml
 Actor:
   exampleActor:
-    # Size of actor's base circle in pixels.
+    # Size of actor's base circle in pixels. An actor with base 0 (the default) has no base collider, so area effects never hit it.
     base: null  # Integer
     # Current facing direction in degrees (0-360). Default north (0).
     bearing: 0  # Integer
@@ -63,7 +63,7 @@ Actor:
     on_touch: null  # Action
     # Action triggered when this actor is viewed by another actor.
     on_view: null  # Action
-    # Vision range in pixels for detecting other actors.
+    # Vision range in pixels: the radius across of the actor's sight ellipse (half that up and down, the isometric ground). It also sets how far fog of war lifts around the player. Example: 250.
     perception: null  # Integer
     # Private resources visible only on own data plate.
     private: null  # Array[Resource]
@@ -71,20 +71,38 @@ Actor:
     public: null  # Array[Resource]
     # Resource entities associated with this actor.
     resources: null  # Array[Resource]
-    # Detection difficulty for other actors (higher = more visible).
+    # How far away, in pixels, others can notice this actor: the radius across of its own ellipse (half that up and down). Another actor sees it when their sight ellipses overlap. 0 = never seen or drawn. Example: 10.
     salience: null  # Integer
     # Skills available to actor. Maximum 9 skills.
     skills: null  # Array[Skill]
-    # Movement speed in pixels per second.
-    speed: null  # Float
+    # Optional Skin entity applying a color remap to this actor's sprite texture at render time. Lets many Actor entities share one Sprite/texture with different recolors. Omit for the sprite's unmodified colors.
+    skin: null  # Skin
+    # Movement speed multiplier. Defaults to 0: an actor without speed cannot move. 1.0 is normal walking pace, 2.0 twice as fast, 0.5 half.
+    speed: 0.0  # Float
     # Reference to Sprite entity for visual representation.
     sprite: null  # Sprite
     # Strategy entity for AI behavior control.
     strategy: null  # Strategy
+    # If false, the actor never enters targeting: no tab or click selection, no view-based target_* actions, no on_view for observers. For decorative actors such as walls, trees and torches.
+    targetable: true  # Boolean
     # Timer entities that execute actions at intervals or after duration.
     timers: null  # Array[Timer]
-    # Trigger entit ies that monitor resource changes and execute actions.
+    # Trigger entities that monitor resource changes and execute actions.
     triggers: null  # Array[Trigger]
+    # Talent trees this actor learns from in the Talents menu (ticket 264).
+    trees: null  # Array[Tree]
+    # Action run when a player interacts with this actor (right-click, the Interact flag, Enter), with caller = the player and target = this actor, instead of walking up to open its dialog or menu (ticket 267). E.g. start_auto_attack on an enemy.
+    on_interact: null  # Action
+    # Skill this actor repeats while auto-attacking (its `start` action is the swing; ticket 268).
+    auto_attack: null  # Skill
+    # How close the target must be for an auto-attack swing, in isometric pixels; farther away the player walks in. 0 = bases touching.
+    auto_attack_range: 0  # Integer
+    # Seconds between auto-attack swings. Default 2.0.
+    auto_attack_interval: 2.0  # Float
+    # Image shown for this actor on the HUD, e.g. its chip on the minion strip (ticket 273). Optional.
+    icon: null  # String
+    # The Character page: equipment slots and stat lines (ticket 282). Optional.
+    sheet: null  # Sheet
 ```
 
 <a id="animation"></a>
@@ -96,23 +114,23 @@ Animation Entity 8-directional sprite animation with frame data for each directi
 Animation:
   exampleAnimation:
     # Frame array for east (90°) direction. Default empty.
-    E: []  # Array
+    E: []  # Array[Integer]
     # Frame array for north (0°) direction. Default empty.
-    N: []  # Array
+    N: []  # Array[Integer]
     # Frame array for northeast (45°) direction. Default empty.
-    NE: []  # Array
+    NE: []  # Array[Integer]
     # Frame array for northwest (315°) direction. Default empty.
-    NW: []  # Array
+    NW: []  # Array[Integer]
     # Frame array for south (180°) direction. Default empty.
-    S: []  # Array
+    S: []  # Array[Integer]
     # Frame array for southeast (135°) direction. Default empty.
-    SE: []  # Array
+    SE: []  # Array[Integer]
     # Frame array for southwest (225°) direction. Default empty.
-    SW: []  # Array
+    SW: []  # Array[Integer]
     # Frame array for west (270°) direction. Default empty.
-    W: []  # Array
-    # If true, animation repeats continuously.
-    loop: null  # Boolean
+    W: []  # Array[Integer]
+    # If true, animation repeats continuously. If false, it plays once and holds its last frame. Default true.
+    loop: true  # Boolean
     # Scaler speed that the animation plays at. Default 1
     rate: 1.0  # Float
     # Sound entity to play with this animation.
@@ -131,11 +149,15 @@ AnimationSet:
     animations: null  # Array[Animation]
     # Animation played while a flying actor is moving (the airborne walk/run).
     fly: null  # Animation
+    # Animation played while a flying actor is stationary (the airborne idle).
+    hover: null  # Animation
     # Which animation in this set fills each engine auto-state. Lets an actor name its animations anything (e.g. barb_ogre_idle) instead of the literal idle/walk/run keys.
     idle: null  # Animation
     # Human-readable animation set name.
     name: null  # String
+    # Animation used for fast ground movement (running).
     run: null  # Animation
+    # Animation used for slow ground movement (walking).
     walk: null  # Animation
 ```
 
@@ -161,12 +183,14 @@ Condition Entity A boolean comparison used in action if/else logic.
 ```yaml
 Condition:
   exampleCondition:
-    # Left operand of comparison. Future: dice expression support.
+    # Left operand of comparison. Supports a plain number, a dice expression (e.g. "2d6+3"), or a $/@ resource reference.
     left: null  # String
     # Comparison operator (==, !=, <, >, <=, >=). NOT NULL.
     operator: ''  # String
-    # Right operand of comparison. Future: dice expression support.
+    # Right operand of comparison. Supports a plain number, a dice expression (e.g. "2d6+3"), or a $/@ resource reference.
     right: null  # String
+    # Other Conditions that must all hold too, for the same caller and target (ticket 281): one Condition can then test several things at once, e.g. a menu option shown only while a quest is done AND the next one isn't started.
+    all: []  # Array[Condition]
 ```
 
 <a id="deployment"></a>
@@ -181,6 +205,8 @@ Deployment:
     actor: null  # Actor
     # Vector entity defining spawn position (x, y).
     location: null  # Vector
+    # Seconds after its actor leaves the world for good (despawns; a change of form doesn't count) before the deployment spawns again, fresh, at its location. It waits while a player stands near the spot. 0 (the default) means never.
+    respawn: 0  # Integer
 ```
 
 <a id="dialog"></a>
@@ -243,6 +269,8 @@ Group:
   exampleGroup:
     # Hex color code for actor outline and UI display.
     color: null  # String
+    # Image shown for the group in the HUD's target-group row above the target plate (a click picks the group for Tab / E / Q). Optional: without one the group shows a dot in its colour.
+    icon: null  # String
     # Human-readable group name.
     name: null  # String
 ```
@@ -287,14 +315,16 @@ Main Entity Campaign configuration defining the starting state. A Main entity is
 ```yaml
 Main:
   exampleMain:
-    # Main player-controlled Actor entity.
-    actor: ''  # Actor
+    # Player-controlled Actor entity. Optional — omit it and the player starts as a built-in null actor: invisible, immovable, infinite-reach, and all-seeing: every actor on its map is visible and targetable to it (salience 0 still hides an actor), however far away.
+    actor: null  # Actor
     # Starting Map entity where campaign begins.
     map: ''  # Map
     # Campaign notes or description. Default empty.
     notes: ''  # String
+    # The campaign's credits, as BBCode ([b], [i], [br], [color], [url] ...). Players read them from the System menu's Credits button. Default empty.
+    credits: ''  # String
     # Plugin resolution order (nested-zip basenames); earlier = higher priority. The campaign top-level always wins; unlisted plugins rank lowest. Default empty.
-    plugins: []  # Array
+    plugins: []  # Array[String]
     # Save-compatibility version. Bump when an entity change would invalidate older player saves; saves from a lower version are migrated, higher are discarded. Default 0.
     version: 0  # Integer
 ```
@@ -321,8 +351,22 @@ Map:
     overlay: null  # Array[Overlay]
     # Spawn point Vector where player enters the map.
     spawn: null  # Vector
-    # TileMap entity defining the terrain grid.
-    tilemap: null  # TileMap
+    # TileMap entity defining the terrain grid. Required: a Map without one fails validation.
+    tilemap: ''  # TileMap
+```
+
+<a id="mask"></a>
+## Mask
+
+Mask Entity Maps one color to another for use in a Skin's color remap.
+
+```yaml
+Mask:
+  exampleMask:
+    # Hex color code to match on the sprite texture (e.g. "#FF0000").
+    from_color: null  # String
+    # Hex color code to remap matching pixels to.
+    to_color: null  # String
 ```
 
 <a id="measure"></a>
@@ -333,18 +377,24 @@ Measure Entity A calculated value based on dice expressions, associated with an 
 ```yaml
 Measure:
   exampleMeasure:
+    # Description shown in the HUD tooltip. Optional; empty leaves the line out.
+    description: null  # String
     # Dice expression to calculate value (e.g., "2d6+3").
     expression: null  # Dice
     # Icon path for UI display.
     icon: null  # String
     # Menu entity for interaction options.
     menu: null  # Menu
+    # Display name shown in the HUD tooltip and menus. Optional; empty falls back to the key.
+    name: null  # String
     # If true, measure is shown on own data plate.
     private: null  # Boolean
     # If true, measure is shown on target focus plate when other actors view this actor.
     public: null  # Boolean
     # Visibility threshold. Measure only visible when value >= reveal. 0 = always visible.
     reveal: null  # Integer
+    # Short words that sort this entry into categories in the resources view, e.g. [gear, head] or [material, ore]. The view shows one filter chip per tag. Optional.
+    tags: []  # Array[String]
 ```
 
 <a id="menu"></a>
@@ -357,8 +407,24 @@ Menu:
   exampleMenu:
     # Action entities available in this menu.
     actions: null  # Array[Action]
+    # When true, an option whose Action has an `if` Condition is listed only while that Condition holds for the player (caller) and the menu's target. Options without an `if` are always listed. If every option is hidden, the menu says "Nothing here." The host works the list out and keeps it current while the menu is open, so the Conditions may read any of the target's resources, public or not.
+    hide_unavailable: false  # Boolean
     # Human-readable menu name.
     name: null  # String
+```
+
+<a id="nav"></a>
+## Nav
+
+Nav Entity An authored point for a map's pathfinding graph: walkers may bend their path here. Corners of walls and obstacles are found automatically; place Navs where that isn't enough, e.g. in a doorway or tight custom terrain. A point off the navmesh or inside an obstacle is skipped with a warning when the map is built, and a point too tight for a body is left out of that body's paths.
+
+```yaml
+Nav:
+  exampleNav:
+    # Vector entity giving the point's position on that map (x, y).
+    location: ''  # Vector
+    # Map entity this point belongs to.
+    map: ''  # Map
 ```
 
 <a id="overlay"></a>
@@ -370,7 +436,7 @@ Overlay Entity A full-screen animated foreground effect (rain, fire, fog) shown 
 Overlay:
   exampleOverlay:
     # Frame indices into the sheet, in play order.
-    frames: []  # Array
+    frames: []  # Array[Integer]
     # If true, the animation repeats; otherwise it holds on the last frame.
     loop: null  # Boolean
     # Starting opacity (0..1); the set_overlay_opacity action can change it at runtime.
@@ -424,7 +490,7 @@ Particle:
     # Drift direction as a bearing: degrees relative to the way the actor faces (0 = forward, 90 = clockwise). 0..360.
     direction: 0  # Integer
     # Frame indices into the sheet, in play order.
-    frames: []  # Array
+    frames: []  # Array[Integer]
     # If true, the drift bearing is captured once when the particle is attached (fixed to the facing at that moment); if false (default), it tracks the actor's current facing each frame.
     lock: null  # Boolean
     # If true, the animation repeats; otherwise it holds on the last frame.
@@ -449,14 +515,20 @@ Resource Entity A trackable numeric value associated with an actor (health, mana
 ```yaml
 Resource:
   exampleResource:
+    # If true, changes to this resource float up as numbers over the actor (combat text) for its own player, the player who caused the change, and players targeting or focusing the actor. Default false.
+    combat_text: null  # Boolean
     # Default starting value.
     default: null  # Integer
     # Description text displayed in UI.
     description: null  # String
     # Dialog entity shown when a player interacts with this resource.
     dialog: null  # Dialog
+    # Combat text colour for a gain, a hex code or colour name (optional; default green).
+    gain_color: null  # String
     # Icon path for UI display.
     icon: null  # String
+    # Combat text colour for a loss, a hex code or colour name (optional; default red).
+    loss_color: null  # String
     # Maximum allowed value, as dice notation evaluated per-actor (supports $/@ injection).
     max: null  # Dice
     # Menu entity for interaction options.
@@ -467,6 +539,70 @@ Resource:
     name: null  # String
     # Visibility threshold. Resource only visible when value >= reveal. 0 = always visible.
     reveal: null  # Integer
+    # Short words that sort this entry into categories in the resources view, e.g. [gear, head] or [material, ore]. The view shows one filter chip per tag. Optional.
+    tags: []  # Array[String]
+```
+
+<a id="sheet"></a>
+## Sheet
+
+Sheet Entity The Character page of an Actor (ticket 282): equipment Slots laid out on a grid, and Stat lines summing up the character. An Actor names it in `sheet`; players open it with the Character key.
+
+```yaml
+Sheet:
+  exampleSheet:
+    # A line under the title.
+    description: null  # String
+    # The page's title.
+    name: null  # String
+    # Equipment cells, each at its own column and row.
+    slots: []  # Array[Slot]
+    # Summary lines, each at its own column and row.
+    stats: []  # Array[Stat]
+```
+
+<a id="slot"></a>
+## Slot
+
+Slot Entity One equipment cell on a Character page (ticket 282). It shows the first of its `worn` Resources that is above 0 (that Resource's icon and name); empty, it shows its own icon and name. Picking it lists the `choices` the player owns (above 0); each opens that Resource's own menu (Equip, Unequip, Drop: whatever the campaign gave it).
+
+```yaml
+Slot:
+  exampleSlot:
+    # Item Resources that fit this slot; those the player owns are listed when the slot is picked.
+    choices: []  # Array[Resource]
+    # Column on the page's grid, from 0 at the left.
+    column: 0  # Integer
+    # Image shown while the slot is empty.
+    icon: null  # String
+    # The slot's name, shown while it is empty ("Main hand").
+    name: null  # String
+    # Row on the page's grid, from 0 at the bottom.
+    row: 0  # Integer
+    # Resources that mean "something is worn here" (e.g. one `<item>_equipped` flag per item); the first above 0 shows.
+    worn: []  # Array[Resource]
+```
+
+<a id="stat"></a>
+## Stat
+
+Stat Entity One summary line on a Character page (ticket 282): a name and a value read from the player.
+
+```yaml
+Stat:
+  exampleStat:
+    # Column of the stats grid, from 0 at the left.
+    column: 0  # Integer
+    # What the line explains, shown when it is hovered.
+    description: null  # String
+    # Image beside the label.
+    icon: null  # String
+    # The line's label ("Strength").
+    name: null  # String
+    # Row of the stats grid, from 0 at the top.
+    row: 0  # Integer
+    # The value: a dice expression over the player's resources and measures, e.g. "$core_strength_measure".
+    value: ''  # String
 ```
 
 <a id="skill"></a>
@@ -479,10 +615,14 @@ Skill:
   exampleSkill:
     # Maximum charge value for charging skills. 0 = no charging. Default 0.
     charge: 0  # Integer
-    # Description text displayed in UI tooltips. Default empty.
+    # Description text displayed in UI tooltips. Default empty. {{$key}} shows the reader's values; {{dice: <dice>}} shows it as dice plus one number ("1d6+16") and {{range: <dice>}} the lowest and highest result ("17–22") (ticket 288).
     description: ''  # String
     # Action triggered when skill button is released.
     end: null  # Action
+    # A Condition on the player (caller and target) that holds when the skill can be cast now (its cost, its cooldown). While it fails, the skill's hotbar slot is greyed (ticket 289). Optional.
+    ready: null  # Condition
+    # A Condition with the player as caller and the current target as target that holds when the target is close enough. While a target is held and it fails, the slot is darkened too (ticket 289). Optional.
+    in_range: null  # Condition
     # Icon path for UI display in skill bar.
     icon: null  # String
     # Human-readable name displayed in UI.
@@ -491,20 +631,38 @@ Skill:
     start: null  # Action
 ```
 
+<a id="skin"></a>
+## Skin
+
+Skin Entity A named set of color remaps (Masks) applied to an Actor's sprite texture at render time. Masks match the sprite's own colours, unaffected by any tint; a tint (set_modulate_*) then colours the skinned result.
+
+```yaml
+Skin:
+  exampleSkin:
+    # Color remaps applied, in order. Maximum 16 (shader uniform array limit).
+    masks: null  # Array[Mask]
+    # Display name for this skin.
+    title: null  # String
+```
+
 <a id="sound"></a>
 ## Sound
 
-Sound Entity An audio file with volume control and looping options.
+Sound Entity An audio file with pitch, volume, reach and looping options.
 
 ```yaml
 Sound:
   exampleSound:
     # If true, audio loops continuously.
     loop: null  # Boolean
-    # Volume scale multiplier (dice expression, e.g., "1.0" or "1d4*0.25").
+    # How far a sound placed in the world carries, in pixels (default 2000). Ignored by map audio, which isn't placed.
+    range: null  # Integer
+    # Pitch in percent, as a dice expression: 100 is normal pitch, 200 an octave up, 50 an octave down. Rolled again each time the sound plays, so '92+1d16' varies it a little. Integers only.
     scale: null  # Dice
     # Path to audio file.
     source: null  # String
+    # Volume in percent, a whole number from 0 to 400: 100 plays the file as it is, 50 at half amplitude, 200 at double. Default 100.
+    volume: 100  # Integer
 ```
 
 <a id="sprite"></a>
@@ -535,6 +693,76 @@ Strategy:
   exampleStrategy:
     # Behavior entities evaluated to determine AI actions.
     behaviors: null  # Array[Behavior]
+```
+
+<a id="quest"></a>
+## Quest
+
+Quest Entity A quest in the player's Quests page (ticket 275). Its state is one Resource the campaign already sets: 0 means not started (not listed); the Step with the highest `value` at or below the resource's value is the current one; a Step with `done: true` moves the quest to Completed. No actions of its own.
+
+```yaml
+Quest:
+  exampleQuest:
+    # A line about the quest, shown under its name.
+    description: null  # String
+    # Image shown beside the quest in the list.
+    icon: null  # String
+    # The quest's name in the Quests page and the tracker.
+    name: null  # String
+    # Where the quest sits in the lists (lowest first; then by name). Default 0.
+    order: 0  # Integer
+    # Resource holding the quest's progress on the player (0 = not started).
+    resource: ''  # Resource
+    # The quest's steps, each shown while the resource is at or past its value.
+    steps: []  # Array[Step]
+```
+
+<a id="step"></a>
+## Step
+
+Step Entity One step of a Quest (ticket 275): the text the player reads while the quest's resource is at `value` (or past it, until a later step's value is reached).
+
+```yaml
+Step:
+  exampleStep:
+    # True when reaching this step finishes the quest (it moves to Completed; its text is the ending).
+    done: false  # Boolean
+    # What the player must do now, in a line or two. {{$key}} shows the player's resources (e.g. a kill count).
+    text: ''  # String
+    # The quest resource's value from which this step is the current one.
+    value: 0  # Integer
+```
+
+<a id="talent"></a>
+## Talent
+
+Talent Entity One node of a talent Tree (ticket 264). Its rank is an ordinary Resource, so skills, measures, conditions and Triggers read it like any other value. Points go in from the bottom row up: a talent opens once every talent in `requires` has a rank.
+
+```yaml
+Talent:
+  exampleTalent:
+    # Column in the tree's grid, from 0 at the left.
+    column: 0  # Integer
+    # Points spent for each rank. Default 1.
+    cost: 1  # Integer
+    # What the talent does, shown in its tooltip.
+    description: null  # String
+    # Image for the talent's tile.
+    icon: null  # String
+    # Condition on the player (caller and target are the player) that must pass to learn a rank, e.g. a level gate.
+    if: null  # Condition
+    # How many ranks the talent has. Default 1.
+    max: 1  # Integer
+    # Human-readable talent name.
+    name: null  # String
+    # Action run on the player (caller and target) after each rank is learned, e.g. set_skill_self to grant a skill.
+    on_learn: null  # Action
+    # Talents that need at least one rank before this one opens; the menu draws a line from each to this one.
+    requires: []  # Array[Talent]
+    # Resource holding this talent's rank (0 = not learned). Give it min 0 and a max of at least `max`.
+    resource: ''  # Resource
+    # Row in the tree's grid, from 0 at the bottom.
+    row: 0  # Integer
 ```
 
 <a id="tile"></a>
@@ -571,10 +799,10 @@ TileMap Entity A grid-based map using tiles from a tileset arranged in layers.
 ```yaml
 TileMap:
   exampleTileMap:
-    # Layer entities defining tile placement and rendering order.
-    layers: null  # Array[Layer]
-    # TileSet entity containing tile definitions.
-    tileset: null  # TileSet
+    # Layer entities defining tile placement and rendering order. Required (an empty list is allowed).
+    layers: []  # Array[Layer]
+    # TileSet entity containing tile definitions. Required: a TileMap without one fails validation.
+    tileset: ''  # TileSet
 ```
 
 <a id="tileset"></a>
@@ -585,12 +813,12 @@ TileSet Entity A collection of tiles from a texture atlas arranged in a grid.
 ```yaml
 TileSet:
   exampleTileSet:
-    # Number of columns in the tile grid.
-    columns: null  # Integer
-    # Path to tileset texture file.
-    texture: null  # String
-    # Tile entities defining individual tiles in the set.
-    tiles: null  # Array[Tile]
+    # Number of columns in the tile grid (at least 1). Required.
+    columns: 1  # Integer
+    # Path to tileset texture file. Required.
+    texture: ''  # String
+    # Tile entities defining individual tiles in the set. Required (an empty list is allowed).
+    tiles: []  # Array[Tile]
 ```
 
 <a id="timer"></a>
@@ -607,6 +835,26 @@ Timer:
     interval: null  # Dice
     # Total duration in seconds (dice expression, e.g., "60" or "2d6").
     total: null  # Dice
+```
+
+<a id="tree"></a>
+## Tree
+
+Tree Entity A talent tree (ticket 264): talents laid out in a grid, learned from the bottom row up with the points in one Resource. An Actor lists its trees in `trees`; players open them in the Talents menu.
+
+```yaml
+Tree:
+  exampleTree:
+    # What the tree is about, shown under its name.
+    description: null  # String
+    # Image for the tree's tab.
+    icon: null  # String
+    # Human-readable tree name (the tab and the panel title).
+    name: null  # String
+    # Resource holding the points this tree spends: the campaign grants them (e.g. a Trigger on level-up).
+    points: ''  # Resource
+    # The talents in this tree.
+    talents: []  # Array[Talent]
 ```
 
 <a id="trigger"></a>

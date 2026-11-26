@@ -43,7 +43,7 @@
 
     <main class="content">
         <h1>Add Resources and Measures</h1>
-<p>This page explains the two ways an actor carries a number: a <strong>Resource</strong>, a stored value the game tracks and changes over time, and a <strong>Measure</strong>, a value the engine computes fresh from a <a href="/manual/getting-started/glossary.html#terms">dice expression</a> each time it is read. You will learn the fields of each entity, how an actor wires them up, and how to choose between them.</p>
+<p>This page explains the two ways an actor carries a number: a <strong><a href="/reference/entities.html#resource">Resource</a></strong>, a stored value the game tracks and changes over time, and a <strong><a href="/reference/entities.html#measure">Measure</a></strong>, a value the engine computes fresh from a <a href="/manual/getting-started/glossary.html#terms">dice expression</a> each time it is read. You will learn the fields of each entity, how an actor wires them up, and how to choose between them.</p>
 <h2>Prerequisites</h2>
 <p>This page assumes you have read:</p>
 <ul>
@@ -53,9 +53,10 @@
 </ul>
 <h2>Resources versus measures</h2>
 <p>A <a href="/manual/getting-started/glossary.html#terms">Resource</a> is a trackable numeric value that the engine stores on each actor and changes as the game runs. Health, mana, and gold are resources: they have a current value, they go up and down, and that value persists between reads.</p>
-<p>A <a href="/manual/getting-started/glossary.html#terms">Measure</a> is a value computed on demand from a dice expression. It is not stored. Every time the engine reads a measure it rolls the expression again, so a measure can be different each time and can be random.</p>
-<p>Choose a Resource when the value is owned and mutated: a pool that drains, fills, or transfers. Choose a Measure when the value is derived or rolled in the moment and you do not need to remember it, such as a luck roll.</p>
+<p>A <a href="/manual/getting-started/glossary.html#terms">Measure</a> is a value computed on demand from a dice expression. It is not stored. Every time the engine reads a measure it works the expression out again from the actor's current values.</p>
+<p>Choose a Resource when the value is owned and changed: a pool that drains, fills, or transfers. Choose a Measure when the value is <strong>derived</strong> from other values, such as maximum health from level and gear, or attack power from strength and an equipped weapon.</p>
 <blockquote>
+<p>Tip: Resources can model far more than health and gold. Cooldowns, quest steps, flags ("has met the blacksmith"), tags ("is an enemy"), threat, and every item a player can carry are all just Resources. See <a href="/recipes/">Recipes</a> for these patterns.</p>
 <p>Note: Every field on both entities is optional. Provide only the ones your campaign needs.</p>
 </blockquote>
 <h2>Define resources</h2>
@@ -64,8 +65,8 @@
 <span class="w">  </span><span class="nt">health</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Health</span>
 <span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
-<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
-<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;20&#39;</span>
 <span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/icons/health.png</span>
 <span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hit points. Reach 0 and you&#39;re done.</span>
 <span class="w">    </span><span class="nt">menu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthMenu</span>
@@ -75,14 +76,18 @@
 <ul>
 <li><code>name</code> — the display name shown in the UI, here <code>"Health"</code>.</li>
 <li><code>default</code> — the value the actor starts with. The hero starts at <code>20</code> health.</li>
-<li><code>min</code> — the lowest the value may reach. All three example resources use <code>0</code>.</li>
-<li><code>max</code> — the highest the value may reach. Health caps at <code>20</code>.</li>
+<li><code>min</code> — the lowest the value may reach. All three example resources use <code>'0'</code>.</li>
+<li><code>max</code> — the highest the value may reach. Health caps at <code>'20'</code>.</li>
 <li><code>icon</code> — a path to an icon image for the UI.</li>
-<li><code>description</code> — tooltip text describing the resource.</li>
-<li><code>menu</code> — a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to a Menu entity for interaction options. See <a href="/manual/guides/menus-dialogs-waypoints.html">Menus, dialogs, and waypoints</a>.</li>
+<li><code>description</code> — tooltip text describing the resource. BBCode formatting (<code>[b]</code>, <code>[color=#...]</code>, <code>[br]</code>) shows as formatting.</li>
+<li><code>menu</code> — a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to a <a href="/reference/entities.html#menu">Menu</a> entity for interaction options. See <a href="/manual/guides/menus-dialogs-waypoints.html">Menus, dialogs, and waypoints</a>.</li>
 <li><code>reveal</code> — a visibility threshold. The resource is shown only when its value is at least <code>reveal</code>; <code>0</code> (the default) means always visible.</li>
+<li><code>combat_text</code>, <code>gain_color</code>, <code>loss_color</code> — set <code>combat_text: true</code> to float the change (<code>+5</code>, <code>-12</code>) over the actor whenever this value changes, in the given hex colours. Good for health, gold, and experience.</li>
+<li><code>tags</code> — a list of short words that sort the resource into categories, such as <code>[gear, head]</code> or <code>[material, ore]</code>. The resources view shows one filter chip per tag, so a player can list only their gear or only their ore. Tags are shown title-cased ("Material"). An entry with no tags appears only under "All".</li>
 </ul>
 <blockquote>
+<p>Warning: <code>min</code> and <code>max</code> are <strong>dice expressions, written as quoted strings</strong>: <code>max: '20'</code>, not <code>max: 20</code>. That lets a bound be live, like <code>max: $maxHealthMeasure</code>, where <code>$</code> means the actor that owns the resource. Always set both: a resource with no <code>max</code> is clamped to <code>0</code>.</p>
+<p>Tip: For internal bookkeeping (cooldowns, quest flags, tags) that players should never see in their resources list, set <code>reveal</code> to a huge number like <code>999999</code>.</p>
 <p>Note: Write the clean YAML keys <code>name</code>, <code>min</code>, and <code>max</code>. The trailing-underscore forms (<code>name_</code>, <code>min_</code>, <code>max_</code>) are internal to the engine and never appear in a campaign file.</p>
 </blockquote>
 <p>The other two example resources are leaner. <code>mana</code> defaults to <code>10</code> with a <code>max</code> of <code>10</code>; <code>gold</code> defaults to <code>5</code> with a <code>max</code> of <code>999</code>. Neither sets a <code>menu</code>.</p>
@@ -90,21 +95,31 @@
 <span class="w">  </span><span class="nt">mana</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Mana</span>
 <span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
-<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
-<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
 <span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/icons/sun.png</span>
 <span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Magical energy for casting skills.</span>
 <span class="w">  </span><span class="nt">gold</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gold</span>
 <span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
-<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
-<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;999&#39;</span>
 <span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/icons/sun.png</span>
 <span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Currency for trading with merchants.</span>
 </code></pre></div>
 
 <h2>Define measures</h2>
-<p>Measures are declared under a top-level <code>Measure</code> block. The example defines one, <code>luckMeasure</code>.</p>
+<p>Measures are declared under a top-level <code>Measure</code> block. A typical measure derives a stat from other values:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Measure</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">maxHealthMeasure</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Maximum Health</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Grows with level and armour.</span>
+<span class="w">    </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$level*10+$armourMeasure*2+20</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+
+<p><code>$level</code> reads the actor's own <code>level</code> resource; <code>$armourMeasure</code> reads another measure. Then point a resource's bound at it: <code>max: $maxHealthMeasure</code>.</p>
+<p>A measure can also include dice, which roll fresh on every read. The example defines one, <code>luckMeasure</code>.</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Measure</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">luckMeasure</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">expression</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d20</span>
@@ -122,6 +137,7 @@
 <li><code>private</code> — when <code>true</code>, the measure appears on the actor's own data plate. The example sets it <code>true</code>.</li>
 <li><code>reveal</code> — a visibility threshold, the same as on a resource. <code>0</code> means always visible.</li>
 <li><code>menu</code> — a KeyRef to a Menu entity. Omitted in the example.</li>
+<li><code>tags</code> — a list of short words for the resources view's filter chips, the same as on a resource.</li>
 </ul>
 <blockquote>
 <p>Note: Measure visibility lives on the measure itself, through its own <code>public</code> and <code>private</code> booleans. Resource visibility works differently and lives on the actor, as the next section shows.</p>
@@ -153,7 +169,7 @@
 <h2>Change a resource with actions</h2>
 <p>You do not edit a resource value directly; you change it by running an <a href="/manual/getting-started/glossary.html#terms">action</a>. The action functions that move resources are <code>plus_resource_self</code>, <code>plus_resource_target</code>, <code>minus_resource_self</code>, <code>minus_resource_target</code>, <code>set_resource_self</code>, <code>set_resource_target</code>, and <code>transfer_resource</code>.</p>
 <p>Each takes two <a href="/manual/getting-started/glossary.html#terms">parameters</a>: <code>resource</code>, a KeyRef to the Resource to change, and <code>expression</code>, a dice expression for the amount. The new value is capped at the resource's own <code>min</code> and <code>max</code>, so a <code>plus</code> that would exceed <code>max</code> stops at the cap.</p>
-<p>An action lists its parameters as a flat array of KeyRefs, with the Parameter entities defined in a sibling top-level <code>Parameter</code> block. The shape looks like this.</p>
+<p>An action lists its parameters as a flat array of KeyRefs, with the <a href="/reference/entities.html#parameter">Parameter</a> entities defined in a sibling top-level <code>Parameter</code> block. The shape looks like this.</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">healHealth</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_self</span>
@@ -171,7 +187,7 @@
 
 <p>Measures take no such functions: there is nothing to change, because the engine rolls the expression each time it reads the value. For the full mechanics of actions and parameters, see <a href="/manual/guides/define-actions.html">Define Actions</a>.</p>
 <h2>Show a value on a dialog</h2>
-<p>Dialog text can print a live resource or measure value with templating tokens. The <code>@</code> token reads the target actor; the <code>$</code> token reads the caller. The names after the token are entity keys.</p>
+<p><a href="/reference/entities.html#dialog">Dialog</a> text can print a live resource or measure value with templating tokens. The <code>@</code> token reads the target actor; the <code>$</code> token reads the caller. The names after the token are entity keys.</p>
 <div class="codehilite"><pre><span></span><code><span class="x">HP: </span><span class="cp">{{</span><span class="err">@</span><span class="nv">health</span><span class="cp">}}</span><span class="x"> / Luck: </span><span class="cp">{{</span><span class="err">$</span><span class="nv">luckMeasure</span><span class="cp">}}</span>
 </code></pre></div>
 
@@ -188,7 +204,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

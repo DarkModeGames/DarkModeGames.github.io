@@ -43,7 +43,7 @@
 
     <main class="content">
         <h1>Sprites and Animations</h1>
-<p>This page shows how an actor gets its on-screen appearance from three entities: a <a href="/reference/entities.html#sprite">Sprite</a> that names a sprite sheet and frame size, an AnimationSet that groups animations, and Animation entities that list the frames to play for each of the eight directions an actor can face.</p>
+<p>This page shows how an actor gets its on-screen appearance from three entities: a <a href="/reference/entities.html#sprite">Sprite</a> that names a sprite sheet and frame size, an <a href="/reference/entities.html#animationset">AnimationSet</a> that groups animations, and <a href="/reference/entities.html#animation">Animation</a> entities that list the frames to play for each of the eight directions an actor can face.</p>
 <h2>Introduction</h2>
 <p>An actor in the game world is drawn from a single image file, a <em>sprite sheet</em>, that packs many small pictures into one grid. A Sprite entity tells the engine which sheet to use and how big one frame is. An Animation entity then lists, per facing direction, which frames to show in sequence so the actor appears to walk, run, or swing a tool.</p>
 <p>You connect these pieces by key. The actor references a Sprite, the Sprite references an AnimationSet, and the AnimationSet references its Animations. At runtime the engine combines the current animation state (such as <code>idle</code> or <code>run</code>) with the actor's heading (such as <code>S</code> for south) to pick the exact frames to play. Getting this wiring right is what makes a static image come alive in eight directions.</p>
@@ -84,8 +84,8 @@
 <p>The fields:</p>
 <ul>
 <li><code>texture</code> is the path to the sheet image inside the campaign archive.</li>
-<li><code>size</code> is a <a href="/manual/getting-started/glossary.html">KeyRef</a> to a Vector giving one frame's width and height in pixels. Here each frame is <code>64</code> by <code>64</code>. This is the number the engine uses to slice the grid.</li>
-<li><code>margin</code> is a KeyRef to an Inset giving the empty padding around the visible art on each edge (<code>top</code>/<code>right</code>/<code>bottom</code>/<code>left</code>). The bottom edge seats the art's feet on the tile, the left/right center it, and all four edges size the actor's footprint so it hugs the body instead of the empty frame.</li>
+<li><code>size</code> is a <a href="/manual/getting-started/glossary.html">KeyRef</a> to a <a href="/reference/entities.html#vector">Vector</a> giving one frame's width and height in pixels. Here each frame is <code>64</code> by <code>64</code>. This is the number the engine uses to slice the grid.</li>
+<li><code>margin</code> is a KeyRef to an <a href="/reference/entities.html#inset">Inset</a> giving the empty padding around the visible art on each edge (<code>top</code>/<code>right</code>/<code>bottom</code>/<code>left</code>). The bottom edge seats the art's feet on the tile, the left/right center it, and all four edges size the actor's footprint so it hugs the body instead of the empty frame.</li>
 <li><code>animation_set</code> is a KeyRef to the AnimationSet whose animations are built into this sprite. Without it, the sprite has no directional animations.</li>
 </ul>
 <p>All four fields are optional in the schema, but a sprite with no <code>texture</code>, <code>size</code>, or <code>animation_set</code> produces nothing visible. Always set them.</p>
@@ -209,16 +209,16 @@
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 </code></pre></div>
 
-<p>The <code>sound</code> field is a KeyRef to a <a href="/manual/guides/audio-and-backgrounds.html">Sound</a> entity. The engine builds an audio node named after the animation key and plays it when the animation starts. See <a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a> for how Sound entities are defined.</p>
-<p>An <code>Animation</code> also accepts an optional <code>loop</code> boolean. In the current build animations loop on their own, so this flag has no effect yet.</p>
+<p>The <code>sound</code> field is a KeyRef to a <a href="/manual/guides/audio-and-backgrounds.html">Sound</a> entity. The engine builds an audio node named after the animation key and plays it when the animation starts. When the animation's state ends, a looping sound fades out and a one-shot plays to its end. See <a href="/manual/guides/audio-and-backgrounds.html">Audio and backgrounds</a> for how Sound entities are defined.</p>
+<p>An <code>Animation</code> also accepts an optional <code>loop</code> boolean, which defaults to <code>true</code>. Leave it out and the animation repeats, as <code>idle</code>, <code>walk</code> and <code>run</code> should. Set <code>loop: false</code> for a clip that plays once and holds its last frame, such as a death pose. A skill whose action uses a one-shot clip holds that last frame until the action's <code>time</code> runs out, then the actor returns to idle.</p>
 <h2>How states and headings choose what plays</h2>
 <p>At runtime the engine names each playable animation by combining the state with the heading, in the form <code>&lt;state&gt;:&lt;heading&gt;</code>. For example, <code>run:S</code> is the running animation facing south, and <code>idle:N</code> is the idle pose facing north. The engine builds one of these for every animation-and-direction pair in the set.</p>
 <p>Two inputs drive the choice:</p>
 <ol>
-<li><strong>The state.</strong> Movement uses the built-in states <code>idle</code>, <code>walk</code>, and <code>run</code>. When the actor is moving, the engine selects <code>run</code> if its speed is high enough, otherwise <code>walk</code>; when it stops, it returns to <code>idle</code>. A skill can also set a state from its action's animation (the example attack uses <code>tool</code>).</li>
+<li><strong>The state.</strong> Movement uses the built-in states <code>idle</code>, <code>walk</code>, <code>run</code>, <code>fly</code>, and <code>hover</code>. On the ground, the engine selects <code>run</code> if the actor's speed is high enough, otherwise <code>walk</code>; when it stops, it returns to <code>idle</code>. While flying (toggled with the <code>fly_self</code>/<code>land_self</code> actions), the same movement/stopped split uses <code>fly</code> while moving and <code>hover</code> while stationary instead. A flier only lands over walkable ground: <code>land_self</code> and <code>land_target</code> do nothing over a wall, water or the edge of the map, and <code>$can_land</code> reads <code>1</code> when landing would work. Check <code>$can_land</code> before a <code>change_actor</code> into a body that can't fly, which isn't stopped this way. A skill can also set a state from its action's animation (the example attack uses <code>tool</code>).</li>
 <li><strong>The heading.</strong> The actor's facing maps to one of the eight directions.</li>
 </ol>
-<p>Because of this, an AnimationSet should normally include <code>idle</code> plus <code>walk</code> and/or <code>run</code> so movement has frames to play. The example provides <code>idle</code> and <code>run</code>.</p>
+<p>Because of this, an AnimationSet should normally include <code>idle</code> plus <code>walk</code> and/or <code>run</code> so ground movement has frames to play, and <code>fly</code>/<code>hover</code> if the actor can ever fly. The example provides <code>idle</code> and <code>run</code>; a flying actor would add <code>fly</code> and <code>hover</code> the same way.</p>
 <blockquote>
 <p>Note: If a requested <code>&lt;state&gt;:&lt;heading&gt;</code> animation does not exist, the actor falls back to <code>idle:&lt;heading&gt;</code> for that direction. A missing run animation simply shows the idle pose while moving, so define the states you actually use.</p>
 </blockquote>
@@ -232,6 +232,39 @@
 </code></pre></div>
 
 <p>That single KeyRef pulls in the whole chain: <code>heroSprite</code> names the sheet and frame size and points at <code>heroAnimSet</code>, which lists <code>idle</code>, <code>run</code>, and <code>tool</code>. At load time the engine slices the sheet into frames and builds a directional animation for each state-and-heading pair. See <a href="/manual/guides/create-an-actor.html">Create an actor</a> for the rest of the actor's fields.</p>
+<h2>Reusing one sprite with skins</h2>
+<p>A Skin recolors an actor's sprite at render time, so many <a href="/reference/entities.html#actor">Actor</a> entities can share one Sprite (and one texture) while each showing up as a different color — no duplicate art or duplicate Sprite entities needed.</p>
+<p>A Skin is a named list of Masks, and each Mask maps one hex color to another:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Mask</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">redToBlue</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">from_color</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#B23A2E&quot;</span>
+<span class="w">    </span><span class="nt">to_color</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#2E5DB2&quot;</span>
+<span class="w">  </span><span class="nt">redToYellow</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">from_color</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#B23A2E&quot;</span>
+<span class="w">    </span><span class="nt">to_color</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;#D9C23A&quot;</span>
+<span class="nt">Skin</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">blueTeam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Blue Team</span>
+<span class="w">    </span><span class="nt">masks</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redToBlue</span>
+<span class="w">  </span><span class="nt">yellowTeam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Yellow Team</span>
+<span class="w">    </span><span class="nt">masks</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">redToYellow</span>
+</code></pre></div>
+
+<p>Point an actor's <code>skin</code> field at one:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroBlue</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">skin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">blueTeam</span>
+<span class="w">  </span><span class="nt">heroYellow</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">skin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">yellowTeam</span>
+</code></pre></div>
+
+<p>Both actors above use the exact same <code>heroSprite</code> texture. <code>heroBlue</code> and <code>heroYellow</code> each swap the sprite's red for a different color, entirely on the GPU — the underlying image is never duplicated or re-exported. <code>skin</code> is optional: an actor with no <code>skin</code> renders the sprite's original, unmodified colors.</p>
+<p><code>skin</code> is fixed campaign data — set it when you define the Actor, not something changed mid-game. A Skin holds up to 16 Masks; colors are matched exactly (small anti-aliasing differences are tolerated automatically).</p>
 <h2>Checklist for a new actor sprite</h2>
 <ol>
 <li>Add the sheet image to your campaign's <code>assets</code> folder.</li>
@@ -240,6 +273,7 @@
 <li>Define an AnimationSet listing your Animation keys.</li>
 <li>Define <code>idle</code> plus <code>walk</code> and/or <code>run</code> Animations, with all eight directions filled in.</li>
 <li>Point the actor's <code>sprite</code> field at your Sprite.</li>
+<li>Optional: to reuse the same Sprite with a different coloring, define a Skin (and its Masks) and point the actor's <code>skin</code> field at it.</li>
 </ol>
 <h2>See also</h2>
 <ul>
@@ -253,7 +287,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

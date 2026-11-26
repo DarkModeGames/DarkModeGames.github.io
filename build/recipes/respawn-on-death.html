@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Respawn an actor on death &middot; Isometry</title>
+    <title>Respawn a player on death &middot; Isometry</title>
     <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
     <meta name="author" content="Dark Mode Games">
     <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
@@ -42,45 +42,280 @@
     </header>
 
     <main class="content">
-        <h1>Respawn an actor on death</h1>
-<p><strong>Problem.</strong> You want a defeated actor to come back after a short delay instead of being
-gone for good.</p>
-<p><strong>Pattern.</strong> Watch the actor's <code>health</code> resource with a condition, and when it hits zero run
-an action chain that restores the resource and moves the actor back to a spawn point. A
-<code>Timer</code> entity introduces the delay before the restore runs.</p>
-<p>The building blocks are all data entities:</p>
-<ul>
-<li>a <code>Resource</code> (<code>health</code>) with a <code>min</code> of <code>0</code>,</li>
-<li>an <code>Action</code> that sets <code>health</code> back to full and teleports the actor to a <code>Vector</code> spawn point,</li>
-<li>a <code>Trigger</code> (or a <code>Strategy</code> condition) that fires the action when <code>health</code> reaches <code>0</code>,</li>
-<li>a <code>Timer</code> to delay the respawn.</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">respawnHero</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
-<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">respawnResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">respawnValue</span><span class="p p-Indicator">]</span>
-<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">respawnMove</span>
-<span class="w">  </span><span class="nt">respawnMove</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_destination_self</span>
-<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">respawnPoint</span><span class="p p-Indicator">]</span>
+        <h1>Respawn a player on death</h1>
+<p><strong>Problem.</strong> When a player's health reaches 0 they should visibly fall, lie still for a few seconds with a
+countdown, and then rise at a graveyard, even if they died on another map.</p>
+<p><strong>Pattern.</strong> Three pieces:</p>
+<ol>
+<li><strong>Fall.</strong> A <a href="/reference/entities.html#trigger"><code>Trigger</code></a> on <code>healthResource</code>, guarded by "health is 0", untags the player (so monsters, heals and
+   pickups ignore them), starts a countdown, and swaps the body for a <strong>fallen</strong> actor with <code>change_actor_self</code>.
+   The fallen actor uses a non-looping death animation, has speed <code>0</code>, no skills, and one <a href="/reference/entities.html#timer">Timer</a>.</li>
+<li><strong>Countdown.</strong> The fallen actor's 1-second Timer says "You have fallen." on its first tick, then counts
+   <code>fallenTimerResource</code> down. When it reaches 0 it refills health and moves to the graveyard:
+   <code>teleport_self_to_vector</code> if the player is already on the graveyard's map, otherwise <code>change_map_self</code>.</li>
+<li><strong>Rise.</strong> On the next tick it retags the player and swaps back to the hero with <code>change_actor_self</code>.</li>
+</ol>
+<p>Resources carry over through <code>change_actor_*</code>, so the timer, health and gold survive each swap.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Health</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span>
+<span class="w">  </span><span class="nt">isPlayerResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Is Player</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+<span class="w">  </span><span class="nt">zoneResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Zone</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;99&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+<span class="w">  </span><span class="nt">justFellResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Just Fell</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+<span class="w">  </span><span class="nt">fallenTimerResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Fallen</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Seconds until you rise at the graveyard.</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;60&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">deadCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$healthResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;=&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">justFellCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$justFellResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">fallenTimerRunningCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$fallenTimerResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&gt;&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">fallenTimerDoneCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$fallenTimerResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">inTownCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$zoneResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
 
 <span class="nt">Parameter</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">respawnResource</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">resource</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">health</span><span class="p p-Indicator">}</span>
-<span class="w">  </span><span class="nt">respawnValue</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">value</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;100&quot;</span><span class="p p-Indicator">}</span>
-<span class="w">  </span><span class="nt">respawnPoint</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">destination</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">heroSpawn</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">healthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthResource</span>
+<span class="w">  </span><span class="nt">isPlayerParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">isPlayerResource</span>
+<span class="w">  </span><span class="nt">zoneParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">zoneResource</span>
+<span class="w">  </span><span class="nt">justFellParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">justFellResource</span>
+<span class="w">  </span><span class="nt">fallenTimerParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenTimerResource</span>
+<span class="w">  </span><span class="nt">deathPenaltyValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
+<span class="w">  </span><span class="nt">fullHealthValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;999999&#39;</span>
+<span class="w">  </span><span class="nt">oneValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">zeroValueParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">value</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">oneExpressionParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">fallenFormParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actor</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenHeroActor</span>
+<span class="w">  </span><span class="nt">heroFormParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actor</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
+<span class="w">  </span><span class="nt">townMapParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">map</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">townMap</span>
+<span class="w">  </span><span class="nt">graveyardParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">location</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">graveyardVector</span>
+<span class="w">  </span><span class="nt">fallenMessageParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">message</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;You</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">fallen.&#39;</span>
+<span class="w">  </span><span class="nt">privateAudienceParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">audience</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">private</span>
 
 <span class="nt">Vector</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">heroSpawn</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="nv">240</span><span class="p p-Indicator">,</span><span class="nt"> y</span><span class="p">:</span><span class="w"> </span><span class="nv">160</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">graveyardVector</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># 1. Fall (the hero&#39;s health Trigger).</span>
+<span class="w">  </span><span class="nt">heroDeathAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deadCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">isPlayerParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">zeroValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroDeathTimerAction</span>
+<span class="w">  </span><span class="nt">heroDeathTimerAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fallenTimerParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">deathPenaltyValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroDeathFlagAction</span>
+<span class="w">  </span><span class="nt">heroDeathFlagAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">justFellParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroDeathSwapAction</span>
+<span class="w">  </span><span class="nt">heroDeathSwapAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_actor_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fallenFormParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="c1"># 2. Countdown (the fallen actor&#39;s Timer).</span>
+<span class="w">  </span><span class="nt">fallenTickAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">justFellCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">justFellParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">zeroValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenAnnounceAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenCountAction</span>
+<span class="w">  </span><span class="nt">fallenAnnounceAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fallenMessageParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">privateAudienceParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenCountAction</span>
+<span class="w">  </span><span class="nt">fallenCountAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenTimerRunningCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fallenTimerParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneExpressionParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenCountDoneAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">riseAction</span>
+<span class="w">  </span><span class="nt">fallenCountDoneAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenTimerDoneCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">fullHealthValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">toGraveyardAction</span>
+<span class="w">  </span><span class="nt">toGraveyardAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inTownCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">teleport_self_to_vector</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">graveyardParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">toGraveyardMapAction</span>
+<span class="w">  </span><span class="nt">toGraveyardMapAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">zoneParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">toGraveyardTravelAction</span>
+<span class="w">  </span><span class="nt">toGraveyardTravelAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_map_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">townMapParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">graveyardParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="c1"># 3. Rise (the next tick, at the graveyard).</span>
+<span class="w">  </span><span class="nt">riseAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">set_resource_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">isPlayerParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneValueParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">riseSwapAction</span>
+<span class="w">  </span><span class="nt">riseSwapAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">change_actor_self</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">heroFormParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Trigger</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroDeathTrigger</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">resource</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthResource</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroDeathAction</span>
+
+<span class="nt">Timer</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fallenTickTimer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">total</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenTickAction</span>
+
+<span class="nt">Group</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">playersGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Adventurers</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#5DA9E9&#39;</span>
+<span class="w">  </span><span class="nt">fallenGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Fallen</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#6E6A78&#39;</span>
+
+<span class="c1"># The fallen body: the hero&#39;s sprite sheet, with the death clip as idle, walk and run.</span>
+<span class="nt">Animation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroDeadAnimation</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">N</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">NE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">E</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">SE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">S</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">SW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">W</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">NW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">loop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="nt">AnimationSet</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fallenHeroAnimationSet</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">animations</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">heroDeadAnimation</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">idle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroDeadAnimation</span>
+<span class="w">    </span><span class="nt">walk</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroDeadAnimation</span>
+<span class="w">    </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroDeadAnimation</span>
+
+<span class="nt">Sprite</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">fallenHeroSprite</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">animation_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenHeroAnimationSet</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">assets/actor.png</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actorSizeVector</span>
+<span class="w">    </span><span class="nt">margin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actorMarginInset</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">playersGroup</span>
+<span class="w">    </span><span class="nt">triggers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">heroDeathTrigger</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthResource</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">fallenHeroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero (fallen)</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenHeroSprite</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fallenGroup</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span>
+<span class="w">    </span><span class="nt">targetable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">timers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fallenTickTimer</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">fallenTimerResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">healthResource</span><span class="p p-Indicator">]</span>
 </code></pre></div>
 
-<p>See the <a href="/reference/actions.html">action reference</a> for the exact parameters of
-<code>set_resource_self</code> and <code>set_destination_self</code>, and the
-<a href="/reference/entities.html">entity reference</a> for <code>Trigger</code>, <code>Timer</code>, and <code>Resource</code> fields.</p>
+<p><code>deathPenaltyValueParameter</code> is the penalty in seconds. The example has one graveyard, on <code>townMap</code> (zone 1). With
+a graveyard per map, test the zone and teleport to that map's graveyard. Every map gate must set <code>zoneResource</code>
+(see <a href="/recipes/map-gates.html">Travel between maps</a>).</p>
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#action"><code>Action</code></a>, <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#animation"><code>Animation</code></a>, <a href="/reference/entities.html#animationset"><code>AnimationSet</code></a>, <a href="/reference/entities.html#condition"><code>Condition</code></a>, <a href="/reference/entities.html#group"><code>Group</code></a>, <a href="/reference/entities.html#parameter"><code>Parameter</code></a>, <a href="/reference/entities.html#resource"><code>Resource</code></a>, <a href="/reference/entities.html#sprite"><code>Sprite</code></a>, <a href="/reference/entities.html#timer"><code>Timer</code></a>, <a href="/reference/entities.html#trigger"><code>Trigger</code></a>, <a href="/reference/entities.html#vector"><code>Vector</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li><strong>Untag on death.</strong> A monster keeps its target by name, and the fallen body has the same name. Setting
+  <code>isPlayerResource</code> to <code>0</code> makes every "is my target a player?" check let go. Outside <code>playersGroup</code> and with
+  <code>targetable: false</code>, the body is never picked again. Gate heals and potions on the same tag.</li>
+<li><strong>The fallen actor has no health Trigger.</strong> A Trigger fires on the actor's first frame, and health is 0 then,
+  so a copied death Trigger would fire again.</li>
+<li><strong>Floating text belongs to its actor.</strong> That is why the message comes from the fallen body's first tick, not
+  from the hero that is being swapped out.</li>
+<li><strong>Teleport first, swap a tick later.</strong> For a player on another computer, the teleport travels as a message to
+  that computer. Swapping in the same instant can bring the hero back where it fell.</li>
+<li><strong><code>change_map_*</code> to the map you're already on does nothing</strong>, and no condition can read the current map. That is
+  why gates set <code>zoneResource</code>.</li>
+<li><code>change_actor_*</code> takes speed, perception and salience from the new actor. Everything else (resources, position,
+  name) carries over. A player who quits while fallen logs back in fallen, and the countdown carries on.</li>
+<li>Regen and other Timers run only on actors that list them, so the fallen body regenerates nothing.</li>
+<li><code>loop: false</code> plays the fall once and holds the last frame.</li>
+</ul>
     </main>
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

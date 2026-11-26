@@ -6,7 +6,7 @@ This page shows you how to make an actor react automatically. A *trigger* runs a
 
 Most actions in a campaign run because something asks for them: a player clicks an ability, or an AI [strategy](/manual/getting-started/glossary.html) decides to act. Triggers and timers are different. They are passive watchers attached to an actor that run an action on their own.
 
-You use a **Trigger** when you want a reaction to a value: heal a wound when health drops, or check for death whenever health changes. You use a **Timer** when you want something to happen on a clock: regenerate health every few seconds.
+You use a **[Trigger](/reference/entities.html#trigger)** when you want a reaction to a value: heal a wound when health drops, or check for death whenever health changes. You use a **[Timer](/reference/entities.html#timer)** when you want something to happen on a clock: regenerate health every few seconds.
 
 Both are [entities](/manual/getting-started/glossary.html). You define them in YAML, then point an actor at them. The engine builds the watchers when the actor spawns.
 
@@ -46,7 +46,7 @@ Trigger:
 
 When `health` changes to any new value, the trigger fires `deathAction`. Both the caller and the target of that action are the actor itself.
 
-> Warning: A trigger fires on *any* change to the resource, an increase as well as a decrease. It does not detect death on its own. The death logic lives in the action, not the trigger.
+> Warning: A trigger fires on *any* change to the resource, an increase as well as a decrease. It does not detect death on its own. The death logic lives in the action, not the trigger. **Always give a trigger's action an `if`.** And be careful when the action changes the same resource it watches: that fires the trigger again. Make sure the `if` turns false after the first run.
 
 ### Gate the effect inside the action
 
@@ -64,7 +64,7 @@ Action:
 
 The `if: isDead` condition checks whether health has reached zero. Only then does the `echo` run. So the trigger fires constantly as health moves, but the message appears only on death. This split, a trigger that watches and an action that decides, keeps each piece simple.
 
-> Note: `parameters` is a flat array of KeyRefs to `Parameter` entities, defined in a sibling top-level `Parameter` block. See [Define actions](/manual/guides/define-actions.html) for how parameters resolve.
+> Note: `parameters` is a flat array of KeyRefs to [`Parameter`](/reference/entities.html#parameter) entities, defined in a sibling top-level `Parameter` block. See [Define actions](/manual/guides/define-actions.html) for how parameters resolve.
 
 ## Timers
 
@@ -85,14 +85,14 @@ Here is the `regenTimer`:
 ```yaml
 Timer:
   regenTimer:
-    total: ''
+    total: '0'
     interval: 1d12
     action: regenAction
 ```
 
 Every `1d12` seconds the timer runs `regenAction`. The interval is re-rolled each time, so the wait is one to twelve seconds, rarely the same twice in a row.
 
-> Warning: `total` counts intervals, not seconds. If `total` evaluates to `0`, the timer never expires and runs for the actor's whole life. The example leaves `total` empty, which evaluates to `0`, so `regenTimer` regenerates health forever.
+> Warning: `total` counts intervals, not seconds. If `total` is `0`, the timer never expires and runs for the actor's whole life, so `regenTimer` regenerates health forever. The first run happens after one `interval`, not immediately.
 
 ### The action a timer runs
 
@@ -126,7 +126,7 @@ Actor:
   heroActor:
     name: Hero
     base: 8
-    speed: 60
+    speed: 1.0
     triggers:
     - deathTrigger
     timers:
@@ -143,7 +143,7 @@ To give an actor self-healing, follow these steps:
 
 1. Confirm the actor has a `health` [resource](/manual/guides/add-resources-and-measures.html) with a `max` it can heal toward.
 2. Write a healing [action](/manual/guides/define-actions.html) that uses `plus_resource_self`, with parameters naming the resource and a dice expression for the amount, as `regenAction` does.
-3. Define a `Timer` entity with an `interval` dice expression, a `total` of `""` to run forever, and `action` pointing at your healing action.
+3. Define a `Timer` entity with an `interval` dice expression, a `total` of `'0'` to run forever, and `action` pointing at your healing action.
 4. Add the timer's key to the actor's `timers` array.
 5. Load the campaign on the host or server and watch the resource climb.
 

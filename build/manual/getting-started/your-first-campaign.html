@@ -62,12 +62,12 @@
 <span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
 </code></pre></div>
 
-<p>Read this as: a <code>Main</code> entity, keyed <code>demoMain</code>, with two fields. The values <code>"heroActor"</code> and <code>"demoMap"</code> are not actors and maps themselves; they are <strong><a href="/manual/getting-started/glossary.html#terms">KeyRefs</a></strong>, that is, the keys of other entities the engine resolves at load time. Entity keys must be unique across the whole campaign, so a key used for an Actor cannot be reused for a Map.</p>
+<p>Read this as: a <a href="/reference/entities.html#main"><code>Main</code></a> entity, keyed <code>demoMain</code>, with two fields. The values <code>"heroActor"</code> and <code>"demoMap"</code> are not actors and maps themselves; they are <strong><a href="/manual/getting-started/glossary.html#terms">KeyRefs</a></strong>, that is, the keys of other entities the engine resolves at load time. Entity keys must be unique across the whole campaign, so a key used for an <a href="/reference/entities.html#actor">Actor</a> cannot be reused for a Map.</p>
 <blockquote>
-<p>Note: You may put several entities, even of different types, in one file. The loader merges every YAML file in the campaign into a single set of entities. An example campaign typically splits entities across files for clarity (<code>Main.yaml</code>, <code>heroActor.yaml</code>, <code>map.yaml</code>, and so on) but co-locates helpers, for example a <code>map.yaml</code> that also defines the <code>Vector</code> that the map's spawn point points to.</p>
+<p>Note: You may put several entities, even of different types, in one file. The loader merges every YAML file in the campaign into a single set of entities. An example campaign typically splits entities across files for clarity (<code>Main.yaml</code>, <code>heroActor.yaml</code>, <code>map.yaml</code>, and so on) but co-locates helpers, for example a <code>map.yaml</code> that also defines the <a href="/reference/entities.html#vector"><code>Vector</code></a> that the map's spawn point points to.</p>
 </blockquote>
 <h2>Main: the one required entity</h2>
-<p>Every campaign must contain <strong>exactly one</strong> Main entity. It defines the campaign's starting state, and only two of its fields are required:</p>
+<p>Every campaign must contain <strong>exactly one</strong> Main entity. It defines the campaign's starting state, but only one of its fields is required:</p>
 <table>
 <thead>
 <tr>
@@ -78,24 +78,24 @@
 </thead>
 <tbody>
 <tr>
-<td><code>actor</code></td>
-<td>KeyRef</td>
-<td>the player-controlled Actor</td>
-</tr>
-<tr>
 <td><code>map</code></td>
 <td>KeyRef</td>
-<td>the starting Map</td>
+<td>the starting Map (required)</td>
+</tr>
+<tr>
+<td><code>actor</code></td>
+<td>KeyRef</td>
+<td>the player-controlled Actor (optional — omit it and the player starts as an invisible, immovable <a href="/manual/core-concepts/campaign-structure.html#the-main-entity">null actor</a>)</td>
 </tr>
 </tbody>
 </table>
 <p>If Main is missing or duplicated, validation stops with an error such as <code>Campaign requires exactly one Main entity (found 0)</code>.</p>
-<p>Main also accepts two optional fields:</p>
+<p>Main also accepts two more optional fields:</p>
 <ul>
 <li><code>notes</code> — a free-text campaign description, empty by default.</li>
 <li><code>plugins</code> — an ordered list of nested campaign zips to merge in; earlier entries win, and the host campaign always takes priority.</li>
 </ul>
-<p>Because <code>Main.actor</code> and <code>Main.map</code> are the only required values anywhere in a minimal campaign, your next two files just need to exist under the keys Main names.</p>
+<p>This walkthrough builds a campaign with a controllable Actor, so <code>Main.map</code> and <code>Main.actor</code> are both the values you need — your next two files just need to exist under the keys Main names.</p>
 <h2>Actor: a character in the world</h2>
 <p>An <a href="/manual/getting-started/glossary.html#terms">Actor</a> is a character, player-controlled or AI-driven. Every Actor field is optional, so a bare <code>{}</code> passes schema validation. In practice you give the player actor a name, a sprite, and a few stats.</p>
 <p>Here are the core fields for a hero actor, trimmed to the essentials:</p>
@@ -105,18 +105,18 @@
 <span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
 <span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
 <span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
-<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
-<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">250</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 </code></pre></div>
 
 <p>Each field is doing one job:</p>
 <ul>
 <li><code>name</code> is the display name. Always write the clean key <code>name</code>; the underscore form <code>name_</code> is internal and never used in campaign files.</li>
-<li><code>sprite</code> is a KeyRef to a Sprite entity.</li>
+<li><code>sprite</code> is a KeyRef to a <a href="/reference/entities.html#sprite">Sprite</a> entity.</li>
 <li><code>base</code> is the actor's footprint size in pixels (minimum 0).</li>
 <li><code>speed</code> is movement speed (minimum 0.0).</li>
 <li><code>perception</code> is the vision range in pixels (minimum 0).</li>
-<li><code>salience</code> is how easily others detect this actor (minimum 0).</li>
+<li><code>salience</code> is how far away, in pixels, others can notice this actor (minimum 0).</li>
 </ul>
 <blockquote>
 <p>Warning: <code>speed</code> is a Float field, so it must carry a decimal point. Write <code>1.0</code>, not <code>1</code>. Integer fields like <code>base</code> and <code>perception</code> accept whole-number floats such as <code>8.0</code>, but a Float field rejects a bare integer.</p>
@@ -157,15 +157,18 @@
 <div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--validate<span class="o">=</span>mycampaign.zip
 </code></pre></div>
 
-<p>To run the full load pipeline headless, place the zip next to the engine binary and boot with <code>--network=host</code>:</p>
+<p>To run the full load pipeline headless, put the zip in the <code>campaigns</code> folder next to the engine (see <a href="/manual/getting-started/install-and-run.html#where-files-go">Where files go</a>) and boot with <code>--network=host</code>:</p>
 <div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>mycampaign<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
 </code></pre></div>
 
-<p>The campaign zip must sit in the same directory as the engine executable. Logs write to <code>log.txt</code> in that directory. A successful boot shows <code>Campaign validation passed</code> followed by <code>Successfully created Entity</code> lines.</p>
+<p>Logs write to <code>log.txt</code> in the engine's data folder. A successful boot shows <code>Campaign validation passed</code> followed by <code>Successfully created Entity</code> lines.</p>
 <blockquote>
 <p>Note: <code>--network=none</code> currently loads no campaign; it is a no-op. Use <code>--network=host</code> to exercise the load pipeline. See <a href="/reference/cli.html">CLI reference</a> for every flag.</p>
 </blockquote>
-<p>If validation fails, the log names the entity and field at fault. Fix the YAML and rerun the boot command; you do not need to repackage unless you changed which files are in the zip.</p>
+<p>If validation fails, the log names the entity and field at fault. Fix the YAML, <strong>zip the campaign again</strong>, and rerun. The engine only ever reads the zip, so an edit to a loose file does nothing until you repackage.</p>
+<blockquote>
+<p>Tip: Make a one-line script that zips, validates, and boots. You will run it hundreds of times.</p>
+</blockquote>
 <h2>See also</h2>
 <ul>
 <li><a href="/manual/getting-started/glossary.html">Glossary</a> — definitions of every term used here.</li>
@@ -180,7 +183,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

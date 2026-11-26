@@ -17,7 +17,7 @@ The download includes builds for **Linux**, **Windows**, and **macOS**.
 
 ## Running it
 
-Put the Isometry executable in a folder, place your campaign `.zip` files alongside it, and
+Put the Isometry executable in a folder, make a `campaigns` folder next to it for your campaign `.zip` files, and
 launch with command line arguments:
 
 <div>

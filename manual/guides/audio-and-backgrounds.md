@@ -1,6 +1,6 @@
 # Audio and Backgrounds
 
-This page shows you how to give a map atmosphere: a soundtrack with the Sound entity and a scrolling backdrop with the Parallax entity. You attach both to a map, so the music plays and the background drifts as soon as the player loads it.
+This page shows you how to give a map atmosphere: a soundtrack with the Sound entity and a scrolling backdrop with the [Parallax](/reference/entities.html#parallax) entity. You attach both to a map, so the music plays and the background drifts as soon as the player loads it.
 
 ## Prerequisites
 
@@ -38,11 +38,13 @@ The map names the keys; the next sections define the entities behind those keys.
 
 A Sound entity is an audio file plus playback settings. Use it for background music, ambience, or a one-shot effect.
 
-The Sound entity has three fields:
+The Sound entity has five fields:
 
 - `source` — the path to the audio file inside your campaign archive.
-- `scale` — a [dice expression](/manual/getting-started/glossary.html#terms) that sets the playback pitch.
+- `scale` — a [dice expression](/manual/getting-started/glossary.html#terms) that sets the playback pitch, in percent.
 - `loop` — whether the stream repeats continuously.
+- `volume` — how loud it plays, in percent (default 100).
+- `range` — how far a sound placed in the world carries, in pixels (default 2000).
 
 > Note: The schema marks every Sound field optional, but a Sound with no `source` has nothing to play. Always set `source`.
 
@@ -58,7 +60,7 @@ Sound:
     loop: true
 ```
 
-The `source` path is relative to the root of the campaign archive. The engine picks the audio format from the file extension, so an `.mp3`, `.ogg`, or `.wav` all work. With `loop` set to `true`, the track restarts the moment it ends, which is what you want for background music.
+The `source` path is relative to the root of the campaign archive. Use **`.mp3`** files. `.ogg` and `.wav` pass validation but are not reliable at runtime, so convert them to MP3 first. With `loop` set to `true`, the track restarts the moment it ends, which is what you want for background music.
 
 To attach it, list `bgMusic` in the map's `audio` array, as shown above.
 
@@ -66,9 +68,24 @@ To attach it, list `bgMusic` in the map's `audio` array, as shown above.
 
 The `scale` field is a [dice expression](/manual/getting-started/glossary.html#terms). The engine rolls it, divides the result by `100.0`, and applies that number as the audio player's pitch scale.
 
-> Warning: `scale` controls **pitch**, not loudness. A value of `1d200` rolls a number from 1 to 200, giving a pitch between `0.01` and `2.0` — anywhere from very low and slow to twice normal speed. Loudness is handled separately by the engine's fade, which you do not set on the entity.
+> Warning: `scale` controls **pitch**, not loudness. A value of `1d200` rolls a number from 1 to 200, giving a pitch between `0.01` and `2.0` — anywhere from very low and slow to twice normal speed. Loudness is the separate `volume` field, below.
 
 The expression is re-rolled every time playback finishes, so a random `scale` shifts the pitch on each repeat. Any valid dice notation works, including a plain constant for a fixed pitch. To keep the pitch unchanged, set `scale` to `100`.
+
+### Set volume and range
+
+`volume` is a whole number of percent from 0 to 400: 100 plays the file as recorded, 50 at half amplitude, 200 at double. Fades end at this volume, so map music set to 40 fades in to 40.
+
+`range` is how far, in pixels, a sound placed in the world can be heard: an animation's sound, or one played by `play_sound_self` / `play_sound_target`. It is ignored for map audio, which is heard everywhere on its map.
+
+```yaml
+Sound:
+  pickupSound:
+    source: /assets/Audio/pickup.mp3
+    scale: '92+1d16'
+    volume: 60
+    range: 900
+```
 
 ### Trigger a sound from an animation
 
@@ -82,6 +99,12 @@ Sound:
 ```
 
 This sound omits `loop`, so it plays once. Its `scale` of `50+(1d100)` rolls 51 to 150, giving a pitch of `0.51` to `1.5` — a small random variation that keeps a repeated effect from sounding identical each time. See [Visuals: sprites and animations](/manual/guides/visuals-sprites-animations.html) for how an animation points at a sound.
+
+When the actor leaves the animation's state, a one-shot sound plays to its end, so a swing is never cut short. A looping sound stops with a short fade, so a looping footstep sound on a walk animation plays while the actor walks and stops when it halts. Entering the state again starts the sound over.
+
+### Play a sound from an action
+
+`play_sound_self` and `play_sound_target` play a Sound once at the caller or the target. With `audience: public` (the default) every player who can see that actor hears it; with `private` only the caller's own player does. The sound is placed in the map, not on the actor, so it plays on if the actor despawns straight after, as a loot bag does when it is picked up.
 
 ## Add a background with the Parallax entity
 

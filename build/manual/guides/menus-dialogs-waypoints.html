@@ -43,7 +43,7 @@
 
     <main class="content">
         <h1>Menus, Dialogs, and Waypoints</h1>
-<p>This page covers the data entities that drive interface panels and world markers: Menu, Dialog, Waypoint, Group, and Deployment. You use them to give actors interaction options, show the player text, mark travel destinations, color factions, and place actors on a map when the campaign starts.</p>
+<p>This page covers the data entities that drive interface panels and world markers: <a href="/reference/entities.html#menu">Menu</a>, <a href="/reference/entities.html#dialog">Dialog</a>, <a href="/reference/entities.html#waypoint">Waypoint</a>, Group, and <a href="/reference/entities.html#deployment">Deployment</a>. You use them to give actors interaction options, show the player text, mark travel destinations, color factions, and place actors on a map when the campaign starts.</p>
 <h2>Introduction</h2>
 <p>The entities on this page are pure-data records, like every other <a href="/manual/getting-started/glossary.html#terms">entity</a> in Isometry. They hold no game logic. Instead, they describe what the player sees and how a campaign is laid out:</p>
 <ul>
@@ -62,7 +62,8 @@
 <li><a href="/manual/guides/build-a-map.html">Build a map</a> — the maps that waypoints and deployments sit on.</li>
 </ul>
 <h2>Menus: actions on interaction</h2>
-<p>A Menu is a named list of <a href="/manual/getting-started/glossary.html#terms">Action</a> keys. When the player interacts with a target (the Enter key by default), the engine opens an <strong>interaction panel</strong> in the bottom-center of the screen, replacing the skill and resource blocks until the interaction ends. The panel shows the actor's <code>dialog</code> text (if it has one) above its menu options laid out as a 2×2 grid (paginated beyond four). The player moves the selection with the arrow keys and confirms with Enter; Esc closes the interaction.</p>
+<p>A Menu is a named list of <a href="/manual/getting-started/glossary.html#terms">Action</a> keys. When the player interacts with a target (the Enter key by default), the engine opens an <strong>interaction panel</strong> in the centre of the screen. The panel shows the actor's <code>dialog</code> text (if it has one) above its menu options laid out as a 2×2 grid (paginated beyond four). The player picks an option with the mouse, the arrow keys and Enter, or a gamepad; Esc closes the interaction.</p>
+<p>When a menu action runs, the <strong>caller is the player</strong> and the <strong>target is the actor that owns the menu</strong> (the NPC). For a <a href="/reference/entities.html#resource">Resource</a>'s menu (an item in the inventory), caller and target are both the player.</p>
 <p>The <code>heroMenu</code> offers four actions: two interactions and two dialogs.</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Menu</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">heroMenu</span><span class="p">:</span>
@@ -80,15 +81,31 @@
 </blockquote>
 <p>The example defines four menus: <code>heroMenu</code>, <code>guardMenu</code>, <code>merchantMenu</code>, and <code>healthMenu</code>. Each one tailors the action list to the actor that uses it.</p>
 <h3>Branching: dialog trees and combat menus</h3>
-<p>Because an option just runs an Action, and an Action can <code>open_dialog</code> (swap the panel's text), <code>open_menu</code> (swap the options), or <code>close_interaction</code> (leave), you can build decision trees and Pokémon-style combat menus without code. Each node is the text + options currently shown; an option's action moves to the next node in place. The guard shows this: it has a <code>dialog</code> (<code>guardGreeting</code>) and a <code>guardMenu</code> whose options ask about town, threaten (each swaps the text via <code>open_dialog</code>), inspect, or leave (<code>close_interaction</code>).</p>
+<p>Because an option just runs an Action, and an Action can <code>open_dialog</code> (swap the panel's text), <code>open_menu</code> (swap the options), or <code>close_interaction</code> (leave), you can build decision trees and turn-based combat menus without code.</p>
+<blockquote>
+<p>Tip: Give the player feedback. An option that hands over an item or finishes a quest step should usually end with <code>open_dialog</code> (to say what happened), <code>open_menu</code> (to show options that no longer include the one just used), or <code>close_interaction</code>. Otherwise the panel looks unchanged and the player can't tell anything happened. Each node is the text + options currently shown; an option's action moves to the next node in place. The guard shows this: it has a <code>dialog</code> (<code>guardGreeting</code>) and a <code>guardMenu</code> whose options ask about town, threaten (each swaps the text via <code>open_dialog</code>), inspect, or leave (<code>close_interaction</code>).</p>
+</blockquote>
+<h3>Hiding options the player can't use</h3>
+<p>Set <code>hide_unavailable: true</code> on a Menu to list only the options the player can use right now. An option whose Action has an <code>if</code> <a href="/reference/entities.html#condition">Condition</a> is listed only while that Condition holds, with the player as the caller (<code>$</code>) and the menu's actor as the target (<code>@</code>). Options without an <code>if</code> are always listed.</p>
+<p>The list stays current while the menu is open. When an option runs, or anything else changes the player's or the target's resources, options appear and disappear to match. Two players looting the same body each see the other's takes vanish. If every option is hidden, the panel says "Nothing here."</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Menu</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">wolfBodyMenu</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Wolf body</span>
+<span class="w">    </span><span class="nt">hide_unavailable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">actions</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">takePelt</span><span class="w">     </span><span class="c1"># if: the body still has a pelt</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">takeFang</span><span class="w">     </span><span class="c1"># if: the body still has a fang</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">leaveBody</span><span class="w">    </span><span class="c1"># no if: always listed</span>
+</code></pre></div>
+
+<p>The host works the list out, because it holds every actor's true values, and sends it to the player. Conditions can therefore read any of the target's resources, private ones included. Keep these Conditions free of dice rolls (<code>d</code>): a rolled Condition can show and hide an option at random.</p>
 <h2>Dialogs: text panels</h2>
 <p>A <a href="/manual/getting-started/glossary.html#terms">dialog</a> is a titled text panel shown to the player. You use dialogs for dialogue, lore, instructions, or status readouts. A Dialog has two fields, <code>title</code> and <code>text</code>, and both are required.</p>
 <p>The <code>welcomeDialog</code> is plain text with no templating.</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Dialog</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">welcomeDialog</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Welcome to Isometry</span>
-<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">This is the example campaign. It showcases all entity types available in the Isometry engine.</span>
-<span class="w">      </span><span class="l l-Scalar l-Scalar-Plain">Explore the map, interact with NPCs, and try your skills.</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;This</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">example</span><span class="nv"> </span><span class="s">campaign.</span><span class="nv"> </span><span class="s">It</span><span class="nv"> </span><span class="s">showcases</span><span class="nv"> </span><span class="s">all</span><span class="nv"> </span><span class="s">entity</span><span class="nv"> </span><span class="s">types</span><span class="nv"> </span><span class="s">available</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">Isometry</span><span class="nv"> </span><span class="s">engine.</span><span class="nv"> </span><span class="s">Explore</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">map,</span><span class="nv"> </span><span class="s">interact</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">NPCs,</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">try</span><span class="nv"> </span><span class="s">your</span><span class="nv"> </span><span class="s">skills.&quot;</span>
 </code></pre></div>
 
 <p>The <code>title</code> shows prominently at the top of the panel; the <code>text</code> is the body. Long body text is split across pages automatically, so you do not need to manage page breaks yourself.</p>
@@ -103,13 +120,12 @@
 <div class="codehilite"><pre><span></span><code><span class="nt">Dialog</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">statusDialog</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Status Report</span>
-<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;Health:</span><span class="nv"> </span><span class="s">{{@health}}</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">20</span>
-
-<span class="w">      </span><span class="s">Mana:</span><span class="nv"> </span><span class="s">{{@mana}}</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">10</span>
-
-<span class="w">      </span><span class="s">Gold:</span><span class="nv"> </span><span class="s">{{$gold}}&#39;</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Health:</span><span class="nv"> </span><span class="s">{{@health}}</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">20\nMana:</span><span class="nv"> </span><span class="s">{{@mana}}</span><span class="nv"> </span><span class="s">/</span><span class="nv"> </span><span class="s">10\nGold:</span><span class="nv"> </span><span class="s">{{$gold}}&quot;</span>
 </code></pre></div>
 
+<blockquote>
+<p>Warning: Write dialog text on <strong>one line</strong>, inside double quotes, and use <code>\n</code> for a line break (<code>\n\n</code> for a blank line). The engine's YAML reader does not support text that spans several lines (<code>|</code> blocks or quoted strings broken across lines); the extra lines are misread as fields.</p>
+</blockquote>
 <p>Here <code>{{@health}}</code> and <code>{{@mana}}</code> show the target actor's <code>health</code> and <code>mana</code> resources, while <code>{{$gold}}</code> shows the caller's <code>gold</code> resource. The literal text around each token, such as <code>/ 20</code>, is shown unchanged. The caller and target are bound when the dialog is opened, typically by an action such as <code>showStatusDialog</code> listed in <code>heroMenu</code>.</p>
 <blockquote>
 <p>Tip: Use templating tokens only inside a Dialog's <code>text</code> field. They work for both resources and measures.</p>
@@ -133,7 +149,7 @@
 <p>The fields are:</p>
 <ul>
 <li><code>name</code> — the human-readable label shown in the interface.</li>
-<li><code>location</code> — a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to a Vector entity that holds the position (<code>x</code>, <code>y</code>).</li>
+<li><code>location</code> — a <a href="/manual/getting-started/glossary.html#terms">KeyRef</a> to a <a href="/reference/entities.html#vector">Vector</a> entity that holds the position (<code>x</code>, <code>y</code>).</li>
 <li><code>icon</code> — the image path used for the marker on the map and in the interface.</li>
 <li><code>map</code> — a KeyRef to the Map entity the waypoint belongs to.</li>
 <li><code>menu</code> — an optional KeyRef to a Menu entity for interaction options.</li>
@@ -169,7 +185,7 @@
 <span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-48</span>
 </code></pre></div>
 
-<p>The <code>location</code> field is a KeyRef to a Vector entity holding the spawn position (<code>x</code>, <code>y</code>). The <code>actor</code> field is a KeyRef to the Actor entity to place there. As with waypoints, the example co-locates the spawn Vector, <code>guardPos</code>, in the same file.</p>
+<p>The <code>location</code> field is a KeyRef to a Vector entity holding the spawn position (<code>x</code>, <code>y</code>). The <code>actor</code> field is a KeyRef to the <a href="/reference/entities.html#actor">Actor</a> entity to place there. As with waypoints, the example co-locates the spawn Vector, <code>guardPos</code>, in the same file.</p>
 <blockquote>
 <p>Note: A Deployment references only a position and an actor. The player actor's own starting placement comes from the <a href="/manual/getting-started/glossary.html#terms">Main</a> entity, not from a Deployment.</p>
 </blockquote>
@@ -187,7 +203,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

@@ -1,6 +1,6 @@
 # Menus, Dialogs, and Waypoints
 
-This page covers the data entities that drive interface panels and world markers: Menu, Dialog, Waypoint, Group, and Deployment. You use them to give actors interaction options, show the player text, mark travel destinations, color factions, and place actors on a map when the campaign starts.
+This page covers the data entities that drive interface panels and world markers: [Menu](/reference/entities.html#menu), [Dialog](/reference/entities.html#dialog), [Waypoint](/reference/entities.html#waypoint), Group, and [Deployment](/reference/entities.html#deployment). You use them to give actors interaction options, show the player text, mark travel destinations, color factions, and place actors on a map when the campaign starts.
 
 ## Introduction
 
@@ -24,7 +24,9 @@ Before you read this page, you should be comfortable with:
 
 ## Menus: actions on interaction
 
-A Menu is a named list of [Action](/manual/getting-started/glossary.html#terms) keys. When the player interacts with a target (the Enter key by default), the engine opens an **interaction panel** in the bottom-center of the screen, replacing the skill and resource blocks until the interaction ends. The panel shows the actor's `dialog` text (if it has one) above its menu options laid out as a 2×2 grid (paginated beyond four). The player moves the selection with the arrow keys and confirms with Enter; Esc closes the interaction.
+A Menu is a named list of [Action](/manual/getting-started/glossary.html#terms) keys. When the player interacts with a target (the Enter key by default), the engine opens an **interaction panel** in the centre of the screen. The panel shows the actor's `dialog` text (if it has one) above its menu options laid out as a 2×2 grid (paginated beyond four). The player picks an option with the mouse, the arrow keys and Enter, or a gamepad; Esc closes the interaction.
+
+When a menu action runs, the **caller is the player** and the **target is the actor that owns the menu** (the NPC). For a [Resource](/reference/entities.html#resource)'s menu (an item in the inventory), caller and target are both the player.
 
 The `heroMenu` offers four actions: two interactions and two dialogs.
 
@@ -47,7 +49,28 @@ The example defines four menus: `heroMenu`, `guardMenu`, `merchantMenu`, and `he
 
 ### Branching: dialog trees and combat menus
 
-Because an option just runs an Action, and an Action can `open_dialog` (swap the panel's text), `open_menu` (swap the options), or `close_interaction` (leave), you can build decision trees and Pokémon-style combat menus without code. Each node is the text + options currently shown; an option's action moves to the next node in place. The guard shows this: it has a `dialog` (`guardGreeting`) and a `guardMenu` whose options ask about town, threaten (each swaps the text via `open_dialog`), inspect, or leave (`close_interaction`).
+Because an option just runs an Action, and an Action can `open_dialog` (swap the panel's text), `open_menu` (swap the options), or `close_interaction` (leave), you can build decision trees and turn-based combat menus without code.
+
+> Tip: Give the player feedback. An option that hands over an item or finishes a quest step should usually end with `open_dialog` (to say what happened), `open_menu` (to show options that no longer include the one just used), or `close_interaction`. Otherwise the panel looks unchanged and the player can't tell anything happened. Each node is the text + options currently shown; an option's action moves to the next node in place. The guard shows this: it has a `dialog` (`guardGreeting`) and a `guardMenu` whose options ask about town, threaten (each swaps the text via `open_dialog`), inspect, or leave (`close_interaction`).
+
+### Hiding options the player can't use
+
+Set `hide_unavailable: true` on a Menu to list only the options the player can use right now. An option whose Action has an `if` [Condition](/reference/entities.html#condition) is listed only while that Condition holds, with the player as the caller (`$`) and the menu's actor as the target (`@`). Options without an `if` are always listed.
+
+The list stays current while the menu is open. When an option runs, or anything else changes the player's or the target's resources, options appear and disappear to match. Two players looting the same body each see the other's takes vanish. If every option is hidden, the panel says "Nothing here."
+
+```yaml
+Menu:
+  wolfBodyMenu:
+    name: Wolf body
+    hide_unavailable: true
+    actions:
+    - takePelt     # if: the body still has a pelt
+    - takeFang     # if: the body still has a fang
+    - leaveBody    # no if: always listed
+```
+
+The host works the list out, because it holds every actor's true values, and sends it to the player. Conditions can therefore read any of the target's resources, private ones included. Keep these Conditions free of dice rolls (`d`): a rolled Condition can show and hide an option at random.
 
 ## Dialogs: text panels
 
@@ -59,8 +82,7 @@ The `welcomeDialog` is plain text with no templating.
 Dialog:
   welcomeDialog:
     title: Welcome to Isometry
-    text: This is the example campaign. It showcases all entity types available in the Isometry engine.
-      Explore the map, interact with NPCs, and try your skills.
+    text: "This is the example campaign. It showcases all entity types available in the Isometry engine. Explore the map, interact with NPCs, and try your skills."
 ```
 
 The `title` shows prominently at the top of the panel; the `text` is the body. Long body text is split across pages automatically, so you do not need to manage page breaks yourself.
@@ -81,13 +103,11 @@ The `statusDialog` combines both markers to report the target's health and mana 
 Dialog:
   statusDialog:
     title: Status Report
-    text: 'Health: {{@health}} / 20
-
-      Mana: {{@mana}} / 10
-
-      Gold: {{$gold}}'
+    text: "Health: {{@health}} / 20\nMana: {{@mana}} / 10\nGold: {{$gold}}"
 ```
 {% endraw %}
+
+> Warning: Write dialog text on **one line**, inside double quotes, and use `\n` for a line break (`\n\n` for a blank line). The engine's YAML reader does not support text that spans several lines (`|` blocks or quoted strings broken across lines); the extra lines are misread as fields.
 
 Here `{% raw %}{{@health}}{% endraw %}` and `{% raw %}{{@mana}}{% endraw %}` show the target actor's `health` and `mana` resources, while `{% raw %}{{$gold}}{% endraw %}` shows the caller's `gold` resource. The literal text around each token, such as `/ 20`, is shown unchanged. The caller and target are bound when the dialog is opened, typically by an action such as `showStatusDialog` listed in `heroMenu`.
 
@@ -116,7 +136,7 @@ Vector:
 The fields are:
 
 - `name` — the human-readable label shown in the interface.
-- `location` — a [KeyRef](/manual/getting-started/glossary.html#terms) to a Vector entity that holds the position (`x`, `y`).
+- `location` — a [KeyRef](/manual/getting-started/glossary.html#terms) to a [Vector](/reference/entities.html#vector) entity that holds the position (`x`, `y`).
 - `icon` — the image path used for the marker on the map and in the interface.
 - `map` — a KeyRef to the Map entity the waypoint belongs to.
 - `menu` — an optional KeyRef to a Menu entity for interaction options.
@@ -162,7 +182,7 @@ Vector:
     y: -48
 ```
 
-The `location` field is a KeyRef to a Vector entity holding the spawn position (`x`, `y`). The `actor` field is a KeyRef to the Actor entity to place there. As with waypoints, the example co-locates the spawn Vector, `guardPos`, in the same file.
+The `location` field is a KeyRef to a Vector entity holding the spawn position (`x`, `y`). The `actor` field is a KeyRef to the [Actor](/reference/entities.html#actor) entity to place there. As with waypoints, the example co-locates the spawn Vector, `guardPos`, in the same file.
 
 > Note: A Deployment references only a position and an actor. The player actor's own starting placement comes from the [Main](/manual/getting-started/glossary.html#terms) entity, not from a Deployment.
 

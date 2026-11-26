@@ -59,10 +59,21 @@
 <p>Note: Isometry is in open beta, version 0.387. itch.io is the only official download source.</p>
 </blockquote>
 <h2>Run the engine</h2>
-<p>Launch the engine executable to open the <strong>launcher</strong>, where you pick a campaign, log in, and host or join a session. The engine reads campaign <code>.zip</code> files from a folder beside the binary, so a campaign you want to play is placed next to the executable before you launch.</p>
+<p>Run the engine executable with command-line flags that name the campaign, the network mode (host or join), and your username and password; see the <a href="/reference/cli.html">CLI reference</a> and the host boot command below. There is no built-in launcher screen, though a campaign may ship its own launcher that passes these flags for you.</p>
+<p><a id="where-files-go"></a></p>
+<h3>Where files go</h3>
+<p>Two locations matter, and they are different:</p>
+<ul>
+<li><strong>Campaigns</strong> go in a folder named <code>campaigns</code> next to the engine executable (on macOS, next to <code>Isometry.app</code>). To use another folder, pass <code>--dir=/absolute/path/to/folder</code>.</li>
+<li><strong>The log, saves, and keys</strong> go in the engine's data folder:</li>
+<li>macOS: <code>~/Library/Application Support/isometry/</code></li>
+<li>Linux: <code>~/.local/share/isometry/</code></li>
+<li>Windows: <code>%APPDATA%\isometry\</code></li>
+</ul>
+<p>Not sure where the engine is looking? Run <code>isometry --print-paths</code>. It prints the data folder and every campaign folder it checks, then exits.</p>
 <p>Throughout this manual, command examples call the engine as <code>isometry</code>; use the actual file name of the executable you downloaded for your platform.</p>
 <h2>Load an example campaign</h2>
-<p>A campaign's <a href="/manual/getting-started/glossary.html#terms">Main</a> entity is the single required entry point that names the player actor and the starting map. A minimal <code>Main.yaml</code> defines one Main entity:</p>
+<p>A campaign's <a href="/manual/getting-started/glossary.html#terms">Main</a> entity is the single required entry point that names the starting map, and optionally the player actor. A minimal <code>Main.yaml</code> defines one Main entity:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
@@ -78,7 +89,7 @@
 </code></pre></div>
 
 <p><code>speed</code> is the actor's movement rate and <code>base</code> is the footprint size in pixels.</p>
-<p>To play a campaign, package its folder into a <code>.zip</code> (see <a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a> for packaging), place the zip beside the engine binary, and launch.</p>
+<p>To play a campaign, package its folder into a <code>.zip</code> (see <a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a> for packaging), put the zip in the <code>campaigns</code> folder (see <a href="#where-files-go">Where files go</a>), and launch.</p>
 <h2>Verify a campaign loads (headless)</h2>
 <p>When you write your own campaign, you need a fast way to confirm it loads and validates without opening a window. The engine offers two headless checks.</p>
 <h3>Quick validate</h3>
@@ -90,17 +101,17 @@
 <h3>Full host boot</h3>
 <p>To exercise the full load-and-validate pipeline, boot in host mode. The <code>--network</code> flag selects the multiplayer mode: <code>none</code>, <code>host</code>, <code>server</code>, or <code>client</code>. Host mode runs the pipeline you want to exercise.</p>
 <blockquote>
-<p>Warning: <code>--network=none</code> currently loads no campaign. The engine boots but does nothing, so single-player from the command line does not work yet. Single-player today works only through the launcher. To boot a campaign from the CLI, use <code>--network=host</code>.</p>
+<p>Warning: <code>--network=none</code> currently loads no campaign. The engine boots but does nothing. To play single-player or boot a campaign, use <code>--network=host</code>.</p>
 </blockquote>
-<p>Place the campaign zip next to the engine binary, then run the boot:</p>
+<p>Put the campaign zip in the <code>campaigns</code> folder, then run the boot:</p>
 <div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
 </code></pre></div>
 
-<p>The campaign zip must sit beside the binary because the engine resolves campaign files relative to the executable's directory. The <code>--campaign</code> flag names the zip without its extension.</p>
+<p>The <code>--campaign</code> flag names the zip without its extension, so <code>--campaign=demo</code> loads <code>campaigns/demo.zip</code>.</p>
 <blockquote>
 <p>Note: The log level defaults to <code>NONE</code>, which produces an essentially empty log. You must pass <code>--log-level=INFO</code> (or higher) to see the verification lines. Valid levels, from quietest to loudest, are <code>NONE</code>, <code>FATAL</code>, <code>ERROR</code>, <code>WARN</code>, <code>INFO</code>, <code>DEBUG</code>, and <code>TRACE</code>.</p>
 </blockquote>
-<p>The engine writes to a file named <code>log.txt</code> in the same directory as the binary. Open that file and look for two lines that confirm success:</p>
+<p>The engine writes to <code>log.txt</code> in its data folder (see <a href="#where-files-go">Where files go</a>). Open that file and look for two lines that confirm success:</p>
 <ul>
 <li><code>Campaign validation passed</code></li>
 <li><code>Successfully created Entity</code></li>
@@ -118,7 +129,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

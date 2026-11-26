@@ -1,6 +1,6 @@
 # Hosting Multiplayer Games
 
-{{ product_name }} has no separate backend, no Docker, and no admin panel. You run the same game binary in a different network mode, set with one command-line flag. This page explains the four modes and the flags that configure a session.
+{{ product_name }} has no separate backend and no Docker. You run the same game binary in a different network mode, set with one command-line flag. This page explains the four modes and the flags that configure a session. To query, stop or restart a running server, see [Server administration](/manual/multiplayer/server-administration.html).
 
 ## Introduction
 
@@ -53,6 +53,8 @@ isometry --headless --campaign=demo --network=server --port=5000 --username=admi
 
 In every mode with a window, the title shows the campaign name followed by the mode name, for example `demo HOST` or `demo SERVER`. A headless server has no window.
 
+> Tip: For step-by-step LAN setups (one player hosts, a dedicated server, testing alone), see [LAN setups](/manual/multiplayer/lan-setup.html).
+
 ## Configuring a session
 
 Beyond `--network`, a handful of flags configure the session. All values arrive as strings from the command line.
@@ -65,7 +67,7 @@ Beyond `--network`, a handful of flags configure the session. All values arrive 
 | `--uri`       | client            | `localhost`   | The server address a client connects to.            |
 | `--username`  | host, server, client | `""` (empty) | The account name used for authentication.           |
 | `--secret`    | host, server, client | `""` (empty) | The account password.                               |
-| `--dir`       | all               | —             | Override the directory for campaign and save files.  |
+| `--dir`       | all               | —             | Override the folder that holds campaign zips.        |
 | `--log-level` | all               | `NONE`        | How much the engine logs (see below).               |
 
 Flags accept two spellings: `--key=value` (preferred) and `--key value` (space-separated). A bare `-flag` with a single dash is read as the boolean `true`. There is no short-flag aliasing for these long flags.
@@ -114,7 +116,7 @@ By default the engine logs nothing. To see startup and validation output, pass `
 NONE  FATAL  ERROR  WARN  INFO  DEBUG  TRACE
 ```
 
-`NONE` (the default) silences all output; `TRACE` is the most verbose. Logs are written to a file named `log.txt` in the working directory, not to standard output.
+`NONE` (the default) silences all output; `TRACE` is the most verbose. Logs are written to `log.txt` in [the engine's data folder](/manual/getting-started/install-and-run.html#where-files-go), not to standard output.
 
 ```bash
 isometry --headless --campaign=demo --network=host --port=5000 --username=p --secret=p --log-level=INFO
@@ -122,13 +124,13 @@ isometry --headless --campaign=demo --network=host --port=5000 --username=p --se
 
 ## Verify a host locally
 
-To confirm a campaign loads end to end, run it as a host with logging on. Place the campaign `.zip` beside the binary, then launch:
+To confirm a campaign loads end to end, run it as a host with logging on. Put the campaign `.zip` in the `campaigns` folder next to the engine, then launch:
 
 ```bash
 isometry --headless --campaign=demo --network=host --port=5000 --username=p --secret=p --log-level=INFO
 ```
 
-The campaign `.zip` must sit in the same directory as the executable. Open `log.txt` and look for two success markers: `Campaign validation passed` and `Successfully created Entity`. If you do not see them, see [Troubleshooting](/reference/troubleshooting.html).
+Open `log.txt` (in [the engine's data folder](/manual/getting-started/install-and-run.html#where-files-go)) and look for two success markers: `Campaign validation passed` and `Successfully created Entity`. If you do not see them, see [Troubleshooting](/reference/troubleshooting.html).
 
 ## See also
 

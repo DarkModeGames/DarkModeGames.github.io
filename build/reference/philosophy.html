@@ -65,8 +65,8 @@
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
 <span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
 <span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
-<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">250</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 <span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mana</span>
@@ -83,7 +83,7 @@
 <p>This is only possible because logic lives in the engine, not in your files. YAML has no hidden control flow to mis-execute, so most mistakes surface as a clear validation error instead of a runtime surprise.</p>
 <h2>Command-line launch</h2>
 <p>You configure Isometry through command-line arguments, parsed at startup. The common flags are <code>--campaign</code>, <code>--network</code>, <code>--port</code>, <code>--username</code>, <code>--secret</code>, and <code>--log-level</code>. The <a href="/reference/cli.html">CLI reference</a> lists them in full.</p>
-<p>This is deliberate. A command-line front door means the launcher is a separable layer: you can wrap the binary in your own launcher UI rather than ship the one in the box. Isometry provides separate launcher and engine builds precisely because the launcher is a front end, not the engine.</p>
+<p>This is deliberate. A command-line front door keeps any launcher a separate layer: the engine ships without one, and a campaign can wrap the binary in its own launcher UI that passes these flags. The launcher is a front end, not part of the engine.</p>
 <h2>Multiplayer-first</h2>
 <p>Networking is part of the architecture, not an add-on. Sessions use secure encrypted connections. The network mode is one of four values: <code>NONE</code>, <code>HOST</code>, <code>SERVER</code>, or <code>CLIENT</code>.</p>
 <p>Designing multiplayer in from the start simplifies the single-player case rather than complicating it. Single-player is just a host session: single-player and multiplayer use the same system underneath, so a solo game runs the same way as a networked one.</p>
@@ -116,7 +116,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

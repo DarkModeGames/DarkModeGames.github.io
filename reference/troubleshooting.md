@@ -24,9 +24,8 @@ isometry --headless --campaign=demo --network=host \
   --port=5000 --username=p --secret=p --log-level=INFO
 ```
 
-The log is written to `log.txt` in the directory next to the executable, the same folder where your campaign `.zip` sits. Levels are `NONE`, `FATAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`, and the value is case-insensitive, so `--log-level=info` works too.
+The log is written to `log.txt` in [the engine's data folder](/manual/getting-started/install-and-run.html#where-files-go) (`~/Library/Application Support/isometry/` on macOS, `~/.local/share/isometry/` on Linux, `%APPDATA%\isometry\` on Windows). Run `isometry --print-paths` to print it. Levels are `NONE`, `FATAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`, and the value is case-insensitive, so `--log-level=info` works too.
 
-> Note: Older documentation pointed at `~/.local/share/isometry/logs/` or an `AppData` path. That is wrong. The log lives beside the binary.
 
 When a campaign loads cleanly you see:
 
@@ -48,7 +47,7 @@ Each error is logged on its own line above that summary. The rest of this page e
 
 **Cause:** `--network=none` is currently a no-op. The startup code only handles the `host`, `server`, and `client` modes; the default branch does nothing. This is a known issue.
 
-**Fix:** Start the game from the launcher to play single-player. To exercise the load pipeline from the command line, use `--network=host`:
+**Fix:** Use `--network=host` instead: single-player is a host session with one player, and it runs the full load pipeline:
 
 ```bash
 isometry --headless --campaign=demo --network=host \
@@ -72,7 +71,7 @@ The sections below group the errors by phase. For the wider picture, read [Valid
 
 **`Unknown entity type 'X' - no schema defined`** — A top-level key in your YAML is not one of the {{ entity_count }} entity types. Check the spelling against [Entities and KeyRefs](/manual/core-concepts/entities-and-keyrefs.html).
 
-**`Required field 'X' is missing`** — Required fields are rare. The two you are most likely to hit are `Main.actor` and `Main.map`, both of which every campaign needs.
+**`Required field 'X' is missing`** — Required fields are rare. The one you are most likely to hit is `Main.map`, which every campaign needs (`Main.actor` is optional — see [Campaign structure](/manual/core-concepts/campaign-structure.html#the-main-entity)).
 
 > Warning: An Actor does not require a `sprite`. There is no "Actor missing required field sprite" error. If a guide told you otherwise, it is out of date.
 
@@ -165,14 +164,14 @@ ghost: false
 
 **Cause:** This is fog of war. The actor's perception circle is small, or the actor spawned away from the area.
 
-**Fix:** Raise the actor's `perception` to widen the reveal radius. The demo hero uses `25`.
+**Fix:** Raise the actor's `perception` (pixels) to widen the reveal radius. The demo hero uses `250`.
 
 ```yaml
 heroActor:
   name: Hero
   base: 8
-  perception: 25
-  salience: 1
+  perception: 250
+  salience: 10
   speed: 1.0
 ```
 
@@ -247,13 +246,13 @@ HP: {{@health}} / Your luck: {{$luck}}
 
 Here `{% raw %}{{@health}}{% endraw %}` reads the viewed actor's `health` resource and `{% raw %}{{$luck}}{% endraw %}` reads the opening actor's `luck` measure.
 
-## There is no save file to delete
+## Old saves hide your changes
 
-**Symptom:** You read older advice to fix a problem by deleting a save file named with a numeric hash.
+**Symptom:** A change you made to an actor (its perception, speed, starting resources, or starting map) does not show up for an existing player, but works for a brand-new username.
 
-**Cause:** That advice does not apply. The engine has no game-save persistence; there is no save file to delete.
+**Cause:** The server saves each player when they disconnect: their actor, map, location, resources, perception, salience, speed, and discovered map. A returning player loads that save instead of the campaign's defaults.
 
-**Fix:** Ignore it. A gray or invisible map is explained by ghost floor tiles or fog of war (above), not by a stale save.
+**Fix:** Test with a fresh username, or delete that player's save from the `data/` folder in the engine's data folder while the server is stopped. Saves are plain JSON named `<hash>.<campaign>.json`.
 
 ## Networking problems
 

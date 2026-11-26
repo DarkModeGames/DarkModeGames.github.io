@@ -42,7 +42,7 @@ This action is named "Attack", takes `1.1` seconds, plays the `tool` animation, 
 
 Most functions need inputs. `minus_resource_target` needs to know *which* resource to subtract from and *how much*. You supply those through [Parameter](/manual/getting-started/glossary.html#terms) entities.
 
-The `parameters` field is a **flat array of [KeyRefs](/manual/getting-started/glossary.html#terms)** pointing at Parameter entities. Each Parameter is defined separately in a sibling top-level `Parameter` block. You never nest a parameter's definition inside the action.
+The `parameters` field is a **flat array of [KeyRefs](/manual/getting-started/glossary.html#terms)** pointing at [Parameter](/reference/entities.html#parameter) entities. Each Parameter is defined separately in a sibling top-level `Parameter` block. You never nest a parameter's definition inside the action.
 
 A Parameter has two required string fields: `key` and `value`. The `key` must match the argument the action function reads. The `value` is the input, written as a string — a literal, a dice expression, or a KeyRef to another entity.
 
@@ -58,7 +58,7 @@ Parameter:
     value: (1d6)-1
 ```
 
-The `resource` parameter tells the function to act on `health`. The `expression` parameter is a [dice expression](/manual/core-concepts/dice-expressions.html): the engine rolls `(1d6)-1` each time to decide the damage. Resource changes stay within the resource's `min` and `max` bounds (see [Add resources and measures](/manual/guides/add-resources-and-measures.html)).
+The `resource` parameter tells the function to act on `health`. The `expression` parameter is a [dice expression](/manual/core-concepts/dice-expressions.html): the engine rolls `(1d6)-1` each time to decide the damage. [Resource](/reference/entities.html#resource) changes stay within the resource's `min` and `max` bounds (see [Add resources and measures](/manual/guides/add-resources-and-measures.html)).
 
 ### Why the names must match
 
@@ -68,8 +68,8 @@ The [action function reference](/reference/actions.html) lists the parameter nam
 
 - `minus_resource_target`, `plus_resource_self`, and the other resource functions read `resource` and `expression`.
 - `echo` reads `message`.
-- `open_dialog` reads `dialog` (a KeyRef to a Dialog entity).
-- `use_track` reads index-numbered parameters (names `0`, `1`, `2`, …; values are Vector keys), visited in ascending index order.
+- `open_dialog` reads `dialog` (a KeyRef to a [Dialog](/reference/entities.html#dialog) entity).
+- `use_track` reads index-numbered parameters (names `0`, `1`, `2`, …; values are [Vector](/reference/entities.html#vector) keys), visited in ascending index order.
 - `change_strategy` reads `strategy`.
 - `set_destination_self` reads `destination`, a KeyRef to a Vector entity.
 
@@ -108,7 +108,7 @@ Two fields control how an action plays out over time.
 
 `time` is how many seconds the action takes, defaulting to `0.0` for an instant effect. `animation` is a KeyRef to an [Animation](/manual/getting-started/glossary.html#terms) entity that plays while the action runs. The `attackAction` uses `"time": 1.1` and `"animation": "tool"`, so the attack plays the `tool` animation across just over a second.
 
-> Note: If you set `animation`, set `time` to a value greater than `0.0`. An animation needs a non-zero duration to play. See [Visuals: sprites and animations](/manual/guides/visuals-sprites-animations.html) for defining Animation entities.
+> Note: If you set `animation`, set `time` to a value greater than `0.0`. An animation needs a non-zero duration to play. See [Visuals: sprites and animations](/manual/guides/visuals-sprites-animations.html) for defining [Animation](/reference/entities.html#animation) entities.
 
 ## Dialogs and live values
 

@@ -73,11 +73,11 @@
 <p>Read each part left to right:</p>
 <ul>
 <li><strong>CATEGORY</strong> names the kind of failure, such as <code>MISSING_REQUIRED_FIELD</code> or <code>KEYREF_UNRESOLVED</code>. There are 13 categories in total, listed at the end of this page.</li>
-<li><strong>EntityType.entityKey</strong> locates the entity. For example, <code>Action.attackAction</code> points at the <code>attackAction</code> entity in your <code>Action</code> block.</li>
+<li><strong>EntityType.entityKey</strong> locates the entity. For example, <code>Action.attackAction</code> points at the <code>attackAction</code> entity in your <a href="/reference/entities.html#action"><code>Action</code></a> block.</li>
 <li><strong>fieldName</strong>, when present, names the exact field at fault.</li>
 <li><strong>message</strong> explains what is wrong and often what was expected.</li>
 </ul>
-<p>For example, this line means the <code>Main</code> entity named <code>demoMain</code> points its <code>actor</code> field at a key that does not exist:</p>
+<p>For example, this line means the <a href="/reference/entities.html#main"><code>Main</code></a> entity named <code>demoMain</code> points its <code>actor</code> field at a key that does not exist:</p>
 <div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">KEYREF_UNRESOLVED</span><span class="o">]</span><span class="w"> </span><span class="n">Main</span><span class="p">.</span><span class="n">demoMain</span><span class="p">.</span><span class="nl">actor</span><span class="p">:</span><span class="w"> </span><span class="n">KeyRef</span><span class="w"> </span><span class="n">heroActor</span><span class="w"> </span><span class="n">does</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">exist</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">campaign</span>
 </code></pre></div>
 
@@ -86,13 +86,13 @@
 <p>The schema phase checks each entity against the rules for its type: which fields exist, which are required, what type each field holds, and any value constraints. Every one of the 33 entity types has a schema.</p>
 <p>Schema checks produce these categories:</p>
 <ul>
-<li><strong>UNKNOWN_TYPE</strong> — you used an entity type that has no schema, for example a typo like <code>Acter</code> instead of <code>Actor</code>. The message reads <code>Unknown entity type X - no schema defined</code>.</li>
+<li><strong>UNKNOWN_TYPE</strong> — you used an entity type that has no schema, for example a typo like <code>Acter</code> instead of <a href="/reference/entities.html#actor"><code>Actor</code></a>. The message reads <code>Unknown entity type X - no schema defined</code>.</li>
 <li><strong>MISSING_REQUIRED_FIELD</strong> — a required field is absent.</li>
 <li><strong>EXTRA_FIELD</strong> — you included a field the schema does not define. The message reads <code>Field X not defined in &lt;Type&gt; schema</code>. This usually means a misspelled field name.</li>
 <li><strong>INVALID_TYPE</strong> — a field holds the wrong type of value.</li>
 <li><strong>CONSTRAINT_VIOLATION</strong> — a value breaks a <code>min</code>/<code>max</code> or length limit.</li>
 </ul>
-<p>The <a href="/manual/getting-started/glossary.html#terms">Main</a> entity is the smallest example. It requires <code>actor</code> and <code>map</code>, both KeyRefs:</p>
+<p>The <a href="/manual/getting-started/glossary.html#terms">Main</a> entity is the smallest example. It requires <code>map</code>; <code>actor</code> is optional:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
@@ -134,7 +134,7 @@
 
 <p>Empty-string KeyRefs are skipped, so an optional reference you leave blank does not error.</p>
 <h3>Action functions exist</h3>
-<p>Each <a href="/manual/getting-started/glossary.html#terms">Action</a> names a built-in action function in its <code>do</code> field. There are exactly 75 valid action functions. If <code>do</code> names one that does not exist, you get:</p>
+<p>Each <a href="/manual/getting-started/glossary.html#terms">Action</a> names a built-in action function in its <code>do</code> field. There are exactly 79 valid action functions. If <code>do</code> names one that does not exist, you get:</p>
 <div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">INVALID_ACTION_NAME</span><span class="o">]</span><span class="w"> </span><span class="k">Action</span><span class="p">.</span><span class="n">attackAction</span><span class="p">.</span><span class="nl">do</span><span class="p">:</span><span class="w"> </span><span class="k">Action</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="n">attck_resource_target</span><span class="w"> </span><span class="n">does</span><span class="w"> </span><span class="ow">not</span><span class="w"> </span><span class="n">exist</span>
 </code></pre></div>
 
@@ -155,12 +155,12 @@
 <span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">(1d6)-1</span>
 </code></pre></div>
 
-<p>The <code>parameters</code> array holds KeyRefs only; the <code>Parameter</code> entities live in their own top-level block. If an action function needs parameters and the <code>parameters</code> array is empty, you get:</p>
+<p>The <code>parameters</code> array holds KeyRefs only; the <a href="/reference/entities.html#parameter"><code>Parameter</code></a> entities live in their own top-level block. If an action function needs parameters and the <code>parameters</code> array is empty, you get:</p>
 <div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">INVALID_ACTION_PARAM</span><span class="o">]</span><span class="w"> </span><span class="k">Action</span><span class="p">.</span><span class="n">attackAction</span><span class="p">.</span><span class="k">parameters</span><span class="err">:</span><span class="w"> </span><span class="k">Action</span><span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="n">minus_resource_target</span><span class="w"> </span><span class="n">requires</span><span class="w"> </span><span class="k">parameters</span><span class="err">:</span><span class="w"> </span><span class="p">...</span>
 </code></pre></div>
 
 <blockquote>
-<p>Note: This check confirms only that <code>parameters</code> is non-empty when the function requires parameters. It does not yet verify that each specific parameter name is present, so a wrong parameter name still passes Phase 2. As an example, <code>set_destination_self</code> requires a <code>destination</code> parameter, a KeyRef to a Vector.</p>
+<p>Note: This check confirms only that <code>parameters</code> is non-empty when the function requires parameters. It does not yet verify that each specific parameter name is present, so a wrong parameter name still passes Phase 2. As an example, <code>set_destination_self</code> requires a <code>destination</code> parameter, a KeyRef to a <a href="/reference/entities.html#vector">Vector</a>.</p>
 </blockquote>
 <p>For the full list of functions and their parameters, see <a href="/manual/guides/define-actions.html">Define actions</a>.</p>
 <h2>Phase 3: asset checks</h2>
@@ -168,8 +168,8 @@
 <p>These fields are checked, and the allowed extensions:</p>
 <ul>
 <li>Image (<code>png</code>, <code>jpg</code>, <code>jpeg</code>): <code>Sprite.texture</code>, <code>Resource.icon</code>, <code>Measure.icon</code>, <code>Skill.icon</code>, <code>Waypoint.icon</code>, <code>Floor.texture</code>, <code>TileSet.texture</code>, <code>Parallax.texture</code>.</li>
-<li>Sound (<code>mp3</code>, <code>wav</code>, <code>ogg</code>): <code>Sound.source</code>.</li>
-<li>Tile map (<code>tmj</code>): <code>Layer.source</code>.</li>
+<li>Sound (<code>mp3</code>, <code>wav</code>, <code>ogg</code>): <code>Sound.source</code>. Use <code>mp3</code>; the other two pass validation but are unreliable at runtime.</li>
+<li>Layer grids: <code>Layer.source</code>. A grid file has <strong>no extension</strong> (for example <code>/maps/town/ground</code>), and extensionless files are not extension-checked.</li>
 </ul>
 <p>Path matching is forgiving: a leading <code>/</code> is stripped, then a match succeeds if any file in the archive ends with the path you gave. So <code>/assets/icons/sun.png</code> matches a file stored at that path inside the archive.</p>
 <p>A missing file reports:</p>
@@ -181,8 +181,8 @@
 </code></pre></div>
 
 <h2>Phase 4: dice checks</h2>
-<p>The dice phase validates the character set of every <a href="/manual/getting-started/glossary.html#terms">dice expression</a> field. It checks <code>Measure.expression</code>, <code>Sound.scale</code>, <code>Timer.total</code>, and <code>Timer.interval</code>.</p>
-<p>Only the characters are validated, not the grammar. The allowed set is <code>0123456789()*%/+-dD&lt;&gt;</code>. Empty strings are skipped. A <code>luckMeasure</code> that uses a valid expression, <code>1d20</code>, and a damage parameter that uses <code>(1d6)-1</code> both pass. Any character outside the set fails:</p>
+<p>The dice phase validates every <a href="/manual/getting-started/glossary.html#terms">dice expression</a> field: <code>Measure.expression</code>, <code>Resource.min</code>/<code>max</code>, <code>Condition.left</code>/<code>right</code>, <code>Timer.total</code>/<code>interval</code>, and <code>Sound.scale</code>. Dice-typed action parameters are checked in phase 2.</p>
+<p>Each expression must be well-formed, use only <code>0123456789()*%/+-dD&lt;&gt;</code>, and every <code>$key</code>/<code>@key</code> must name a real <a href="/reference/entities.html#resource">Resource</a>, <a href="/reference/entities.html#measure">Measure</a>, or built-in value. Empty strings are skipped. A <code>luckMeasure</code> that uses a valid expression, <code>1d20</code>, and a damage parameter that uses <code>(1d6)-1</code> both pass. Any character outside the set fails:</p>
 <div class="codehilite"><pre><span></span><code><span class="o">[</span><span class="n">INVALID_DICE</span><span class="o">]</span><span class="w"> </span><span class="n">Measure</span><span class="p">.</span><span class="n">luckMeasure</span><span class="p">.</span><span class="nl">expression</span><span class="p">:</span><span class="w"> </span><span class="n">Invalid</span><span class="w"> </span><span class="n">dice</span><span class="w"> </span><span class="n">expression</span><span class="w"> </span><span class="mi">1</span><span class="n">k20</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">invalid</span><span class="w"> </span><span class="k">character</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="k">position</span><span class="w"> </span><span class="mi">1</span>
 </code></pre></div>
 
@@ -207,7 +207,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

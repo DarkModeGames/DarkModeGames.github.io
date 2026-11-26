@@ -46,7 +46,7 @@
 <p>This page shows you how to make an actor react automatically. A <em>trigger</em> runs an <a href="/manual/guides/define-actions.html">action</a> when one of the actor's resources changes, and a <em>timer</em> runs an action over and over on an interval. You attach both to an actor and let the engine fire them.</p>
 <h2>Introduction</h2>
 <p>Most actions in a campaign run because something asks for them: a player clicks an ability, or an AI <a href="/manual/getting-started/glossary.html">strategy</a> decides to act. Triggers and timers are different. They are passive watchers attached to an actor that run an action on their own.</p>
-<p>You use a <strong>Trigger</strong> when you want a reaction to a value: heal a wound when health drops, or check for death whenever health changes. You use a <strong>Timer</strong> when you want something to happen on a clock: regenerate health every few seconds.</p>
+<p>You use a <strong><a href="/reference/entities.html#trigger">Trigger</a></strong> when you want a reaction to a value: heal a wound when health drops, or check for death whenever health changes. You use a <strong><a href="/reference/entities.html#timer">Timer</a></strong> when you want something to happen on a clock: regenerate health every few seconds.</p>
 <p>Both are <a href="/manual/getting-started/glossary.html">entities</a>. You define them in YAML, then point an actor at them. The engine builds the watchers when the actor spawns.</p>
 <blockquote>
 <p>Note: Triggers and timers only run while the game is running on the host or server. They do not run on a plain client.</p>
@@ -77,7 +77,7 @@
 
 <p>When <code>health</code> changes to any new value, the trigger fires <code>deathAction</code>. Both the caller and the target of that action are the actor itself.</p>
 <blockquote>
-<p>Warning: A trigger fires on <em>any</em> change to the resource, an increase as well as a decrease. It does not detect death on its own. The death logic lives in the action, not the trigger.</p>
+<p>Warning: A trigger fires on <em>any</em> change to the resource, an increase as well as a decrease. It does not detect death on its own. The death logic lives in the action, not the trigger. <strong>Always give a trigger's action an <code>if</code>.</strong> And be careful when the action changes the same resource it watches: that fires the trigger again. Make sure the <code>if</code> turns false after the first run.</p>
 </blockquote>
 <h3>Gate the effect inside the action</h3>
 <p>Because the trigger fires on every change, the action it runs decides whether anything actually happens. The example does this with an <code>if</code> <a href="/manual/guides/conditions-and-logic.html">condition</a> on <code>deathAction</code>:</p>
@@ -92,7 +92,7 @@
 
 <p>The <code>if: isDead</code> condition checks whether health has reached zero. Only then does the <code>echo</code> run. So the trigger fires constantly as health moves, but the message appears only on death. This split, a trigger that watches and an action that decides, keeps each piece simple.</p>
 <blockquote>
-<p>Note: <code>parameters</code> is a flat array of KeyRefs to <code>Parameter</code> entities, defined in a sibling top-level <code>Parameter</code> block. See <a href="/manual/guides/define-actions.html">Define actions</a> for how parameters resolve.</p>
+<p>Note: <code>parameters</code> is a flat array of KeyRefs to <a href="/reference/entities.html#parameter"><code>Parameter</code></a> entities, defined in a sibling top-level <code>Parameter</code> block. See <a href="/manual/guides/define-actions.html">Define actions</a> for how parameters resolve.</p>
 </blockquote>
 <h2>Timers</h2>
 <p>A <strong>Timer</strong> runs an action over and over on an interval. Unlike a trigger, it does not watch anything; it acts on a clock.</p>
@@ -107,14 +107,14 @@
 <p>Here is the <code>regenTimer</code>:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Timer</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">regenTimer</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">total</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&#39;</span>
+<span class="w">    </span><span class="nt">total</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
 <span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d12</span>
 <span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regenAction</span>
 </code></pre></div>
 
 <p>Every <code>1d12</code> seconds the timer runs <code>regenAction</code>. The interval is re-rolled each time, so the wait is one to twelve seconds, rarely the same twice in a row.</p>
 <blockquote>
-<p>Warning: <code>total</code> counts intervals, not seconds. If <code>total</code> evaluates to <code>0</code>, the timer never expires and runs for the actor's whole life. The example leaves <code>total</code> empty, which evaluates to <code>0</code>, so <code>regenTimer</code> regenerates health forever.</p>
+<p>Warning: <code>total</code> counts intervals, not seconds. If <code>total</code> is <code>0</code>, the timer never expires and runs for the actor's whole life, so <code>regenTimer</code> regenerates health forever. The first run happens after one <code>interval</code>, not immediately.</p>
 </blockquote>
 <h3>The action a timer runs</h3>
 <p>The <code>regenTimer</code> runs <code>regenAction</code>, which heals the actor:</p>
@@ -142,7 +142,7 @@
 <span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
 <span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
 <span class="w">    </span><span class="nt">triggers</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">deathTrigger</span>
 <span class="w">    </span><span class="nt">timers</span><span class="p">:</span>
@@ -158,7 +158,7 @@
 <ol>
 <li>Confirm the actor has a <code>health</code> <a href="/manual/guides/add-resources-and-measures.html">resource</a> with a <code>max</code> it can heal toward.</li>
 <li>Write a healing <a href="/manual/guides/define-actions.html">action</a> that uses <code>plus_resource_self</code>, with parameters naming the resource and a dice expression for the amount, as <code>regenAction</code> does.</li>
-<li>Define a <code>Timer</code> entity with an <code>interval</code> dice expression, a <code>total</code> of <code>""</code> to run forever, and <code>action</code> pointing at your healing action.</li>
+<li>Define a <code>Timer</code> entity with an <code>interval</code> dice expression, a <code>total</code> of <code>'0'</code> to run forever, and <code>action</code> pointing at your healing action.</li>
 <li>Add the timer's key to the actor's <code>timers</code> array.</li>
 <li>Load the campaign on the host or server and watch the resource climb.</li>
 </ol>
@@ -178,7 +178,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

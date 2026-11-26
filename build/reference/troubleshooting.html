@@ -59,10 +59,7 @@
 <span class="w">  </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
 </code></pre></div>
 
-<p>The log is written to <code>log.txt</code> in the directory next to the executable, the same folder where your campaign <code>.zip</code> sits. Levels are <code>NONE</code>, <code>FATAL</code>, <code>ERROR</code>, <code>WARN</code>, <code>INFO</code>, <code>DEBUG</code>, and <code>TRACE</code>, and the value is case-insensitive, so <code>--log-level=info</code> works too.</p>
-<blockquote>
-<p>Note: Older documentation pointed at <code>~/.local/share/isometry/logs/</code> or an <code>AppData</code> path. That is wrong. The log lives beside the binary.</p>
-</blockquote>
+<p>The log is written to <code>log.txt</code> in <a href="/manual/getting-started/install-and-run.html#where-files-go">the engine's data folder</a> (<code>~/Library/Application Support/isometry/</code> on macOS, <code>~/.local/share/isometry/</code> on Linux, <code>%APPDATA%\isometry\</code> on Windows). Run <code>isometry --print-paths</code> to print it. Levels are <code>NONE</code>, <code>FATAL</code>, <code>ERROR</code>, <code>WARN</code>, <code>INFO</code>, <code>DEBUG</code>, and <code>TRACE</code>, and the value is case-insensitive, so <code>--log-level=info</code> works too.</p>
 <p>When a campaign loads cleanly you see:</p>
 <div class="codehilite"><pre><span></span><code>Campaign validation passed
 </code></pre></div>
@@ -75,7 +72,7 @@
 <h2>The campaign does nothing in single-player</h2>
 <p><strong>Symptom:</strong> You run with <code>--network=none</code> (or omit <code>--network</code>) and nothing loads. No terrain, no actor, no validation output.</p>
 <p><strong>Cause:</strong> <code>--network=none</code> is currently a no-op. The startup code only handles the <code>host</code>, <code>server</code>, and <code>client</code> modes; the default branch does nothing. This is a known issue.</p>
-<p><strong>Fix:</strong> Start the game from the launcher to play single-player. To exercise the load pipeline from the command line, use <code>--network=host</code>:</p>
+<p><strong>Fix:</strong> Use <code>--network=host</code> instead: single-player is a host session with one player, and it runs the full load pipeline:</p>
 <div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
 </code></pre></div>
@@ -92,7 +89,7 @@
 <p>The sections below group the errors by phase. For the wider picture, read <a href="/manual/core-concepts/validation.html">Validation</a>.</p>
 <h3>Schema errors (phase 1)</h3>
 <p><strong><code>Unknown entity type 'X' - no schema defined</code></strong> — A top-level key in your YAML is not one of the 33 entity types. Check the spelling against <a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a>.</p>
-<p><strong><code>Required field 'X' is missing</code></strong> — Required fields are rare. The two you are most likely to hit are <code>Main.actor</code> and <code>Main.map</code>, both of which every campaign needs.</p>
+<p><strong><code>Required field 'X' is missing</code></strong> — Required fields are rare. The one you are most likely to hit is <code>Main.map</code>, which every campaign needs (<code>Main.actor</code> is optional — see <a href="/manual/core-concepts/campaign-structure.html#the-main-entity">Campaign structure</a>).</p>
 <blockquote>
 <p>Warning: An Actor does not require a <code>sprite</code>. There is no "Actor missing required field sprite" error. If a guide told you otherwise, it is out of date.</p>
 </blockquote>
@@ -105,7 +102,7 @@
 <p><strong><code>Duplicate key 'X' found in entity types: TypeA, TypeB</code></strong> — The same <a href="/manual/getting-started/glossary.html">entity key</a> is used by two different entity types. Keys must be unique across the whole campaign. Rename one.</p>
 <p><strong><code>KeyRef 'X' does not exist in campaign</code></strong> — A field points at an entity key that no file defines. Check for a typo in the reference or a missing entity file.</p>
 <p><strong><code>KeyRef 'X' resolves to type 'A', expected 'B'</code></strong> — The reference resolves, but to the wrong kind of entity. For example, you pointed a <code>sprite</code> field at an Actor instead of a Sprite.</p>
-<p><strong><code>Action function 'X' does not exist in actions.gd</code></strong> — An Action's <code>do</code> value is not one of the 75 built-in action functions. See the <a href="/reference/actions.html">action function reference</a> for the full list.</p>
+<p><strong><code>Action function 'X' does not exist in actions.gd</code></strong> — An Action's <code>do</code> value is not one of the 79 built-in action functions. See the <a href="/reference/actions.html">action function reference</a> for the full list.</p>
 <p><strong><code>Action function 'X' requires parameters: a, b</code></strong> — The function needs parameters, but the action's <code>parameters</code> array is empty.</p>
 <h3>How action parameters are shaped</h3>
 <p>This last error trips people up, so it is worth showing the correct shape. An action's <code>parameters</code> is a <strong>flat array of KeyRefs</strong> to Parameter entities. The Parameter entities themselves live in a sibling top-level <code>Parameter</code> block, never nested inside the action.</p>
@@ -152,12 +149,12 @@
 <h3>Fix terrain that stays dark</h3>
 <p><strong>Symptom:</strong> Terrain is dark until the player walks near it, then fades in.</p>
 <p><strong>Cause:</strong> This is fog of war. The actor's perception circle is small, or the actor spawned away from the area.</p>
-<p><strong>Fix:</strong> Raise the actor's <code>perception</code> to widen the reveal radius. The demo hero uses <code>25</code>.</p>
+<p><strong>Fix:</strong> Raise the actor's <code>perception</code> (pixels) to widen the reveal radius. The demo hero uses <code>250</code>.</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">heroActor</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
 <span class="w">  </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-<span class="w">  </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
-<span class="w">  </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">250</span>
+<span class="w">  </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 <span class="w">  </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
 </code></pre></div>
 
@@ -207,10 +204,10 @@
 </code></pre></div>
 
 <p>Here <code>{{@health}}</code> reads the viewed actor's <code>health</code> resource and <code>{{$luck}}</code> reads the opening actor's <code>luck</code> measure.</p>
-<h2>There is no save file to delete</h2>
-<p><strong>Symptom:</strong> You read older advice to fix a problem by deleting a save file named with a numeric hash.</p>
-<p><strong>Cause:</strong> That advice does not apply. The engine has no game-save persistence; there is no save file to delete.</p>
-<p><strong>Fix:</strong> Ignore it. A gray or invisible map is explained by ghost floor tiles or fog of war (above), not by a stale save.</p>
+<h2>Old saves hide your changes</h2>
+<p><strong>Symptom:</strong> A change you made to an actor (its perception, speed, starting resources, or starting map) does not show up for an existing player, but works for a brand-new username.</p>
+<p><strong>Cause:</strong> The server saves each player when they disconnect: their actor, map, location, resources, perception, salience, speed, and discovered map. A returning player loads that save instead of the campaign's defaults.</p>
+<p><strong>Fix:</strong> Test with a fresh username, or delete that player's save from the <code>data/</code> folder in the engine's data folder while the server is stopped. Saves are plain JSON named <code>&lt;hash&gt;.&lt;campaign&gt;.json</code>.</p>
 <h2>Networking problems</h2>
 <p>Multiplayer connection failures, credential rules, and campaign version mismatches between client and server are covered on their own page, which is the authoritative source for the exact runtime messages. See <a href="/manual/multiplayer/networking-and-security.html">Networking and security</a>.</p>
 <h2>See also</h2>
@@ -229,7 +226,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

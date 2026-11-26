@@ -23,14 +23,17 @@ xattr -dr com.apple.quarantine Isometry.app
 Campaign files are ZIP archives containing YAML or JSON entity definitions and
 assets. Place a campaign `.zip` in one of these locations:
 
-- The same folder as the {{ product_name }} executable
-- A `campaigns/` subfolder next to the executable
-- A custom path you point at with `--dir=/path/to/campaigns`
+- A `campaigns/` folder next to the executable (on macOS, next to `Isometry.app`)
+- A custom folder you point at with `--dir=/absolute/path/to/campaigns`
 
-## Using the Launcher
+Run `isometry --print-paths` to see exactly where it looks.
 
-Launching {{ product_name }} without network flags opens the launcher — a
-graphical interface for starting games.
+## Starting a Game
+
+{{ product_name }} has no built-in launcher screen. You start a game by running the
+executable with a few settings: the campaign, whether you host or join, the address
+and port, and your username and password. A campaign may ship its own launcher that
+fills these in for you; otherwise, use the command line below.
 
 **Choosing a username & password.** Your in-game username is displayed to other
 players. Your password is encrypted on the host's machine, and a new
@@ -39,15 +42,8 @@ to a host. Be mindful of where your password is stored: don't reuse a password
 from another personal account, and **write your username and password down** —
 the host has no way to recover them for you.
 
-1. Open {{ product_name }}.
-2. Enter your **username** and **password**.
-3. Select a **campaign** from the dropdown.
-4. Enter the **URI** and **port** (defaults: `localhost:5000`).
-5. Click **HOST** to start a server, or **JOIN** to connect to one.
-
 ## Command-Line Launch
 
-For advanced use, {{ product_name }} can launch directly from the command line.
 The examples below use the Linux executable name; substitute the executable for
 your platform.
 

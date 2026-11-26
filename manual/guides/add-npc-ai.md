@@ -1,6 +1,6 @@
 # Add NPC AI
 
-This page shows you how to make a non-player actor act on its own: patrol a route, watch for intruders, or chase whoever comes near. You do this by giving an actor a [strategy](/manual/getting-started/glossary.html#terms), so it is worth understanding before you populate a map with anything other than the player.
+This page shows you how to make a non-player actor act on its own: patrol a route, spot a player, chase them, and attack. You do this by giving an actor a [strategy](/manual/getting-started/glossary.html#terms).
 
 ## Prerequisites
 
@@ -9,171 +9,161 @@ You should already be comfortable with these pages:
 - [Create an actor](/manual/guides/create-an-actor.html) — the actor that the AI will drive.
 - [Define actions](/manual/guides/define-actions.html) — the actions a behavior runs.
 - [Conditions and logic](/manual/guides/conditions-and-logic.html) — the conditions a behavior uses as goals.
-- [Build a map](/manual/guides/build-a-map.html) — the map and tracks the AI moves across.
+- [Build a map](/manual/guides/build-a-map.html) — the map the AI moves across.
 
 ## How NPC AI is organized
 
-Isometry drives AI with two entity types that work together.
+AI is built from two entity types.
 
-A [Behavior](/manual/getting-started/glossary.html#terms) is a single rule: a set of *goals* and one *action*. The goals are [conditions](/manual/getting-started/glossary.html#terms) that describe when the rule applies. The action is what the actor does when the rule is active and all its goals are true.
+A [Behavior](/manual/getting-started/glossary.html#terms) is one step of a plan: a list of **goals** (Conditions) and one **action**. Think of the goals as "what this step is trying to achieve". The action runs, over and over, **until every goal is true**.
 
-A [Strategy](/manual/getting-started/glossary.html#terms) is an ordered list of behaviors. It is the AI controller you attach to an actor. The engine reads the behaviors as a priority list, top to bottom, and the first behavior whose goals are met runs its action.
+A [Strategy](/manual/getting-started/glossary.html#terms) is an ordered list of behaviors: the whole plan, top to bottom. You attach it to an actor with the actor's `strategy` field.
 
-You wire AI onto an actor by setting that actor's `strategy` field to a Strategy key. An actor without a `strategy` field does nothing on its own. This page builds up three AI patterns: patrol, follow, and guard.
+## How a strategy runs
 
-> Note: `strategy`, `behaviors`, `goals`, and `action` are all optional fields. A strategy with no behaviors, or a behavior with no goals, is allowed — a behavior with empty goals always counts as met.
+The engine checks each AI actor's strategy several times a second, on the host or server only (never on a plain client). Each check:
 
-## When behaviors are evaluated
+1. **Fall back if something broke.** If a goal of an *earlier* behavior has stopped being true (for example, the actor lost its target), that earlier behavior becomes the current one again.
+2. **Skip steps that are done.** Starting at the current behavior, any behavior whose goals are all true is passed over.
+3. **Run one action.** The first behavior with an unmet goal runs its action.
+4. If every behavior's goals are true, nothing runs: the plan is complete.
 
-While the game is running on the host or server, the engine keeps checking an actor's strategy. AI never runs on a plain client. The engine resolves the actor's current target, walks the strategy's behaviors in order, and runs the action of the first behavior whose goals are all true.
+So you write a strategy as a checklist: "have a target", then "be close to it", then "it is down". Each behavior does the work that makes its own goal come true.
 
-Goals are combined with logical AND: every condition in a behavior's `goals` must be true for that behavior to match. Because behaviors are ordered, put the most specific or highest-priority behavior first.
+> Note: A behavior with no goals is never "done", so its action runs on every check. Put one at the end of a list for an action that should repeat forever.
 
-## Conditions for AI: targets and distance
+## The goal conditions
 
-AI behaviors read built-in *measure references* that describe the actor's view of the world. Two of them drive every pattern here:
-
-- `@has_target` is `1` when the actor currently has a target, `0` otherwise.
-- `@distance_to_target` is how far the target is, in pixels.
-
-A target is another actor the AI has detected. Detection is sized by the actor's `perception` and `salience` fields (see [Create an actor](/manual/guides/create-an-actor.html)); a patroller might use `perception` of `20`, a guard `15`. These are actor fields, not strategy fields — they decide *what* the AI can see, while the strategy decides *what the actor does about it*.
-
-The example defines two goal conditions. The first is true when a target exists; the second is true when the target is more than one pixel away.
+In a behavior, the **caller is the AI actor itself** and the target is its current target. So `$` reads the AI, and `@` reads whoever it is targeting.
 
 ```yaml
 Condition:
   hasTarget:
-    left: '@has_target'
-    operator: '='
+    left: $has_target
+    operator: '=='
     right: '1'
-  isNearTarget:
-    left: '@distance_to_target'
-    operator: '>'
-    right: '1'
+  closeToTarget:
+    left: $distance_to_target
+    operator: <=
+    right: '40'
+  targetIsDown:
+    left: '@health'
+    operator: <=
+    right: '0'
 ```
 
-`hasTarget` gates behaviors that should run once an actor is spotted. `isNearTarget` gates pursuit, which should stop when the target is reached. See [Conditions and logic](/manual/guides/conditions-and-logic.html) for the full operator list.
+- `has_target` and `distance_to_target` are built-in values every actor has.
+- `distance_to_target` is in pixels on the isometric ground, measured centre to centre. Vertical distance counts double. See [Distances and sizes](/reference/units.html).
 
-## Build a patrol
+## A monster that hunts players
 
-A patrol walks a fixed route until something interrupts it. The behavior's goal is `hasTarget`, and its action follows a track.
-
-The patrol action uses the `use_track` action function and lists one parameter per waypoint. Each parameter's key is an integer index (`0`, `1`, `2`, …) and its value is a [Vector](/reference/entities.html#vector) key; `use_track` visits the points in ascending index order (gaps are allowed). Each parameter is a flat [KeyRef](/manual/getting-started/glossary.html#terms) to a top-level `Parameter` block, never an inline-nested object.
+This monster waits until a player comes into view, walks up to them, and bites until they fall.
 
 ```yaml
+Group:
+  playersGroup:
+    name: Players
+    color: '#4080ff'
+  monstersGroup:
+    name: Monsters
+    color: '#ff4040'
+
+Action:
+  findPlayerAction:
+    do: target_nearest_in_group
+    parameters: [findPlayersParam]
+  chaseAction:
+    do: move_to_target
+  biteAction:
+    name: Bite
+    do: minus_resource_target
+    time: 1.0
+    parameters: [biteResourceParam, biteDamageParam]
+
+Parameter:
+  findPlayersParam: {key: group, value: playersGroup}
+  biteResourceParam: {key: resource, value: health}
+  biteDamageParam: {key: expression, value: 1d6}
+
+Behavior:
+  findBehavior:
+    goals: [hasTarget]
+    action: findPlayerAction
+  chaseBehavior:
+    goals: [closeToTarget]
+    action: chaseAction
+  attackBehavior:
+    goals: [targetIsDown]
+    action: biteAction
+
+Strategy:
+  hunterStrategy:
+    behaviors: [findBehavior, chaseBehavior, attackBehavior]
+
+Actor:
+  wolfActor:
+    name: Wolf
+    sprite: wolfSprite
+    group: monstersGroup
+    perception: 200
+    strategy: hunterStrategy
+```
+
+Read it as a checklist:
+
+1. **findBehavior.** Until I have a target, look for the nearest player I can see.
+2. **chaseBehavior.** Until I'm within 40 px of my target, walk toward it.
+3. **attackBehavior.** Until my target is down, bite it. `time: 1.0` makes each bite take a second.
+
+If the player runs away, `closeToTarget` breaks and the wolf falls back to chasing. If it loses the player completely, `hasTarget` breaks and it goes back to looking. Players must be in `playersGroup` (set `group: playersGroup` on the player actor).
+
+> Tip: `target_nearest_in_group` only finds actors the AI can see, so a bigger `perception` means the monster notices players from farther away.
+
+## A guard that patrols
+
+Put a patrol **first** in the list, with the goal "have a target". The guard walks its route until it spots someone; after that, the chase and attack steps take over. Chain a scan after the patrol so it looks around as it walks:
+
+```yaml
+Vector:
+  gatePos: {x: 200, y: 40}
+  wellPos: {x: 360, y: 120}
+
 Action:
   patrolAction:
-    name: Patrol
     do: use_track
-    then: scanAction
-    parameters:
-    - patrolPoint0
-    - patrolPoint1
+    parameters: [patrolPoint0, patrolPoint1]
+    then: findPlayerAction
+
 Parameter:
-  patrolPoint0:
-    key: '0'
-    value: patrolPointA
-  patrolPoint1:
-    key: '1'
-    value: patrolPointB
-```
+  patrolPoint0: {key: '0', value: gatePos}
+  patrolPoint1: {key: '1', value: wellPos}
 
-The `then` field chains `scanAction` after the move, so the actor looks for a target as it walks. See [Define actions](/manual/guides/define-actions.html) for how `then`, `do`, and `parameters` fit together.
-
-Wrap that action in a behavior, then in a strategy:
-
-```yaml
 Behavior:
   patrolBehavior:
-    goals:
-    - hasTarget
+    goals: [hasTarget]
     action: patrolAction
-Strategy:
-  patrolStrategy:
-    behaviors:
-    - patrolBehavior
-```
 
-Finally, attach the strategy to an actor through its `strategy` field. The merchant patrols:
-
-```yaml
-Actor:
-  merchantActor:
-    strategy: patrolStrategy
-```
-
-## Build a follow
-
-A follow chases a target until it catches up. Its goal is `isNearTarget`, and its action moves toward the target with the `move_to_target` action function.
-
-```yaml
-Action:
-  pursueAction:
-    name: Pursue
-    do: move_to_target
-Behavior:
-  followBehavior:
-    goals:
-    - isNearTarget
-    action: pursueAction
-Strategy:
-  followStrategy:
-    behaviors:
-    - followBehavior
-```
-
-Because the goal is "target is more than one pixel away," the actor pursues until it closes the gap, then the goal stops being met and the action stops. The patroller actor uses `followStrategy`.
-
-## Build a guard
-
-A guard combines the two patterns into one ordered strategy. It first tries to scan for intruders, then falls back to following one it has found. Order matters: the engine runs the first behavior whose goals are met, so `guardBehavior` comes before `followBehavior`.
-
-The scan action targets the nearest actor with the `target_nearest` action function:
-
-```yaml
-Action:
-  scanAction:
-    name: Scan
-    do: target_nearest
-```
-
-The guard behavior runs that scan once a target exists, and the strategy lists it ahead of the reused follow behavior:
-
-```yaml
-Behavior:
-  guardBehavior:
-    goals:
-    - hasTarget
-    action: scanAction
 Strategy:
   guardStrategy:
-    behaviors:
-    - guardBehavior
-    - followBehavior
+    behaviors: [patrolBehavior, chaseBehavior, attackBehavior]
 ```
 
-The guard actor sets `"strategy": "guardStrategy"`. Notice that `followBehavior` is shared between `followStrategy` and `guardStrategy` — behaviors are entities, so you reference one from many strategies rather than duplicating it.
+`use_track` walks the Vectors in order of their index keys (`'0'`, `'1'`, …), and back to the first after the last. Each call sends the actor to its current point, or on to the next once it has stopped at it, so the patrol needs calling over and over: a behavior's action does that several times a second, and a Timer with an interval of about a second works too. Calling it again mid-walk carries on rather than starting over; giving the actor a different track starts that track at its first point. A point the actor can't quite reach (off the walkable ground) counts as reached where the actor stops. Behaviors are entities, so `chaseBehavior` and `attackBehavior` are shared with the hunter rather than copied.
 
-> Tip: To build new AI, start from these three strategies and swap the actions and goal conditions for your own.
+## Common mistakes
 
-## Verify it loads
+- **Writing goals as "when to act".** A goal is the state the behavior is trying to *reach*. "Chase while far away" is written as the goal `closeToTarget`, not `farFromTarget`.
+- **A goal the action can never achieve.** If nothing the action does can make the goal true, the actor repeats that action forever.
+- **Using `@` where you mean "me".** `@has_target` asks whether the *target* has a target. Use `$has_target`.
+- **AI that never starts.** Strategies only run on a host or server. Check that the actor has `strategy` and every behavior has an `action`.
 
-A strategy only takes effect after the campaign validates and loads. Boot your campaign on a host to see the actors move, since AI runs on host or server only:
-
-```bash
-./isometry --campaign=mygame --network=host --port=5000 \
-  --username=p --secret=p --log-level=INFO
-```
-
-A clean boot logs `Campaign validation passed` and creates the actors. If a strategy references a missing behavior, condition, or action key, validation fails and names the broken reference.
+For bigger patterns (threat, leashing, packs that call for help) see [Recipes](/recipes/).
 
 ## See also
 
-- [Create an actor](/manual/guides/create-an-actor.html)
-- [Define actions](/manual/guides/define-actions.html)
 - [Conditions and logic](/manual/guides/conditions-and-logic.html)
-- [Build a map](/manual/guides/build-a-map.html)
+- [Define actions](/manual/guides/define-actions.html)
 - [Triggers and timers](/manual/guides/triggers-and-timers.html)
-- [Menus, dialogs, and waypoints](/manual/guides/menus-dialogs-waypoints.html)
-- [Entity reference](/reference/entities.html)
+- [Recipes](/recipes/)
 - [Action function reference](/reference/actions.html)
+- [Entity reference](/reference/entities.html)

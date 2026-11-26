@@ -70,7 +70,7 @@
 <p>A <a href="/manual/getting-started/glossary.html">campaign</a> is a directory of data files plus assets, packaged into a <code>.zip</code> that sits next to the executable. When the binary starts, it loads that zip, validates it, and runs it. An example campaign is the canonical reference; you will see its values throughout this manual.</p>
 <p>Because a campaign is just data, you build, change, and share a game by editing files and re-zipping them — not by recompiling anything. <a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a> walks you through this end to end.</p>
 <h3>Entities describe everything</h3>
-<p>An <a href="/manual/getting-started/glossary.html">entity</a> is a pure-data record loaded from YAML. There are exactly 33 entity types — Main, Map, Actor, Action, Skill, Strategy, Sprite, and so on. Entities hold data only; they contain no game logic.</p>
+<p>An <a href="/manual/getting-started/glossary.html">entity</a> is a pure-data record loaded from YAML. There are exactly 33 entity types — Main, Map, <a href="/reference/entities.html#actor">Actor</a>, Action, <a href="/reference/entities.html#skill">Skill</a>, <a href="/reference/entities.html#strategy">Strategy</a>, <a href="/reference/entities.html#sprite">Sprite</a>, and so on. Entities hold data only; they contain no game logic.</p>
 <p>Every entity file follows the same shape: an entity type, then a unique <a href="/manual/getting-started/glossary.html">entity key</a>, then the fields. Here is an example <a href="/manual/getting-started/glossary.html">Main</a> entity, the required entry point that names the starting actor and map:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
@@ -78,7 +78,7 @@
 <span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
 </code></pre></div>
 
-<p><code>"Main"</code> is the entity type, <code>"demoMain"</code> is its key, and <code>actor</code> and <code>map</code> are its two required fields. Every campaign has exactly one Main entity.</p>
+<p><code>"Main"</code> is the entity type, <code>"demoMain"</code> is its key, <code>map</code> is its one required field, and <code>actor</code> is optional (name a starting actor, or omit it and the player starts as an invisible, immovable stand-in — see <a href="/manual/core-concepts/campaign-structure.html#the-main-entity">Campaign structure</a>). Every campaign has exactly one Main entity.</p>
 <p>Notice that <code>"actor": "heroActor"</code> does not embed the actor — it names it. That string is a <a href="/manual/getting-started/glossary.html">KeyRef</a>: a typed reference to another entity by its key. Entities reference each other this way, and the engine resolves every reference when the campaign loads. If a reference points at a key that does not exist, <a href="/manual/getting-started/glossary.html">validation</a> reports it before the game runs.</p>
 <p>The <code>heroActor</code> referenced above is defined in its own file. It shows how much one entity can describe with plain fields and KeyRefs:</p>
 <div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
@@ -86,33 +86,29 @@
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
 <span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
 <span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
-<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
-<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">250</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 <span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
 <span class="w">    </span><span class="nt">skills</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackSkill</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healSkill</span>
-<span class="w">    </span><span class="nt">resources</span><span class="p">:</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mana</span>
-<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gold</span>
 </code></pre></div>
 
-<p>The plain values (<code>speed</code>, <code>base</code>, <code>perception</code>, <code>salience</code>) set the actor's stats. The KeyRef <code>sprite</code> points at one other entity. The lists <code>skills</code> and <code>resources</code> are <a href="/manual/getting-started/glossary.html">KeyRefArrays</a> — arrays of KeyRefs. An actor may hold at most nine skills.</p>
+<p>The plain values (<code>speed</code>, <code>base</code>, <code>perception</code>, <code>salience</code>) set the actor's stats. The KeyRef <code>sprite</code> points at one other entity. The list <code>skills</code> is a <a href="/manual/getting-started/glossary.html">KeyRefArray</a> — an array of KeyRefs. An actor may hold at most nine skills.</p>
 <blockquote>
 <p>Tip: Always write the clean key like <code>name</code>; the underscore forms such as <code>name_</code> are internal and never used in campaign files.</p>
 </blockquote>
-<p>This is the entire model. To add a behavior, you write an entity that runs an <a href="/manual/getting-started/glossary.html">Action</a>; to give an actor a goal-driven AI, you reference a <a href="/manual/getting-started/glossary.html">Strategy</a>. Actions call one of the 75 built-in action functions. <a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a> covers the data model in depth.</p>
+<p>This is the entire model. To add a behavior, you write an entity that runs an <a href="/manual/getting-started/glossary.html">Action</a>; to give an actor a goal-driven AI, you reference a <a href="/manual/getting-started/glossary.html">Strategy</a>. Actions call one of the 79 built-in action functions. <a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a> covers the data model in depth.</p>
 <h3>Multiplayer is CLI-driven</h3>
 <p>Isometry treats multiplayer as the default shape of the game, not an add-on. You choose a network mode on the command line when you launch the binary. There are four modes: <code>none</code>, <code>host</code>, <code>server</code>, and <code>client</code>. Sessions between a server and its clients are authenticated with RSA keys.</p>
 <p>Conceptually, single-player is just a server with one connected client. That is why the same engine serves both: there is no separate code path for "offline."</p>
 <blockquote>
-<p>Warning: The <code>--network=none</code> flag currently loads no campaign on its own. To play single-player today, use the launcher to pick a campaign and host or join. For the exact flags, see the <a href="/reference/cli.html">CLI reference</a> and <a href="/manual/multiplayer/hosting.html">Hosting a session</a>.</p>
+<p>Warning: The <code>--network=none</code> flag currently loads no campaign on its own. To play single-player today, launch with <code>--network=host</code>: a host session with one player. For the exact flags, see the <a href="/reference/cli.html">CLI reference</a> and <a href="/manual/multiplayer/hosting.html">Hosting a session</a>.</p>
 </blockquote>
 <h2>How a campaign loads</h2>
 <p>You do not do any of this yourself, but knowing the flow helps you understand error messages. When you start the program:</p>
 <ol>
-<li>You pick a campaign, log in, and host or join.</li>
+<li>The launch flags name the campaign, your login, and whether you host or join.</li>
 <li>The campaign is read and checked — every KeyRef and every <a href="/manual/getting-started/glossary.html">dice expression</a> is cross-checked before the game is allowed to run.</li>
 <li>Once it passes, the game starts.</li>
 </ol>
@@ -141,7 +137,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

@@ -28,7 +28,7 @@ Every entry in the archive lives under one top-level folder whose name matches t
 
 The campaign prefix matters because asset paths inside your YAML are resolved relative to it. A sprite that stores `assets/hero.png` is read from `demo/assets/hero.png` in the archive. Keep the prefix folder name consistent with the campaign name you load.
 
-At runtime the archive must sit beside the Isometry binary. The engine looks for `<binary-dir>/<dir>/<campaign>.zip`.
+At runtime the archive goes in the `campaigns` folder next to the engine, or in the folder you pass with `--dir`. See [Where files go](/manual/getting-started/install-and-run.html#where-files-go).
 
 > Note: `--network=none` is currently a no-op that loads no campaign. To exercise the load pipeline headless, load an example campaign and run with `--network=host`. See [Hosting](/manual/multiplayer/hosting.html) and [Troubleshooting](/reference/troubleshooting.html).
 
@@ -60,7 +60,7 @@ EntityType:
     field: value
 ```
 
-A single file may contain several entity types, and several files may contribute to the same type. A `heroActor.yaml` shows one file holding two types, an `Actor` and a `Vector`:
+A single file may contain several entity types, and several files may contribute to the same type. A `heroActor.yaml` shows one file holding two types, an [`Actor`](/reference/entities.html#actor) and a [`Vector`](/reference/entities.html#vector):
 
 ```yaml
 Actor:
@@ -69,8 +69,8 @@ Actor:
     speed: 1.0
     sprite: heroSprite
     base: 8
-    perception: 25
-    salience: 1
+    perception: 250
+    salience: 10
 Vector:
   heroStartPos:
     x: 200
@@ -80,6 +80,16 @@ Vector:
 These are typical example values: the hero's `base` is `8` and `speed` is `1.0`. (A full Actor defines more fields than shown here; see [the entity reference](/reference/entities.html) for the full Actor schema.)
 
 > Warning: Data files use **clean keys** only. Always write the clean key like `name`; the underscore forms such as `name_` are internal and never used in campaign files. This applies to every entity type.
+
+<a id="yaml-rules"></a>
+### YAML rules that trip people up
+
+The engine reads a practical subset of YAML. Stick to these habits and your files will always load:
+
+- **Keep each value on one line.** Multi-line text (`|` or `>` blocks, or a quoted string broken across lines) is not supported. For long text, use one double-quoted line with `\n` for line breaks: `text: "First line.\n\nSecond paragraph."`
+- **Keep a flow list on one line.** `skills: [punchSkill, healSkill]` is fine; don't split `[...]` across lines. For long lists use the dash form, one item per line.
+- **Quote anything that should be text but looks like something else**: `symbol: 'y'`, `value: '0'`, `operator: '='`, `color: '#ff0000'`. Unquoted `yes`, `no`, `on`, `off`, `y`, and `n` can be read as true/false, and `#` starts a comment.
+- **Dice fields are strings.** `min: '0'`, `max: '20'`, `interval: '1d4'`.
 
 ### YAML and JSON
 
@@ -97,9 +107,10 @@ Entity keys must be unique across the **entire** merged dictionary, not just wit
 
 When two files contribute the same key, a later-loaded entity overwrites an earlier one. Do not rely on file load order for correctness; give every entity a distinct key.
 
+<a id="the-main-entity"></a>
 ## The Main entity
 
-Every campaign requires exactly one [Main](/manual/getting-started/glossary.html#terms) entity. Main names where the game starts: the player-controlled actor and the starting map. An example `Main.yaml`:
+Every campaign requires exactly one [Main](/manual/getting-started/glossary.html#terms) entity. Main names where the game starts: the actor to control (optional — see below) and the starting map. An example `Main.yaml`:
 
 ```yaml
 Main:
@@ -108,9 +119,9 @@ Main:
     map: demoMap
 ```
 
-Here `actor` is a [KeyRef](/manual/getting-started/glossary.html#terms) to the `heroActor` entity and `map` is a KeyRef to `demoMap`. Both fields are required.
+Here `actor` is a [KeyRef](/manual/getting-started/glossary.html#terms) to the `heroActor` entity and `map` is a KeyRef to `demoMap`. `map` is required. `actor` is **optional** — omit it and each player starts as a **null actor**: an invisible, immovable stand-in that sees the whole map and can select any actor from anywhere. That's the pattern for letting players pick their hero from actors you place in the world (see the [pick-your-hero recipe](/recipes/pick-your-hero.html)).
 
-Main also accepts two optional fields:
+Main also accepts two more optional fields, beyond `actor`:
 
 - `notes` — a free-form description string.
 - `plugins` — an ordered list of plugin names that controls precedence. Covered in [Plugins](#plugins) below.
@@ -122,8 +133,8 @@ Main also accepts two optional fields:
 Asset files travel in the archive alongside your data files and are loaded on demand by the entities that reference them. The loader recognizes these extensions:
 
 - `.png`, `.jpg`, `.jpeg` — loaded as image textures.
-- `.wav` — loaded as audio. Audio must use a 44,100 Hz sample rate.
-- `.mp3` — loaded as audio.
+- `.mp3` — loaded as audio. **Use MP3 for all sound.**
+- `.wav` and `.ogg` pass validation but are not reliable at runtime; convert them to MP3.
 - `.txt` — loaded as text, used for layer tile grids and similar data.
 
 Reference an asset by its path relative to the campaign prefix, for example `assets/hero.png`. The engine prepends the prefix when it reads the file.

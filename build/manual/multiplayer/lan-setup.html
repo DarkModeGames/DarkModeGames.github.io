@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAN Setups &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>LAN Setups</h1>
+<p>This page walks through the usual ways to play together on one local network (home or office Wi-Fi or Ethernet): one player hosts, a spare machine runs a dedicated server, or everything runs on one computer for testing. Internet and cloud hosting are out of scope here.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><a href="/manual/getting-started/install-and-run.html">Install and run</a>, so the engine runs and you know where the <code>campaigns</code> folder is.</li>
+<li><a href="/manual/multiplayer/hosting.html">Hosting a session</a>, for what each <code>--network</code> mode means.</li>
+</ul>
+<h2>The rules every setup follows</h2>
+<ol>
+<li><strong>One machine runs the world.</strong> It is started with <code>--network=host</code> (it also plays) or <code>--network=server</code> (it only serves). Everyone else joins with <code>--network=client</code>.</li>
+<li><strong>Everyone has the exact same campaign zip.</strong> Each machine puts the same <code>.zip</code> in its own <code>campaigns</code> folder. If even one byte differs, the client is refused with <code>Update to the latest campaign version to connect.</code> Copy the file; don't rebuild it separately on each machine.</li>
+<li><strong>Same port on both sides.</strong> The default is <code>5000</code>. The traffic is <strong>UDP</strong>.</li>
+<li><strong>Clients need the world machine's address.</strong> On a LAN, that is its local IP address, such as <code>192.168.1.20</code>. Clients pass it as <code>--uri</code>.</li>
+<li><strong>Start the world machine first.</strong> A client that dials before the server is listening fails to connect. Start the client again once the server is up.</li>
+<li><strong>Every player uses their own username.</strong> The first login reserves a name for its password, and a name can only be logged in once at a time (see <a href="/manual/multiplayer/networking-and-security.html#reserved-usernames">Reserved usernames</a>).</li>
+</ol>
+<h3>Find the world machine's local IP address</h3>
+<p>Run this on the machine that will host or serve:</p>
+<table>
+<thead>
+<tr>
+<th>System</th>
+<th>Command</th>
+<th>Looks like</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS</td>
+<td><code>ipconfig getifaddr en0</code> (Wi-Fi or the first network port; try <code>en1</code> if it prints nothing)</td>
+<td><code>192.168.1.20</code></td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>ipconfig</code>, then read "IPv4 Address"</td>
+<td><code>192.168.1.20</code></td>
+</tr>
+<tr>
+<td>Linux</td>
+<td><code>hostname -I</code> (the first address)</td>
+<td><code>192.168.1.20</code></td>
+</tr>
+</tbody>
+</table>
+<p>Use the address that starts with <code>192.168.</code>, <code>10.</code>, or <code>172.16.</code>–<code>172.31.</code>. Those are local addresses. Don't use <code>127.0.0.1</code>; that only means "this same machine".</p>
+<h3>Let the port through the firewall</h3>
+<p>Only the world machine needs this.</p>
+<ul>
+<li><strong>macOS:</strong> the first time the engine listens, macOS asks whether to accept incoming connections. Click <strong>Allow</strong>. If you clicked Deny, open System Settings → Network → Firewall → Options and set Isometry to allow incoming connections.</li>
+<li><strong>Windows:</strong> when Windows Defender Firewall asks, allow access on <strong>Private networks</strong>. Make sure your network is set to Private, not Public.</li>
+<li><strong>Linux:</strong> if you use <code>ufw</code>, run <code>sudo ufw allow 5000/udp</code> (with your port).</li>
+</ul>
+<p>You do not need router port forwarding for LAN play. That is only for players outside your network.</p>
+<h2>Setup 1: One player hosts</h2>
+<p>The most common setup. One player runs a host and plays; friends on the same network join.</p>
+<div class="codehilite"><pre><span></span><code>  ┌──────────────── your LAN ────────────────┐
+  │  Host PC (plays + serves)  ◀── Client A  │
+  │  192.168.1.20 : 5000 UDP   ◀── Client B  │
+  └──────────────────────────────────────────┘
+</code></pre></div>
+
+<p>On the host machine:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>alice<span class="w"> </span>--secret<span class="o">=</span>alicepass
+</code></pre></div>
+
+<p>On each other player's machine:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>client<span class="w"> </span>--uri<span class="o">=</span><span class="m">192</span>.168.1.20<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>bob<span class="w"> </span>--secret<span class="o">=</span>bobpass
+</code></pre></div>
+
+<p>Good to know:</p>
+<ul>
+<li>The world only exists while the host is running. When the host quits, everyone is disconnected.</li>
+<li>Player saves are stored on the host, in its data folder. A player who joins next time (to the same host) continues where they left off.</li>
+<li>The host machine does the most work: it renders the game and also runs every monster. Give that job to the strongest computer.</li>
+</ul>
+<h2>Setup 2: A dedicated server on a spare machine</h2>
+<p>Use a machine nobody plays on (an old laptop, a desktop in the corner, a home server). The world stays up when players come and go.</p>
+<div class="codehilite"><pre><span></span><code>  ┌──────────────────── your LAN ─────────────────────┐
+  │  Server PC (headless)        ◀── Client A         │
+  │  192.168.1.50 : 5000 UDP     ◀── Client B         │
+  │                              ◀── Client C         │
+  └───────────────────────────────────────────────────┘
+</code></pre></div>
+
+<p>On the server machine:</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">ISOMETRY_ADMIN_SECRET</span><span class="o">=</span>change-me<span class="w"> </span>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>server<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>server<span class="w"> </span>--secret<span class="o">=</span>serverpass<span class="w"> </span>--log-level<span class="o">=</span>INFO
+</code></pre></div>
+
+<p>On every player's machine:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>client<span class="w"> </span>--uri<span class="o">=</span><span class="m">192</span>.168.1.50<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>bob<span class="w"> </span>--secret<span class="o">=</span>bobpass
+</code></pre></div>
+
+<p>Good to know:</p>
+<ul>
+<li><code>--headless</code> runs with no window. A server has no player of its own.</li>
+<li>With an admin secret set, you can check or stop the server from that same machine: <code>ISOMETRY_ADMIN_SECRET=change-me isometry --headless --control=info --port=5000</code>. <code>--control=shutdown</code> saves every player first. The admin endpoint only listens on the server machine itself. See <a href="/manual/multiplayer/server-administration.html">Server administration</a>.</li>
+<li>To keep it running after a reboot, start it from your system's service manager (launchd, systemd, or Task Scheduler). See the <a href="/guide/hosting.html">Player Guide's hosting page</a> for a systemd example.</li>
+<li>Back up the <code>data/</code> folder in the server's data folder; it holds every player's save.</li>
+</ul>
+<h2>Setup 3: Server and player on the same machine</h2>
+<p>Run a dedicated server in the background and join it from a normal game window on the same computer. Other players on the LAN can still join. This is handy if you want the world to stay up while you close and reopen your own game.</p>
+<p>Terminal 1:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>server<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>server<span class="w"> </span>--secret<span class="o">=</span>serverpass
+</code></pre></div>
+
+<p>Terminal 2 (you):</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>client<span class="w"> </span>--uri<span class="o">=</span>localhost<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>alice<span class="w"> </span>--secret<span class="o">=</span>alicepass
+</code></pre></div>
+
+<p>Other players use the machine's LAN address (<code>--uri=192.168.1.20</code>), exactly as in Setup 2.</p>
+<h2>Setup 4: Test multiplayer alone</h2>
+<p>Creators can check co-op features without a second computer. Start a server, then open two client windows with different usernames:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>server<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>server<span class="w"> </span>--secret<span class="o">=</span>s<span class="w"> </span>--log-level<span class="o">=</span>INFO
+isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>client<span class="w"> </span>--uri<span class="o">=</span>localhost<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>tester1<span class="w"> </span>--secret<span class="o">=</span>t1
+isometry<span class="w"> </span>--campaign<span class="o">=</span>mygame<span class="w"> </span>--network<span class="o">=</span>client<span class="w"> </span>--uri<span class="o">=</span>localhost<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>tester2<span class="w"> </span>--secret<span class="o">=</span>t2
+</code></pre></div>
+
+<p>Every process on one machine writes to the same <code>log.txt</code>. To keep the logs apart, give each process its own data folder by starting it with a different <code>HOME</code>, for example <code>HOME=/tmp/p1 isometry ...</code> on macOS or Linux. Delete the test players' saves between rounds so each test starts fresh.</p>
+<h2>When a client can't connect</h2>
+<p>Work down this list:</p>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Update to the latest campaign version to connect.</code></td>
+<td>The zips differ.</td>
+<td>Copy the server's exact <code>.zip</code> to the client.</td>
+</tr>
+<tr>
+<td><code>Username reserved or incorrect secret</code></td>
+<td>That name was first used with a different password.</td>
+<td>Use the original password, or pick a new name.</td>
+</tr>
+<tr>
+<td><code>This username is already logged in</code></td>
+<td>Someone (maybe you, in another window) is already playing as that name.</td>
+<td>Use a different username.</td>
+</tr>
+<tr>
+<td>The client hangs, then gives up</td>
+<td>Wrong address or port, the server isn't running yet, or the firewall is blocking UDP.</td>
+<td>Check <code>--uri</code> and <code>--port</code> against the server. Make sure the server is up. Allow the port through the server's firewall.</td>
+</tr>
+<tr>
+<td>Works on the host machine with <code>localhost</code>, fails from other machines</td>
+<td>The firewall, or a network that keeps devices apart.</td>
+<td>Allow the port. Guest Wi-Fi and some mesh or "AP isolation" setups block devices from reaching each other. Put everyone on the main network.</td>
+</tr>
+<tr>
+<td>The log is empty</td>
+<td>Logging is off by default.</td>
+<td>Add <code>--log-level=INFO</code> and look in <code>log.txt</code> in the data folder.</td>
+</tr>
+</tbody>
+</table>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/multiplayer/hosting.html">Hosting a session</a></li>
+<li><a href="/manual/multiplayer/networking-and-security.html">Networking and security</a></li>
+<li><a href="/manual/multiplayer/server-administration.html">Server administration</a></li>
+<li><a href="/reference/cli.html">CLI reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

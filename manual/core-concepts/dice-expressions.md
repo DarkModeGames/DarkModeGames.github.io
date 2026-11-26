@@ -6,7 +6,7 @@ A few numeric fields in a campaign accept a [dice expression](/manual/getting-st
 
 A dice expression lets a value vary at runtime. Instead of writing a flat `10`, you write `1d20` and the engine rolls a twenty-sided die each time the value is read. This page covers where dice expressions are allowed, the exact set of characters they may contain, the operators the engine understands, and the integer-only rules that govern the result.
 
-Only four fields across all {{ entity_count }} entity types accept dice expressions. Everything else that looks numeric is a plain number. Knowing which fields are dice fields, and which characters they accept, keeps your campaign from failing [validation](/manual/core-concepts/validation.html).
+Dice expressions appear in a handful of fields (listed [below](#which-fields-accept-dice-expressions)) and in many action parameters, such as damage amounts and radii. They can also read live values from actors with `$key` and `@key`. Knowing which fields are dice fields, and which characters they accept, keeps your campaign from failing [validation](/manual/core-concepts/validation.html).
 
 ## Prerequisites
 
@@ -43,9 +43,9 @@ A dice expression may contain only these characters:
 0123456789()*%/+-dD<>
 ```
 
-That is: the digits, parentheses, the four arithmetic operators (`*`, `/`, `+`, `-`), the modulus sign (`%`), the dice letters `d` and `D`, and the filter signs (`>`, `<`).
+That is: the digits, parentheses, the four arithmetic operators (`*`, `/`, `+`, `-`), the modulus sign (`%`), the dice letters `d` and `D`, and the filter signs (`>`, `<`). On top of that, it may contain **value references**: `$key` and `@key` (see [Reading live values](#reading-live-values)).
 
-Any other character is rejected. At load time, validation reports an `INVALID_DICE` error naming the bad character and its position. At runtime, the roll logs an error and returns `0`.
+Validation checks the whole expression, not just the characters: it must be well-formed, and every `$`/`@` reference must name a real [Resource](/reference/entities.html#resource), [Measure](/reference/entities.html#measure), or built-in value. A problem is reported as `INVALID_DICE`. At runtime, a broken roll logs an error and returns `0`.
 
 > Warning: The character set excludes the decimal point. Dice expressions are integer-only, so `0.25` or `1d4*0.25` will not validate. To express a fraction, scale up to integers (see [Sound scale as a percentage](#sound-scale-as-a-percentage)).
 
@@ -61,6 +61,8 @@ You can combine dice pools and numbers with arithmetic. The engine evaluates an 
 6. Modulus (`%`).
 7. Addition (`+`).
 8. Subtraction (`-`).
+
+> Warning: Because addition happens before subtraction, `10-2+3` means `10-(2+3)` = `5`, not `11`. Put subtractions last (`10+3-2`) or use parentheses (`(10-2)+3`).
 
 Use parentheses to group a sub-expression and force it to resolve first. An `attackSound` that rolls a hundred-sided die inside parentheses, then adds `50`:
 
@@ -93,16 +95,18 @@ That last rule matters for measures: a `Measure` with no `expression` field is v
 
 ## Which fields accept dice expressions
 
-Exactly four fields are dice fields. They are the only fields the engine validates as dice notation:
+These entity fields are dice fields:
 
 | Entity | Field | Meaning |
 | --- | --- | --- |
 | `Measure` | `expression` | The value calculated fresh each time the [measure](/manual/guides/add-resources-and-measures.html) is read. |
-| `Sound` | `scale` | The audio pitch, as a percentage of normal (see below). |
-| `Timer` | `total` | The total duration, in seconds. |
-| `Timer` | `interval` | The seconds between repeated action runs. |
+| `Resource` | `min`, `max` | The bounds, re-read whenever the value changes (so `max` can be a measure, like `$maxHealthMeasure`). |
+| [`Condition`](/reference/entities.html#condition) | `left`, `right` | The two sides of a comparison. |
+| [`Timer`](/reference/entities.html#timer) | `total` | How many times the timer runs (`0` = forever). |
+| `Timer` | `interval` | The seconds between runs. |
+| [`Sound`](/reference/entities.html#sound) | `scale` | The audio pitch, as a percentage of normal (see below). |
 
-Any other numeric-looking field, such as an actor's `speed` or a resource's `max`, is a plain number, not a dice expression.
+Many action parameters are dice too, such as `expression` on the resource actions and `radius` and `distance` on area and movement actions. The [action reference](/reference/actions.html) marks each one. Other numeric-looking fields, such as an actor's `speed`, are plain numbers.
 
 <a id="sound-scale-as-a-percentage"></a>
 ### Sound scale as a percentage
@@ -128,33 +132,34 @@ A `Timer` runs an [action](/manual/guides/define-actions.html) on a schedule. It
 ```yaml
 Timer:
   regenTimer:
-    total: ''
+    total: '0'
     interval: 1d12
     action: regenAction
 ```
 
-The empty `total` reads as `0`. The `action` field is a [KeyRef](/manual/getting-started/glossary.html#terms) to an Action entity, not a dice field. See [Triggers and timers](/manual/guides/triggers-and-timers.html) for the full timer lifecycle.
+A `total` of `0` means "repeat forever". The `action` field is a [KeyRef](/manual/getting-started/glossary.html#terms) to an Action entity, not a dice field. See [Triggers and timers](/manual/guides/triggers-and-timers.html) for the full timer lifecycle.
 
-## What does not belong in a dice field
+<a id="reading-live-values"></a>
+## Reading live values
 
-Some parts of a campaign use the `$` and `@` markers to pull in live values at runtime. `$` reads a value from the **caller** and `@` reads a value from the **target**. These markers look like they might fit a dice expression, but they do not.
+An expression can read an actor's current values:
 
-> Warning: `$` and `@` are not in the dice character set (`0123456789()*%/+-dD<>`). A marker inside a `Measure.expression`, `Sound.scale`, or `Timer` field fails validation with `INVALID_DICE`. Keep markers out of dice fields.
+- `$key` reads the **caller** (the actor running the action, or the owner of the measure).
+- `@key` reads the **target** (the caller's current target).
 
-The markers live in two other places:
+`key` can be any Resource or Measure key, or a built-in value such as `distance_to_target` or `has_target`. For example, a damage parameter of `$attackPowerMeasure+1d6` adds the attacker's attack power to a die roll, and a measure of `$level*5+20` grows with level.
 
-- In [Condition](/manual/guides/conditions-and-logic.html) operands, such as `@health`, which compares against the target's `health`.
-- In [dialog](/manual/guides/menus-dialogs-waypoints.html) text, using the templating tokens below.
+Measures may hold fractions internally (`$speed*100` works); the final result is rounded to a whole number.
 
-When a dialog shows a live value, it wraps the marker in double braces:
+> Warning: In a Resource's `min` or `max`, `$` means the actor that owns the resource. Never use `@` there: the bound would change whenever the owner switches targets.
+
+[Dialog](/reference/entities.html#dialog) text uses the same markers, wrapped in double braces:
 
 {% raw %}
 ```
 HP: {{@health}} / Your luck: {{$luck}}
 ```
 {% endraw %}
-
-These templating paths do not go through dice validation. They are covered on the conditions and dialogs pages, not here. No dice field uses a marker.
 
 > Note: Markers behave defensively. A key that names no resource or measure resolves to `0`, and a missing actor resolves its marker to `0`.
 

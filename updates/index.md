@@ -5,7 +5,71 @@ Release notes for Isometry, newest first.
 > Adding a release: copy the most recent `## vX.Y — date` block to the top and fill in
 > grouped bullets in plain language.
 
-## v{{ version }} — Open beta
+## v0.402 — Release candidate (still beta)
+
+**Isometry 0.402 is a release candidate.** It is still a beta, but everything below is finished, tested (1,990
+automated tests, all passing) and played in a full campaign, **Aurelia**. This is
+everything since 0.401.
+
+### For players
+- **Quests page (J).** Every quest you've started, what to do now, and the steps you've done. Tick
+  *Show completed* to see finished ones.
+- **Character page (U).** What you wear in each slot and your key stats. Pick a slot to swap gear.
+- **Talent trees (P).** Spend points from the bottom row up; each talent shows what it does.
+- **Auto-attack.** Right-click an enemy and your character keeps swinging until it dies, you change target or you
+  walk away. Casting a skill in between doesn't reset your swing.
+- **Tab cycles targets**, **E** picks the nearest, and **hold Alt** (or the new eye button) to outline everything
+  you can target, as in Diablo.
+- **Focus corners (R T F G)** keep a character's plate in a corner of the screen. Each corner now shows a pin:
+  click it to pin your target, right-click to clear it, and press **H** to clear them all. A pinned character who
+  leaves the world now leaves its corner too.
+- **Click the icon on any plate** to interact with that character.
+- **Skill tooltips show real numbers**, worked out from your own stats ("12–17 damage"), and skills you can't use
+  right now (no resource, on cooldown, out of range) are darkened on the hotbar.
+- **Conversations are a list of spoken replies**, with stat checks such as `[CHA 12]` shown up front.
+- Minions: a strip under your target shows them with their orders (F1–F4).
+- Smaller things: a walk/run toggle (N), a follow key (V), dimmer HUD icons, five HUD buttons a side, an Interact
+  flag, an on-screen keyboard for gamepads, long names that fit their plates, and campaign credits in the System
+  menu.
+
+### For campaign creators
+- **New entities:** `Quest` and `Step` (the Quests page), `Sheet`, `Slot` and `Stat` (the Character page),
+  `Tree` and `Talent` (talent trees) and `Nav` (extra pathfinding points).
+- **New fields:** `Actor.auto_attack` / `auto_attack_interval` / `auto_attack_range`, `Actor.on_interact`,
+  `Actor.icon` and `Group.icon` (shown on plates), `Deployment.respawn` (monsters come back), `Skill.ready` and
+  `Skill.in_range` (hotbar readiness), `Condition.all`, `Menu.hide_unavailable`, `Resource.combat_text` and
+  `tags`, `Sound.volume` and `range`, and `Main.credits`.
+- **New actions:** `start_auto_attack`, `stop_auto_attack_self`, `play_sound_self` / `play_sound_target`,
+  `move_home_self`, minion commands (`follow_master` with formations, `each_minion`, `target_master`), and
+  `echo_*` gained a public/private audience, a colour and a duration.
+- Skill descriptions accept {% raw %}`{{range: <dice>}}` and `{{dice: <dice>}}`{% endraw %}.
+- **Test your campaign with scripts:** `--ui-script` plays keys and clicks and checks the screen, with PASS/FAIL
+  lines. See [Test your campaign with UI scripts](/manual/guides/test-with-ui-scripts.html).
+- The validator now rejects a map without a tilemap, a tilemap without a tileset, and an incomplete tileset.
+- **Seven new recipes:** [quest log](/recipes/quest-log.html), [talent trees](/recipes/talent-trees.html),
+  [character page](/recipes/character-page.html), [auto-attack](/recipes/auto-attack.html),
+  [monsters that come back](/recipes/respawning-monsters.html),
+  [skill tooltips and readiness](/recipes/skill-tooltips-and-readiness.html) and
+  [credits](/recipes/campaign-credits.html). Every recipe's example is validated against this release.
+
+### Multiplayer
+- Tested end to end with real processes: host alone, host with two clients, a dedicated server with two clients,
+  a client quitting and rejoining, and a client crashing mid-fight (the others carry on and the lost player is
+  removed).
+- Fixed: late joiners now see current values; appearance changes reach every player; a change of form no longer
+  leaves ghost bodies or hides the world; discovered waypoints survive a respawn; any-peer messages check who sent
+  them.
+
+### Performance
+Measured on an Apple M5 with the full Aurelia campaign (about 1,000 actors over three maps), per frame at 60 fps
+(the budget is 16.7 ms): idle 0.4 ms, walking the moor 2.5 ms, a four-player fight 4.5 ms. On average a host stays
+under budget with 8 players in one fight (8.7 ms) and with 500 monsters awake at once (14 ms).
+
+### Isometry Editor
+The editor now matches this release: every new entity and field appears in the inspector, options with a fixed
+set of words (such as a message's audience) are drop-downs, and `Nav` points can be placed on the map painter.
+
+## v0.401 — Open beta
 
 **Isometry is now in open beta.** This release covers roughly three months of work bringing
 the framework to a public, playable state — gameplay, multiplayer, authoring, and a brand-new
@@ -24,6 +88,9 @@ documentation site.
 - **Flying actors**: actors can be set to fly over walls and obstacles, stopped only by a
   new impassable **boundary** terrain — with fly/land actions and a flying state you can
   check in your own logic.
+- **Null actor**: leave a campaign's starting actor unset and players begin as an invisible,
+  immovable spectator — ideal for letting players pick their hero. See
+  [Campaign structure](/manual/core-concepts/campaign-structure.html#the-main-entity).
 
 ### Camera &amp; map view
 - A pop-out **map view** that opens from the bottom of the screen with its own zoom, pan

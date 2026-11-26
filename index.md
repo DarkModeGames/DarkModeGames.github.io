@@ -31,7 +31,7 @@ There is no separate backend and no Docker: the game binary is the whole product
 
 ## A campaign is just data
 
-The required entry point names the starting actor and map:
+The required entry point names the starting map, and optionally a starting actor:
 
 ```yaml
 Main:

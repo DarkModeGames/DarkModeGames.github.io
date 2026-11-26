@@ -43,7 +43,7 @@
 
     <main class="content">
         <h1>Hosting Multiplayer Games</h1>
-<p>Isometry has no separate backend, no Docker, and no admin panel. You run the same game binary in a different network mode, set with one command-line flag. This page explains the four modes and the flags that configure a session.</p>
+<p>Isometry has no separate backend and no Docker. You run the same game binary in a different network mode, set with one command-line flag. This page explains the four modes and the flags that configure a session. To query, stop or restart a running server, see <a href="/manual/multiplayer/server-administration.html">Server administration</a>.</p>
 <h2>Introduction</h2>
 <p>Multiplayer in Isometry is entirely command-line driven. There is no hosting config file in a <a href="/manual/getting-started/glossary.html">campaign</a>; a campaign is just data, and you choose its network role when you launch it. The role is set by <code>--network</code>, which selects one of four modes: none, host, server, or client.</p>
 <p>This page covers what each mode does, the flags that start a session, their defaults, and the behavioral differences between hosting and joining. Authentication and the on-disk save format are introduced here only briefly; the full detail lives on <a href="/manual/multiplayer/networking-and-security.html">Networking and security</a>.</p>
@@ -107,6 +107,9 @@ isometry<span class="w"> </span>--network<span class="o">=</span><span class="m"
 </code></pre></div>
 
 <p>In every mode with a window, the title shows the campaign name followed by the mode name, for example <code>demo HOST</code> or <code>demo SERVER</code>. A headless server has no window.</p>
+<blockquote>
+<p>Tip: For step-by-step LAN setups (one player hosts, a dedicated server, testing alone), see <a href="/manual/multiplayer/lan-setup.html">LAN setups</a>.</p>
+</blockquote>
 <h2>Configuring a session</h2>
 <p>Beyond <code>--network</code>, a handful of flags configure the session. All values arrive as strings from the command line.</p>
 <table>
@@ -159,7 +162,7 @@ isometry<span class="w"> </span>--network<span class="o">=</span><span class="m"
 <td><code>--dir</code></td>
 <td>all</td>
 <td>—</td>
-<td>Override the directory for campaign and save files.</td>
+<td>Override the folder that holds campaign zips.</td>
 </tr>
 <tr>
 <td><code>--log-level</code></td>
@@ -200,16 +203,16 @@ isometry<span class="w"> </span>--network<span class="o">=</span><span class="m"
 <div class="codehilite"><pre><span></span><code>NONE  FATAL  ERROR  WARN  INFO  DEBUG  TRACE
 </code></pre></div>
 
-<p><code>NONE</code> (the default) silences all output; <code>TRACE</code> is the most verbose. Logs are written to a file named <code>log.txt</code> in the working directory, not to standard output.</p>
+<p><code>NONE</code> (the default) silences all output; <code>TRACE</code> is the most verbose. Logs are written to <code>log.txt</code> in <a href="/manual/getting-started/install-and-run.html#where-files-go">the engine's data folder</a>, not to standard output.</p>
 <div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
 </code></pre></div>
 
 <h2>Verify a host locally</h2>
-<p>To confirm a campaign loads end to end, run it as a host with logging on. Place the campaign <code>.zip</code> beside the binary, then launch:</p>
+<p>To confirm a campaign loads end to end, run it as a host with logging on. Put the campaign <code>.zip</code> in the <code>campaigns</code> folder next to the engine, then launch:</p>
 <div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--headless<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p<span class="w"> </span>--log-level<span class="o">=</span>INFO
 </code></pre></div>
 
-<p>The campaign <code>.zip</code> must sit in the same directory as the executable. Open <code>log.txt</code> and look for two success markers: <code>Campaign validation passed</code> and <code>Successfully created Entity</code>. If you do not see them, see <a href="/reference/troubleshooting.html">Troubleshooting</a>.</p>
+<p>Open <code>log.txt</code> (in <a href="/manual/getting-started/install-and-run.html#where-files-go">the engine's data folder</a>) and look for two success markers: <code>Campaign validation passed</code> and <code>Successfully created Entity</code>. If you do not see them, see <a href="/reference/troubleshooting.html">Troubleshooting</a>.</p>
 <h2>See also</h2>
 <ul>
 <li><a href="/manual/getting-started/install-and-run.html">Install and run</a></li>
@@ -221,7 +224,7 @@ isometry<span class="w"> </span>--network<span class="o">=</span><span class="m"
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.387 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.402 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

@@ -36,8 +36,8 @@ Actor:
     name: Hero
     speed: 1.0
     base: 8
-    perception: 25
-    salience: 1
+    perception: 250
+    salience: 10
     resources:
     - health
     - mana
@@ -61,7 +61,7 @@ This is only possible because logic lives in the engine, not in your files. YAML
 
 You configure {{ product_name }} through command-line arguments, parsed at startup. The common flags are `--campaign`, `--network`, `--port`, `--username`, `--secret`, and `--log-level`. The [CLI reference](/reference/cli.html) lists them in full.
 
-This is deliberate. A command-line front door means the launcher is a separable layer: you can wrap the binary in your own launcher UI rather than ship the one in the box. {{ product_name }} provides separate launcher and engine builds precisely because the launcher is a front end, not the engine.
+This is deliberate. A command-line front door keeps any launcher a separate layer: the engine ships without one, and a campaign can wrap the binary in its own launcher UI that passes these flags. The launcher is a front end, not part of the engine.
 
 ## Multiplayer-first
 

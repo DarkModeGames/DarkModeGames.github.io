@@ -44,7 +44,7 @@ Because a campaign is just data, you build, change, and share a game by editing 
 
 ### Entities describe everything
 
-An [entity](/manual/getting-started/glossary.html) is a pure-data record loaded from YAML. There are exactly {{ entity_count }} entity types — Main, Map, Actor, Action, Skill, Strategy, Sprite, and so on. Entities hold data only; they contain no game logic.
+An [entity](/manual/getting-started/glossary.html) is a pure-data record loaded from YAML. There are exactly {{ entity_count }} entity types — Main, Map, [Actor](/reference/entities.html#actor), Action, [Skill](/reference/entities.html#skill), [Strategy](/reference/entities.html#strategy), [Sprite](/reference/entities.html#sprite), and so on. Entities hold data only; they contain no game logic.
 
 Every entity file follows the same shape: an entity type, then a unique [entity key](/manual/getting-started/glossary.html), then the fields. Here is an example [Main](/manual/getting-started/glossary.html) entity, the required entry point that names the starting actor and map:
 
@@ -55,7 +55,7 @@ Main:
     map: demoMap
 ```
 
-`"Main"` is the entity type, `"demoMain"` is its key, and `actor` and `map` are its two required fields. Every campaign has exactly one Main entity.
+`"Main"` is the entity type, `"demoMain"` is its key, `map` is its one required field, and `actor` is optional (name a starting actor, or omit it and the player starts as an invisible, immovable stand-in — see [Campaign structure](/manual/core-concepts/campaign-structure.html#the-main-entity)). Every campaign has exactly one Main entity.
 
 Notice that `"actor": "heroActor"` does not embed the actor — it names it. That string is a [KeyRef](/manual/getting-started/glossary.html): a typed reference to another entity by its key. Entities reference each other this way, and the engine resolves every reference when the campaign loads. If a reference points at a key that does not exist, [validation](/manual/getting-started/glossary.html) reports it before the game runs.
 
@@ -67,19 +67,15 @@ Actor:
     name: Hero
     speed: 1.0
     base: 8
-    perception: 25
-    salience: 1
+    perception: 250
+    salience: 10
     sprite: heroSprite
     skills:
     - attackSkill
     - healSkill
-    resources:
-    - health
-    - mana
-    - gold
 ```
 
-The plain values (`speed`, `base`, `perception`, `salience`) set the actor's stats. The KeyRef `sprite` points at one other entity. The lists `skills` and `resources` are [KeyRefArrays](/manual/getting-started/glossary.html) — arrays of KeyRefs. An actor may hold at most nine skills.
+The plain values (`speed`, `base`, `perception`, `salience`) set the actor's stats. The KeyRef `sprite` points at one other entity. The list `skills` is a [KeyRefArray](/manual/getting-started/glossary.html) — an array of KeyRefs. An actor may hold at most nine skills.
 
 > Tip: Always write the clean key like `name`; the underscore forms such as `name_` are internal and never used in campaign files.
 
@@ -91,13 +87,13 @@ Isometry treats multiplayer as the default shape of the game, not an add-on. You
 
 Conceptually, single-player is just a server with one connected client. That is why the same engine serves both: there is no separate code path for "offline."
 
-> Warning: The `--network=none` flag currently loads no campaign on its own. To play single-player today, use the launcher to pick a campaign and host or join. For the exact flags, see the [CLI reference](/reference/cli.html) and [Hosting a session](/manual/multiplayer/hosting.html).
+> Warning: The `--network=none` flag currently loads no campaign on its own. To play single-player today, launch with `--network=host`: a host session with one player. For the exact flags, see the [CLI reference](/reference/cli.html) and [Hosting a session](/manual/multiplayer/hosting.html).
 
 ## How a campaign loads
 
 You do not do any of this yourself, but knowing the flow helps you understand error messages. When you start the program:
 
-1. You pick a campaign, log in, and host or join.
+1. The launch flags name the campaign, your login, and whether you host or join.
 2. The campaign is read and checked — every KeyRef and every [dice expression](/manual/getting-started/glossary.html) is cross-checked before the game is allowed to run.
 3. Once it passes, the game starts.
 
