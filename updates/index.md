@@ -5,9 +5,9 @@ Release notes for Isometry, newest first.
 > Adding a release: copy the most recent `## vX.Y — date` block to the top and fill in
 > grouped bullets in plain language.
 
-## v0.402 — Release candidate (still beta)
+## v0.405 — Release candidate (still beta)
 
-**Isometry 0.402 is a release candidate.** It is still a beta, but everything below is finished, tested (1,990
+**Isometry 0.405 is a release candidate.** It is still a beta, but everything below is finished, tested (1,990
 automated tests, all passing) and played in a full campaign, **Aurelia**. This is
 everything since 0.401.
 
