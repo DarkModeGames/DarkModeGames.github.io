@@ -5,6 +5,27 @@ Release notes for Isometry, newest first.
 > Adding a release: copy the most recent `## vX.Y — date` block to the top and fill in
 > grouped bullets in plain language.
 
+## v0.408 — Auto-interact, reactions and haste (still beta)
+
+### For players
+- **Your character fights back.** When an enemy hits you and you're standing still with no other target (or it
+  *is* your target), your character swings back on its own. It never switches a target you picked, never pulls a
+  healer off an ally, and never turns you around while you run. Turn it off in Options: **React Automatically**.
+- **Clicking an enemy you're standing on works.** Up close your own character could be "in front" of the enemy, so
+  a right-click hit you and stopped your attack. A click now picks the enemy.
+
+### For campaign makers
+- **Auto-attack is now auto-interact** (it repeats any interaction: a swing, a heal, tending a crop). Renamed with
+  no aliases while we're in beta: `auto_attack` → `auto_interact`, `auto_attack_range` → `auto_interact_range`,
+  `auto_attack_interval` → `auto_interact_interval`, `start_auto_attack` → `start_auto_interact`,
+  `stop_auto_attack_self` → `stop_auto_interact_self`. Rename these in your campaign.
+- **`reaction`** on an Actor runs whenever another actor's action lands on it (the counterpart of `on_interact`),
+  filtered by its own `if`.
+- **`auto_interact_speed`**: a dice percentage, read before each repeat. Point it at a stat for haste and slows.
+- `start_auto_interact` takes an optional `chase: false`; new built-in values `auto_interacting`, `moving` and
+  `@is_target`.
+- The [Auto-attack recipe](/recipes/auto-attack.html) shows all of it: right-click to attack, fight back, haste.
+
 ## v0.407 — Character page and HUD fixes (still beta)
 
 A small update on top of the 0.405 release candidate.
