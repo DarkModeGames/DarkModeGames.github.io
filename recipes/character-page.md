@@ -115,6 +115,7 @@ Slot:
     name: Main hand
     worn: [ironSwordEquippedResource, ashStaffEquippedResource]
     choices: [ironSwordResource, ashStaffResource]
+    paired: true   # worn[i] goes with choices[i]: the page marks the worn item in its list
     column: 0
     row: 1
 
@@ -156,3 +157,7 @@ Actor:
 - A slot's `icon` and `name` show only while it is empty; once something is worn, that item's own icon and name
   show.
 - Two ring slots can list the same rings; give each ring its own `_equipped` flag per slot if both can be worn.
+- With `paired: true`, list `worn` and `choices` in the same order (one flag per item, same position). Validation
+  rejects a paired slot whose lists differ in length. The list of choices then marks the worn item with a gold
+  border, and its tooltip says "Equipped". Without `paired`, nothing in the list is marked.
+- Resting the mouse on a slot or on an item in its list shows that item's name and description.

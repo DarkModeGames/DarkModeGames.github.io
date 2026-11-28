@@ -59,9 +59,9 @@ boss's while you target something else. Each corner holds one.
 
 - **R / T / F / G** — the four corners (top left, top right, bottom left, bottom right). Tap with a target to pin
   it there. Tap again later to target the pinned character. Hold to clear the corner.
-- **Pin icons** — each corner shows a small pin. Hover it for a reminder. Click it to pin your target there
+- **Corner icons** — each corner shows a small figure in crosshairs. Hover it for a reminder. Click it to pin your target there
   (replacing whoever was there); with no target, a click targets the pinned character. Right-click clears it.
-  The pins hide with the other HUD buttons (**Show Menu Buttons** in the options menu).
+  The icons hide with the other HUD buttons (**Show Menu Buttons** in the options menu).
 - **H** — clear every focus corner and start fresh.
 - A pinned character who leaves the world (dies and despawns, or goes where you can't see them) leaves its
   corner by itself after a couple of seconds.

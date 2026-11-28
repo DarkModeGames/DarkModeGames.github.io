@@ -577,6 +577,8 @@ Slot:
     icon: null  # String
     # The slot's name, shown while it is empty ("Main hand").
     name: null  # String
+    # If true, `worn` and `choices` are pairs by position: `worn[i]` is above 0 while `choices[i]` is worn. The page then marks the worn item in the list of choices. Both lists must then be the same length (ticket 298).
+    paired: false  # Boolean
     # Row on the page's grid, from 0 at the bottom.
     row: 0  # Integer
     # Resources that mean "something is worn here" (e.g. one `<item>_equipped` flag per item); the first above 0 shows.
