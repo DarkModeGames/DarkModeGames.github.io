@@ -5,6 +5,22 @@ Release notes for Isometry, newest first.
 > Adding a release: copy the most recent `## vX.Y — date` block to the top and fill in
 > grouped bullets in plain language.
 
+## v0.407 — Character page and HUD fixes (still beta)
+
+A small update on top of the 0.405 release candidate.
+
+### For players
+- **One target plate, always.** An old target's plate could stay at the top of the screen beside the new one
+  after you changed form or map, or talked to someone. Now there is only ever one.
+- **Character page items are icons.** Pick a slot and what fits it shows as a grid of icons. Rest the mouse on an
+  item (or on a slot) to see its name and what it does. The item you're wearing has a gold border.
+- **New focus corner icon.** The corners show a small figure in crosshairs instead of a pin.
+
+### For campaign makers
+- **`paired` slots.** A Slot with `paired: true` says that `worn[i]` goes with `choices[i]`, so the Character page
+  can mark the worn item. Both lists must be the same length. See the [Slot reference](/reference/entities.html#slot)
+  and the [Character page recipe](/recipes/character-page.html). Campaigns that use it need 0.407 or newer.
+
 ## v0.405 — Release candidate (still beta)
 
 **Isometry 0.405 is a release candidate.** It is still a beta, but everything below is finished, tested (1,990
