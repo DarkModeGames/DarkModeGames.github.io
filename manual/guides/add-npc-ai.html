@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add NPC AI &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Add NPC AI</h1>
+<p>This page shows you how to make a non-player actor act on its own: patrol a route, spot a player, chase them, and attack. You do this by giving an actor a <a href="/manual/getting-started/glossary.html#terms">strategy</a>.</p>
+<h2>Prerequisites</h2>
+<p>You should already be comfortable with these pages:</p>
+<ul>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a> — the actor that the AI will drive.</li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a> — the actions a behavior runs.</li>
+<li><a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a> — the conditions a behavior uses as goals.</li>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a> — the map the AI moves across.</li>
+</ul>
+<h2>How NPC AI is organized</h2>
+<p>AI is built from two entity types.</p>
+<p>A <a href="/manual/getting-started/glossary.html#terms">Behavior</a> is one step of a plan: a list of <strong>goals</strong> (Conditions) and one <strong>action</strong>. Think of the goals as "what this step is trying to achieve". The action runs, over and over, <strong>until every goal is true</strong>.</p>
+<p>A <a href="/manual/getting-started/glossary.html#terms">Strategy</a> is an ordered list of behaviors: the whole plan, top to bottom. You attach it to an actor with the actor's <code>strategy</code> field.</p>
+<h2>How a strategy runs</h2>
+<p>The engine checks each AI actor's strategy several times a second, on the host or server only (never on a plain client). Each check:</p>
+<ol>
+<li><strong>Fall back if something broke.</strong> If a goal of an <em>earlier</em> behavior has stopped being true (for example, the actor lost its target), that earlier behavior becomes the current one again.</li>
+<li><strong>Skip steps that are done.</strong> Starting at the current behavior, any behavior whose goals are all true is passed over.</li>
+<li><strong>Run one action.</strong> The first behavior with an unmet goal runs its action.</li>
+<li>If every behavior's goals are true, nothing runs: the plan is complete.</li>
+</ol>
+<p>So you write a strategy as a checklist: "have a target", then "be close to it", then "it is down". Each behavior does the work that makes its own goal come true.</p>
+<blockquote>
+<p>Note: A behavior with no goals is never "done", so its action runs on every check. Put one at the end of a list for an action that should repeat forever.</p>
+</blockquote>
+<h2>The goal conditions</h2>
+<p>In a behavior, the <strong>caller is the AI actor itself</strong> and the target is its current target. So <code>$</code> reads the AI, and <code>@</code> reads whoever it is targeting.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hasTarget</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$has_target</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">closeToTarget</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$distance_to_target</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;=</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;40&#39;</span>
+<span class="w">  </span><span class="nt">targetIsDown</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@health&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;=</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+</code></pre></div>
+
+<ul>
+<li><code>has_target</code> and <code>distance_to_target</code> are built-in values every actor has.</li>
+<li><code>distance_to_target</code> is in pixels on the isometric ground, measured centre to centre. Vertical distance counts double. See <a href="/reference/units.html">Distances and sizes</a>.</li>
+</ul>
+<h2>A monster that hunts players</h2>
+<p>This monster waits until a player comes into view, walks up to them, and bites until they fall.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Group</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">playersGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Players</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#4080ff&#39;</span>
+<span class="w">  </span><span class="nt">monstersGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Monsters</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#ff4040&#39;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">findPlayerAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_nearest_in_group</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">findPlayersParam</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">chaseAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">move_to_target</span>
+<span class="w">  </span><span class="nt">biteAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Bite</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_target</span>
+<span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">biteResourceParam</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">biteDamageParam</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">findPlayersParam</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">group</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">playersGroup</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">biteResourceParam</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">resource</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">health</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">biteDamageParam</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="nv">expression</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">1d6</span><span class="p p-Indicator">}</span>
+
+<span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">findBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">hasTarget</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">findPlayerAction</span>
+<span class="w">  </span><span class="nt">chaseBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">closeToTarget</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaseAction</span>
+<span class="w">  </span><span class="nt">attackBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">targetIsDown</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">biteAction</span>
+
+<span class="nt">Strategy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hunterStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">behaviors</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">findBehavior</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">chaseBehavior</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">attackBehavior</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">wolfActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Wolf</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wolfSprite</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">monstersGroup</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">    </span><span class="nt">strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hunterStrategy</span>
+</code></pre></div>
+
+<p>Read it as a checklist:</p>
+<ol>
+<li><strong>findBehavior.</strong> Until I have a target, look for the nearest player I can see.</li>
+<li><strong>chaseBehavior.</strong> Until I'm within 40 px of my target, walk toward it.</li>
+<li><strong>attackBehavior.</strong> Until my target is down, bite it. <code>time: 1.0</code> makes each bite take a second.</li>
+</ol>
+<p>If the player runs away, <code>closeToTarget</code> breaks and the wolf falls back to chasing. If it loses the player completely, <code>hasTarget</code> breaks and it goes back to looking. Players must be in <code>playersGroup</code> (set <code>group: playersGroup</code> on the player actor).</p>
+<blockquote>
+<p>Tip: <code>target_nearest_in_group</code> only finds actors the AI can see, so a bigger <code>perception</code> means the monster notices players from farther away.</p>
+</blockquote>
+<h2>A guard that patrols</h2>
+<p>Put a patrol <strong>first</strong> in the list, with the goal "have a target". The guard walks its route until it spots someone; after that, the chase and attack steps take over. Chain a scan after the patrol so it looks around as it walks:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">gatePos</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="nv">200</span><span class="p p-Indicator">,</span><span class="nt"> y</span><span class="p">:</span><span class="w"> </span><span class="nv">40</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">wellPos</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="nv">360</span><span class="p p-Indicator">,</span><span class="nt"> y</span><span class="p">:</span><span class="w"> </span><span class="nv">120</span><span class="p p-Indicator">}</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">patrolAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">use_track</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">patrolPoint0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">patrolPoint1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">findPlayerAction</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">patrolPoint0</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">gatePos</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">patrolPoint1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span><span class="p p-Indicator">,</span><span class="nt"> value</span><span class="p">:</span><span class="w"> </span><span class="nv">wellPos</span><span class="p p-Indicator">}</span>
+
+<span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">patrolBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">hasTarget</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patrolAction</span>
+
+<span class="nt">Strategy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">behaviors</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">patrolBehavior</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">chaseBehavior</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">attackBehavior</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p><code>use_track</code> walks the Vectors in order of their index keys (<code>'0'</code>, <code>'1'</code>, …), and back to the first after the last. Each call sends the actor to its current point, or on to the next once it has stopped at it, so the patrol needs calling over and over: a behavior's action does that several times a second, and a Timer with an interval of about a second works too. Calling it again mid-walk carries on rather than starting over; giving the actor a different track starts that track at its first point. A point the actor can't quite reach (off the walkable ground) counts as reached where the actor stops. Behaviors are entities, so <code>chaseBehavior</code> and <code>attackBehavior</code> are shared with the hunter rather than copied.</p>
+<h2>Common mistakes</h2>
+<ul>
+<li><strong>Writing goals as "when to act".</strong> A goal is the state the behavior is trying to <em>reach</em>. "Chase while far away" is written as the goal <code>closeToTarget</code>, not <code>farFromTarget</code>.</li>
+<li><strong>A goal the action can never achieve.</strong> If nothing the action does can make the goal true, the actor repeats that action forever.</li>
+<li><strong>Using <code>@</code> where you mean "me".</strong> <code>@has_target</code> asks whether the <em>target</em> has a target. Use <code>$has_target</code>.</li>
+<li><strong>AI that never starts.</strong> Strategies only run on a host or server. Check that the actor has <code>strategy</code> and every behavior has an <code>action</code>.</li>
+</ul>
+<p>For bigger patterns (threat, leashing, packs that call for help) see <a href="/recipes/">Recipes</a>.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a></li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a></li>
+<li><a href="/manual/guides/triggers-and-timers.html">Triggers and timers</a></li>
+<li><a href="/recipes/">Recipes</a></li>
+<li><a href="/reference/actions.html">Action function reference</a></li>
+<li><a href="/reference/entities.html">Entity reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.410 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

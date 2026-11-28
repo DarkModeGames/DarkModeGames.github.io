@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorial: Build the Demo Campaign &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Tutorial: Build the Demo Campaign</h1>
+<p>This tutorial builds a small <a href="/manual/getting-started/glossary.html">campaign</a> called <code>demo</code> from scratch, one file at a time. At the end you package it, validate it and boot it. If you copy every block on this page, you get a campaign that passes validation and loads.</p>
+<h2>Introduction</h2>
+<p>Isometry games are pure data. You write YAML <a href="/manual/getting-started/glossary.html">entity</a> files and package them into a <code>.zip</code>; you write no code. This page builds:</p>
+<ul>
+<li>a walled map made of tiles;</li>
+<li>a hero you control, with two hotbar skills;</li>
+<li>a guard that hunts the hero;</li>
+<li>a waypoint and a status dialog.</li>
+</ul>
+<h2>Prerequisites</h2>
+<p>You should have worked through these pages first:</p>
+<ul>
+<li><a href="/manual/getting-started/install-and-run.html">Install and run</a>: get the engine running.</li>
+<li><a href="/manual/getting-started/your-first-campaign.html">Your first campaign</a>: the smallest campaign that loads.</li>
+<li><a href="/manual/core-concepts/entities-and-keyrefs.html">Entities and KeyRefs</a>: how entities point at each other.</li>
+</ul>
+<blockquote>
+<p>Note: Always write clean field names such as <code>name</code>, <code>min</code> and <code>max</code>. The engine has internal aliases like <code>name_</code>, but writing one in a file is an error.</p>
+</blockquote>
+<h2>Step 0: Set up the folder</h2>
+<p>Make a folder named <code>demo</code> with an <code>assets</code> folder inside it. Download these three images into <code>demo/assets/</code>:</p>
+<ul>
+<li><a href="/assets/tutorial/ground.png">ground.png</a>: two ground tiles, grass and a stone wall.</li>
+<li><a href="/assets/tutorial/hero.png">hero.png</a>: the hero, two frames.</li>
+<li><a href="/assets/tutorial/guard.png">guard.png</a>: the guard, two frames.</li>
+</ul>
+<p>Every <code>.yaml</code> file below goes directly in <code>demo/</code>. The engine reads every <code>.yaml</code> file in the folder, whatever its name.</p>
+<h2>Step 1: Define the entry point</h2>
+<p>Every campaign needs exactly one <a href="/reference/entities.html#main"><code>Main</code></a> entity. It names the starting map and the actor the player controls.</p>
+<p><code>main.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMain</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroActor</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+</code></pre></div>
+
+<p><code>actor</code> and <code>map</code> are <a href="/manual/getting-started/glossary.html">KeyRefs</a>: the keys of entities you write in the next steps.</p>
+<h2>Step 2: Build the map</h2>
+<p>A map is drawn from tiles. You define the tiles in a <a href="/reference/entities.html#tileset"><code>TileSet</code></a>, lay them out in text files, stack those files in a <a href="/reference/entities.html#tilemap"><code>TileMap</code></a>, then wrap it all in a <a href="/reference/entities.html#map"><code>Map</code></a>.</p>
+<h3>Define the tiles</h3>
+<p>A <code>TileSet</code> points at one image and lists the <a href="/reference/entities.html#tile"><code>Tile</code></a> entities cut from it. Each tile is a 32×32 square of the image, counted left to right from <code>index</code> 0. Each <code>Tile</code> has a one-character <code>symbol</code> for the layout files, and a <a href="/reference/entities.html#face"><code>Face</code></a> that says which part of it is walkable (<code>navigation</code>) or solid (<code>obstacle</code>). The top of a tile is its <code>northeast</code> and <code>northwest</code> faces.</p>
+<p><code>tileset.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">TileSet</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoTileSet</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">columns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/ground.png</span>
+<span class="w">    </span><span class="nt">tiles</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">grassTile</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">wallTile</span><span class="p p-Indicator">]</span>
+<span class="nt">Face</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">topFace</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">northeast</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">northwest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">Tile</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">grassTile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">G</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">navigation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">topFace</span>
+<span class="w">  </span><span class="nt">wallTile</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">symbol</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">X</span>
+<span class="w">    </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">obstacle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">topFace</span>
+</code></pre></div>
+
+<p><code>columns</code> is how many tiles wide the image is. Grass is walkable and walls block movement.</p>
+<h3>Draw the layers</h3>
+<p>A <code>TileMap</code> stacks <a href="/reference/entities.html#layer"><code>Layer</code></a> entities. Each layer's <code>source</code> is a plain-text file in the campaign. The path must start with <code>/</code>.</p>
+<p><code>tilemap.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">TileMap</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoTileMap</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">tileset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoTileSet</span>
+<span class="w">    </span><span class="nt">layers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">floorLayer</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">wallLayer</span><span class="p p-Indicator">]</span>
+<span class="nt">Layer</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">floorLayer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/maps/floor</span>
+<span class="w">    </span><span class="nt">ysort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">wallLayer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/maps/walls</span>
+<span class="w">    </span><span class="nt">ysort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+
+<p><code>ysort</code> decides whether the layer's tiles sort in depth against actors. Leave it off for a flat floor.</p>
+<p>Now make a <code>maps</code> folder in <code>demo/</code> and create two files in it, <strong>with no file extension</strong>. Each character is one tile <code>symbol</code>, and a space leaves the cell empty. Each <strong>line</strong> of the file is one step along the map's x axis, and each <strong>character</strong> along a line is one step along y (y counts down from 0, so the map runs up and to the right on screen).</p>
+<p><code>maps/floor</code>, ten lines of grass:</p>
+<div class="codehilite"><pre><span></span><code>GGGGGGGGGG
+GGGGGGGGGG
+GGGGGGGGGG
+GGGGGGGGGG
+GGGGGGGGGG
+GGGGGGGGGG
+GGGGGGGGGG
+GGGGGGGGGG
+GGGGGGGGGG
+GGGGGGGGGG
+</code></pre></div>
+
+<p><code>maps/walls</code>, a ring of wall around the edge (the middle lines are an <code>X</code>, eight spaces and an <code>X</code>):</p>
+<div class="codehilite"><pre><span></span><code>XXXXXXXXXX
+X        X
+X        X
+X        X
+X        X
+X        X
+X        X
+X        X
+X        X
+XXXXXXXXXX
+</code></pre></div>
+
+<h3>Assemble the map</h3>
+<p>The <code>Map</code> ties the tilemap to a <code>spawn</code> point, where the player appears, and a list of <code>deployments</code>, the NPCs placed on it. Positions are <a href="/reference/entities.html#vector"><code>Vector</code></a> entities in world pixels. On this map the middle of the floor is about <code>(176, 0)</code>.</p>
+<p><code>map.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Map</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">demoMap</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Demo Map</span>
+<span class="w">    </span><span class="nt">tilemap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoTileMap</span>
+<span class="w">    </span><span class="nt">spawn</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroStart</span>
+<span class="w">    </span><span class="nt">deployments</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">guardDeploy</span><span class="p p-Indicator">]</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroStart</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">160</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-24</span>
+</code></pre></div>
+
+<p>You write <code>guardDeploy</code> in <a href="#step-5-add-an-npc-with-ai">Step 5</a>. For every map field, see <a href="/manual/guides/build-a-map.html">Build a map</a>.</p>
+<h2>Step 3: Create the hero</h2>
+<p>The hero is an <a href="/reference/entities.html#actor"><code>Actor</code></a>. It needs a look (a <a href="/reference/entities.html#sprite"><code>Sprite</code></a>), some values to track (<a href="/reference/entities.html#resource"><code>Resource</code></a> entities), and a <a href="/manual/getting-started/glossary.html">group</a>.</p>
+<h3>Sprites and animations</h3>
+<p>A <code>Sprite</code> points at an image, an <a href="/reference/entities.html#animationset"><code>AnimationSet</code></a>, and a <code>Vector</code> giving the size of one frame. An <a href="/reference/entities.html#animation"><code>Animation</code></a> lists frame numbers for each of the eight compass directions (<code>N</code>, <code>NE</code>, <code>E</code>, <code>SE</code>, <code>S</code>, <code>SW</code>, <code>W</code>, <code>NW</code>); all eight are needed. One frame is a still pose, and several frames cycle. The hero and the guard images have the same layout, so they share one <code>AnimationSet</code>.</p>
+<p><code>sprites.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Sprite</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroSprite</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/hero.png</span>
+<span class="w">    </span><span class="nt">animation_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">personAnimSet</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">frameSize</span>
+<span class="w">  </span><span class="nt">guardSprite</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">texture</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/assets/guard.png</span>
+<span class="w">    </span><span class="nt">animation_set</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">personAnimSet</span>
+<span class="w">    </span><span class="nt">size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">frameSize</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">frameSize</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+<span class="nt">AnimationSet</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">personAnimSet</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Person</span>
+<span class="w">    </span><span class="nt">animations</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">standAnim</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">walkAnim</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">idle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">standAnim</span>
+<span class="w">    </span><span class="nt">walk</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">walkAnim</span>
+<span class="nt">Animation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">standAnim</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">N</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">NE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">E</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">SE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">S</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">SW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">W</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">NW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">walkAnim</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">N</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">NE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">E</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">SE</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">S</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">SW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">W</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">NW</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<p>Note the field is <code>animation_set</code>, with an underscore.</p>
+<h3>Resources and groups</h3>
+<p>A <a href="/manual/getting-started/glossary.html"><code>Resource</code></a> is a number an actor holds, such as health or gold. Give each one a <code>default</code>, a <code>min</code> and a <code>max</code>, and write <code>min</code> and <code>max</code> as quoted strings. <strong>Every actor automatically has every Resource</strong> at its default, so you never list resources on an actor.</p>
+<p>A <a href="/reference/entities.html#group"><code>Group</code></a> is a team. The guard looks for actors in the players' group.</p>
+<p><code>resources.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">health</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Health</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;20&#39;</span>
+<span class="w">  </span><span class="nt">gold</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Gold</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;999&#39;</span>
+<span class="nt">Group</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">playerGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Players</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#4080ff&#39;</span>
+<span class="w">  </span><span class="nt">enemyGroup</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Enemies</span>
+<span class="w">    </span><span class="nt">color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#ff4040&#39;</span>
+</code></pre></div>
+
+<h3>Assemble the hero</h3>
+<p><code>hero.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">playerGroup</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">250</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">40</span>
+<span class="w">    </span><span class="nt">public</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">health</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">private</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">health</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">gold</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">skills</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">punchSkill</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">statusSkill</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+
+<ul>
+<li><code>base</code> is the size of the actor's footprint, in pixels.</li>
+<li><code>speed</code> is a multiplier: <code>1.0</code> is normal pace. Write the decimal point.</li>
+<li><a href="/manual/getting-started/glossary.html"><code>perception</code></a> is how far the actor sees, in pixels, and <a href="/manual/getting-started/glossary.html"><code>salience</code></a> is how far away others can notice it.</li>
+<li><code>public</code> resources show to other players; <code>private</code> ones show only to you.</li>
+<li><code>skills</code> fill the hotbar, keys 1 to 9 in order. You write them next.</li>
+</ul>
+<p>For every actor field, see <a href="/manual/guides/create-an-actor.html">Create an actor</a>.</p>
+<h2>Step 4: Define actions and skills</h2>
+<p>An <a href="/manual/getting-started/glossary.html"><code>Action</code></a> changes the game when it runs. Its <code>do</code> field names one of the 79 built-in action functions. Data goes in through <a href="/manual/getting-started/glossary.html"><code>Parameter</code></a> entities: <code>parameters</code> is a flat list of <a href="/reference/entities.html#parameter">Parameter</a> keys, and each Parameter is a <code>key</code> and a <code>value</code>.</p>
+<p>The punch takes health from whoever the hero has targeted. The status action opens a dialog.</p>
+<p><code>actions.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">punchAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Punch</span>
+<span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParam</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">punchDamageParam</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">statusAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Status</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">open_dialog</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">statusDialogParam</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">health</span>
+<span class="w">  </span><span class="nt">punchDamageParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d6</span>
+<span class="w">  </span><span class="nt">statusDialogParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dialog</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">statusDialog</span>
+<span class="nt">Skill</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">punchSkill</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Punch</span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">punchAction</span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">punchAction</span>
+<span class="w">  </span><span class="nt">statusSkill</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Status</span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">statusAction</span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">statusAction</span>
+<span class="nt">Dialog</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">statusDialog</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Status</span>
+<span class="w">    </span><span class="nt">text</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Health:</span><span class="nv"> </span><span class="s">{{$health}}</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">20\nGold:</span><span class="nv"> </span><span class="s">{{$gold}}&quot;</span>
+</code></pre></div>
+
+<ul>
+<li><code>time</code> is how long the action takes, in seconds.</li>
+<li><code>1d6</code> is a <a href="/manual/getting-started/glossary.html">dice expression</a>: one six-sided die.</li>
+<li>A <a href="/reference/entities.html#skill"><code>Skill</code></a> is a hotbar button. It runs its <code>start</code> action.</li>
+<li>A <a href="/reference/entities.html#dialog"><code>Dialog</code></a> needs a <code>title</code> and a <code>text</code>. In the text, <code>{{$health}}</code> shows a value of the actor who opened it.</li>
+<li>The engine's YAML reader has no multi-line strings. Keep each text on one line, in double quotes, and write <code>\n</code> for a line break.</li>
+</ul>
+<p>Press <code>1</code> to punch your target and <code>2</code> to see your status. For more, see <a href="/manual/guides/define-actions.html">Define actions</a>.</p>
+<p><a id="step-5-add-an-npc-with-ai"></a></p>
+<h2>Step 5: Add an NPC with AI</h2>
+<p>An NPC is an <code>Actor</code> with a <a href="/manual/getting-started/glossary.html"><code>Strategy</code></a>. A strategy is an ordered list of <a href="/manual/getting-started/glossary.html"><code>Behavior</code></a> entities. Each behavior has <code>goals</code> (Conditions) and an <code>action</code>, and <strong>the action runs until all its goals are true</strong>. The engine runs the first behavior whose goals are not yet met.</p>
+<p>Read the guard's plan as a checklist:</p>
+<ol>
+<li>Until I have a target, look for the nearest player.</li>
+<li>Until I am within 40 pixels of it, walk toward it.</li>
+<li>Until it is down, hit it.</li>
+</ol>
+<p>A <a href="/manual/getting-started/glossary.html"><code>Condition</code></a> compares two values. In a behavior, <code>$</code> reads the guard itself and <code>@</code> reads its target. <code>has_target</code> and <code>distance_to_target</code> are built-in values every actor has.</p>
+<p><code>guard.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hasTarget</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$has_target</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">closeToTarget</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$distance_to_target</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;=</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;40&#39;</span>
+<span class="w">  </span><span class="nt">targetIsDown</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@health&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;=</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">findHeroAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">target_nearest_in_group</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">playerGroupParam</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">chaseAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">move_to_target</span>
+<span class="w">  </span><span class="nt">hitAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hit</span>
+<span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParam</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">hitDamageParam</span><span class="p p-Indicator">]</span>
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">playerGroupParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">group</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">playerGroup</span>
+<span class="w">  </span><span class="nt">hitDamageParam</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1d4</span>
+<span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">findBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">hasTarget</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">findHeroAction</span>
+<span class="w">  </span><span class="nt">chaseBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">closeToTarget</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaseAction</span>
+<span class="w">  </span><span class="nt">hitBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">targetIsDown</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hitAction</span>
+<span class="nt">Strategy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">behaviors</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">findBehavior</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">chaseBehavior</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">hitBehavior</span><span class="p p-Indicator">]</span>
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Guard</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardSprite</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enemyGroup</span>
+<span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">    </span><span class="nt">speed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">    </span><span class="nt">perception</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">150</span>
+<span class="w">    </span><span class="nt">salience</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">40</span>
+<span class="w">    </span><span class="nt">public</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">health</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardStrategy</span>
+<span class="nt">Deployment</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardDeploy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">actor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardActor</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">guardStart</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">guardStart</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">176</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">32</span>
+</code></pre></div>
+
+<p><code>hitAction</code> reuses <code>healthParam</code> from Step 4; parameters are shared by key. A <a href="/reference/entities.html#deployment"><code>Deployment</code></a> places an actor at a <code>Vector</code> when the world is built. If you run away, <code>closeToTarget</code> breaks and the guard chases again. For patrols and more, see <a href="/manual/guides/add-npc-ai.html">Add NPC AI</a>.</p>
+<h2>Step 6: Add a waypoint</h2>
+<p>A <a href="/reference/entities.html#waypoint"><code>Waypoint</code></a> is a named marker on a map that points the player at a place.</p>
+<p><code>waypoints.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Waypoint</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">middleWaypoint</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Middle</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">The middle of the demo map.</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demoMap</span>
+<span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">middlePos</span>
+<span class="nt">Vector</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">middlePos</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">176</span>
+<span class="w">    </span><span class="nt">y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</code></pre></div>
+
+<p>For menus, dialogs and waypoints in depth, see <a href="/manual/guides/menus-dialogs-waypoints.html">Menus, dialogs, and waypoints</a>.</p>
+<h2>Step 7: Package, validate and boot</h2>
+<h3>Package</h3>
+<p>The engine loads a <code>.zip</code> whose single top folder is named after the campaign. From the folder that contains <code>demo/</code>:</p>
+<div class="codehilite"><pre><span></span><code>zip<span class="w"> </span>-r<span class="w"> </span>demo.zip<span class="w"> </span>demo<span class="w"> </span>-x<span class="w"> </span><span class="s2">&quot;*.DS_Store&quot;</span>
+</code></pre></div>
+
+<p><strong>Repackage the zip after every edit.</strong> The engine only reads the zip.</p>
+<h3>Validate</h3>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--validate<span class="o">=</span>/full/path/to/demo.zip
+</code></pre></div>
+
+<p>The validator checks every field, every KeyRef, every dice expression, and that every image and layer file exists in the zip. A pass prints <code>Campaign validation passed</code> and exits <code>0</code>. A failure names the entity and field at fault and exits <code>1</code>. See <a href="/manual/core-concepts/validation.html">Validation</a>.</p>
+<h3>Boot</h3>
+<p>Put <code>demo.zip</code> in the <code>campaigns</code> folder next to the engine, or point the engine at its folder with <code>--dir=/full/path/to/folder</code>. Then host a game:</p>
+<div class="codehilite"><pre><span></span><code>isometry<span class="w"> </span>--campaign<span class="o">=</span>demo<span class="w"> </span>--network<span class="o">=</span>host<span class="w"> </span>--port<span class="o">=</span><span class="m">5000</span><span class="w"> </span>--username<span class="o">=</span>p<span class="w"> </span>--secret<span class="o">=</span>p
+</code></pre></div>
+
+<p>You appear on the grass inside the walls, and the guard walks over to fight you. Target it and press <code>1</code> to punch.</p>
+<p>The engine writes <code>log.txt</code> in its data folder (on macOS, <code>~/Library/Application Support/isometry/</code>). <code>isometry --print-paths</code> shows where the data and campaigns folders are. A clean boot logs <code>Campaign validation passed</code> and then <code>Successfully created Entity</code> lines. Add <code>--headless</code> to boot without a window, for example on a server. See <a href="/manual/multiplayer/hosting.html">Hosting</a>.</p>
+<p>You have built a campaign with a tiled map, a hero with skills, a guard with AI, a waypoint and a dialog, all in data.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="/manual/guides/create-an-actor.html">Create an actor</a></li>
+<li><a href="/manual/guides/add-resources-and-measures.html">Add resources and measures</a></li>
+<li><a href="/manual/guides/define-actions.html">Define actions</a></li>
+<li><a href="/manual/guides/build-a-map.html">Build a map</a></li>
+<li><a href="/manual/guides/add-npc-ai.html">Add NPC AI</a></li>
+<li><a href="/manual/guides/menus-dialogs-waypoints.html">Menus, dialogs, and waypoints</a></li>
+<li><a href="/manual/core-concepts/validation.html">Validation</a></li>
+<li><a href="/manual/multiplayer/hosting.html">Hosting</a></li>
+<li><a href="/manual/getting-started/glossary.html">Glossary</a></li>
+<li><a href="/reference/actions.html">Action function reference</a></li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.410 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-attack: right-click an enemy, and fight back when hit &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Auto-attack: right-click an enemy, and fight back when hit</h1>
+<p><strong>Problem.</strong> In a WoW-style game you right-click an enemy and your character keeps swinging at it until it dies,
+you pick something else, or you walk away. And when something hits you, you want your character to fight back
+without a click.</p>
+<p><strong>Pattern.</strong> The engine calls this <strong>auto-interact</strong>: it repeats one skill on a target. It is not only for
+fighting (see the last section).
+- <strong>Right-click to attack.</strong>
+  - Give the player's actor an <code>auto_interact</code> skill, plus an <code>auto_interact_interval</code> (seconds between swings) and
+    an <code>auto_interact_range</code> (how close it must be, in isometric pixels; 0 means bases touching).
+  - Give each enemy an <code>on_interact</code> action that runs <code>start_auto_interact</code>.
+  - Right-clicking the enemy, the Interact key or its plate icon then runs that action, with the player as caller
+    and the enemy as target, instead of walking up to talk. The player walks into range and swings until the
+    target changes, dies or leaves, or the player moves by hand.
+  - A skill cast in between does not reset the swing clock.
+- <strong>Fight back when hit.</strong>
+  - Give the player's actor a <code>reaction</code>. It runs whenever another actor's action lands on the player, with the
+    player as caller and the one who acted as target.
+  - Its checks keep it to enemies, and stop it from switching what the player is already doing, pulling a healer
+    off the ally they target, or turning a fleeing player around.
+  - Its last step starts auto-interact with <code>chase: false</code>. The player swings back while the enemy is within
+    reach and never walks after it.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Health</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">50</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;50&#39;</span>
+<span class="w">  </span><span class="nt">isEnemyResource</span><span class="p">:</span><span class="w">            </span><span class="c1"># a tag: set it to 1 on enemies at spawn (see the spawn-hook recipe)</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">    </span><span class="nt">reveal</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">999999</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">healthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">healthResource</span>
+<span class="w">  </span><span class="nt">swingDamageParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1d6+2&#39;</span>
+<span class="w">  </span><span class="nt">noChaseParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chase</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;false&#39;</span>
+
+<span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hitByEnemyCondition</span><span class="p">:</span><span class="w">        </span><span class="c1"># the actor who acted on me is an enemy</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@isEnemyResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">notBusyCondition</span><span class="p">:</span><span class="w">           </span><span class="c1"># I&#39;m not already auto-attacking something</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$auto_interacting&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">noTargetCondition</span><span class="p">:</span><span class="w">          </span><span class="c1"># I haven&#39;t picked a target...</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$has_target&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">  </span><span class="nt">isMyTargetCondition</span><span class="p">:</span><span class="w">        </span><span class="c1"># ...or the one who hit me IS my target</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@is_target&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+<span class="w">  </span><span class="nt">standingStillCondition</span><span class="p">:</span><span class="w">     </span><span class="c1"># I&#39;m not walking away</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$moving&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">swingAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Attack</span>
+<span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">minus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">healthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">swingDamageParameter</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">attackItAction</span><span class="p">:</span><span class="w">             </span><span class="c1"># an enemy&#39;s on_interact: right-click to attack</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">start_auto_interact</span>
+<span class="w">  </span><span class="nt">fightBackAction</span><span class="p">:</span><span class="w">            </span><span class="c1"># the player&#39;s reaction: four checks, then swing back without chasing</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hitByEnemyCondition</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fightBackIfFreeAction</span>
+<span class="w">  </span><span class="nt">fightBackIfFreeAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">notBusyCondition</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fightBackIfTargetAction</span>
+<span class="w">  </span><span class="nt">fightBackIfTargetAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">noTargetCondition</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fightBackIfStillAction</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fightBackIfMyTargetAction</span>
+<span class="w">  </span><span class="nt">fightBackIfMyTargetAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">isMyTargetCondition</span>
+<span class="w">    </span><span class="nt">then</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fightBackIfStillAction</span>
+<span class="w">  </span><span class="nt">fightBackIfStillAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">standingStillCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">start_auto_interact</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">noChaseParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Skill</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">swingSkill</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Attack</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;A</span><span class="nv"> </span><span class="s">plain</span><span class="nv"> </span><span class="s">swing:</span><span class="nv"> </span><span class="s">{{range:</span><span class="nv"> </span><span class="s">1d6+2}}</span><span class="nv"> </span><span class="s">damage.&#39;</span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">swingAction</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">heroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Hero</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">auto_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">swingSkill</span>
+<span class="w">    </span><span class="nt">auto_interact_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+<span class="w">    </span><span class="nt">auto_interact_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">reaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fightBackAction</span>
+<span class="w">  </span><span class="nt">wolfActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Grey Wolf</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wolfSprite</span>
+<span class="w">    </span><span class="nt">on_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">attackItAction</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#skill"><code>Skill</code></a>, <a href="/reference/entities.html#action"><code>Action</code></a>, <a href="/reference/entities.html#condition"><code>Condition</code></a>, <a href="/reference/entities.html#parameter"><code>Parameter</code></a>, <a href="/reference/entities.html#resource"><code>Resource</code></a></p>
+<p><strong>Actions used.</strong> <a href="/reference/actions.html#start_auto_interact"><code>start_auto_interact</code></a>, <a href="/reference/actions.html#stop_auto_interact_self"><code>stop_auto_interact_self</code></a>, <a href="/reference/actions.html#minus_resource_target"><code>minus_resource_target</code></a></p>
+<p><strong>How a reaction is counted.</strong>
+- It runs once after each action chain in which another actor acted on this one: any <code>_target</code> action, or
+  <code>transfer_resource</code>.
+- An area effect counts for every actor it reaches.
+- Moving toward someone, or spawning or teleporting next to them, doesn't count.
+- An action whose <code>if</code> fails lands nothing.
+- Nothing a reaction does sets off further reactions, so two actors can't bounce reactions back and forth.</p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li><code>on_interact</code> replaces the walk-up dialog, so give it only to actors you fight. NPCs keep their <code>menu</code>.</li>
+<li>The swing is the skill's <code>start</code> action, run as a skill: its <code>if</code>, <code>time</code> and animation all apply. Put range or
+  "is alive" checks in that action's <code>if</code> as usual.</li>
+<li>A reaction runs on <em>every</em> action that lands, heals and buffs from friends included. Always start it with an
+  <code>if</code>, like <code>hitByEnemyCondition</code> above.</li>
+<li>Without <code>notBusyCondition</code>, a second enemy biting you would pull your swings off the one you chose.</li>
+<li>Without the target checks, a healer targeting an ally would switch to whatever bit them.</li>
+<li>Without <code>chase: false</code> (or <code>standingStillCondition</code>), every bite while you run away would turn you around.</li>
+<li>Right-clicking what a reaction started lets it chase again, as a normal right-click does.</li>
+<li><code>stop_auto_interact_self</code> ends it from an action (for example when the player opens a vendor).</li>
+<li>A ranged class can set <code>auto_interact_range</code> to its bow's reach so it stops and fires from there.</li>
+<li>Players can turn reactions off for themselves: Options → <strong>React automatically</strong>. Mobs and NPCs always react.</li>
+<li>Mobs can have a <code>reaction</code> too, for example to turn on whoever hits them.</li>
+</ul>
+<h2>Haste: swing faster or slower</h2>
+<p><code>auto_interact_speed</code> is a percentage, read before each swing (<code>$</code> is the attacker, <code>@</code> its target). The wait
+between swings is <code>auto_interact_interval × 100 / speed</code>, so <code>'125'</code> swings a quarter faster and <code>'50'</code> half as
+fast. Point it at a stat to make haste and slows work:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">hasteResource</span><span class="p">:</span><span class="w">              </span><span class="c1"># buffs and gear add to it; 25 = a quarter faster</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Haste</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">quickHeroActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Quick Hero</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">heroSprite</span>
+<span class="w">    </span><span class="nt">auto_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">swingSkill</span>
+<span class="w">    </span><span class="nt">auto_interact_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+<span class="w">    </span><span class="nt">auto_interact_speed</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100+$hasteResource&#39;</span>
+</code></pre></div>
+
+<p>With 25 haste the 2.0 s swing comes every 1.6 s. The speed never drops below 10 (ten times slower), so a big
+slow can't stop an attack outright.</p>
+<h2>Not just for fighting</h2>
+<p>The same pattern can repeat any interaction. A farmer who keeps tending a crop until it's grown:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Resource</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">growthResource</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Growth</span>
+<span class="w">    </span><span class="nt">default</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">    </span><span class="nt">min</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">max</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">growthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">growthResource</span>
+<span class="w">  </span><span class="nt">oneGrowthParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">expression</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+
+<span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">notYetGrownCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;@growthResource&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;10&#39;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">tendAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Tend</span>
+<span class="w">    </span><span class="nt">time</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">    </span><span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">notYetGrownCondition</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plus_resource_target</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">growthParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">oneGrowthParameter</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">else</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">doneTendingAction</span>
+<span class="w">  </span><span class="nt">doneTendingAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stop_auto_interact_self</span>
+<span class="w">  </span><span class="nt">keepTendingAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">start_auto_interact</span>
+
+<span class="nt">Skill</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">tendSkill</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Tend</span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tendAction</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">farmerActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Farmer</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">villagerSprite</span>
+<span class="w">    </span><span class="nt">auto_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tendSkill</span>
+<span class="w">    </span><span class="nt">auto_interact_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.0</span>
+<span class="w">    </span><span class="nt">auto_interact_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">  </span><span class="nt">cropActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Barley</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">oakTreeSprite</span>
+<span class="w">    </span><span class="nt">on_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">keepTendingAction</span>
+</code></pre></div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.410 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

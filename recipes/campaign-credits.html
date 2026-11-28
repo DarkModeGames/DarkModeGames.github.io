@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit the people whose work you used &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Credit the people whose work you used</h1>
+<p><strong>Problem.</strong> Your campaign uses icons, sounds and sprites under licences that ask for credit (CC BY, for example),
+and players should be able to read who made what.</p>
+<p><strong>Pattern.</strong> Put the credits in <code>Main.credits</code> as BBCode. Players read them from the System menu's <strong>Credits</strong>
+button. Keep a plain <code>CREDITS.md</code> beside your campaign source as well, so the licence trail is in your files too.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Main</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">campaignMain</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">map</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">townMap</span>
+<span class="w">    </span><span class="nt">credits</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;[b]Wolf</span><span class="nv"> </span><span class="s">Moor[/b][br]A</span><span class="nv"> </span><span class="s">campaign</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">You.[br][br][b]Icons[/b][br]Wolf</span><span class="nv"> </span><span class="s">head</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">Lorc,</span><span class="nv"> </span><span class="s">[url=https://game-icons.net]game-icons.net[/url],</span><span class="nv"> </span><span class="s">CC</span><span class="nv"> </span><span class="s">BY</span><span class="nv"> </span><span class="s">3.0.[br][br][b]Sounds[/b][br]Wind</span><span class="nv"> </span><span class="s">loop</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">Someone,</span><span class="nv"> </span><span class="s">CC</span><span class="nv"> </span><span class="s">BY</span><span class="nv"> </span><span class="s">4.0.&#39;</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#main"><code>Main</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li>It's one string. Use <code>[br]</code> for line breaks, <code>[b]</code> for headings and <code>[url=...]</code> for links.</li>
+<li>Quote it in YAML (single quotes), because BBCode's brackets would otherwise read as a YAML list.</li>
+<li>Name each work, its author, where it came from and its licence. CC BY needs all four.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.410 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

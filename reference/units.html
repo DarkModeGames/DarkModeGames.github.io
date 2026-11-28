@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distances and sizes &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Distances and sizes</h1>
+<p>Every distance on the ground is measured in <strong>isometric pixels</strong>. The distance between two points is
+<code>sqrt(dx² + (2·dy)²)</code>, where <code>dx</code> and <code>dy</code> are the screen offsets in world pixels. A step straight up or down the
+screen counts double, so a distance <code>r</code> reaches <code>r</code> pixels to either side and <code>r/2</code> pixels up or down: the same
+ellipse the ground is drawn on. Sight, touch, <code>distance_to_target</code>, area-of-effect radii and every movement distance
+use this one measure, between actor centres.</p>
+<table>
+<thead>
+<tr>
+<th>Field or parameter</th>
+<th>Unit</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Actor.perception</code></td>
+<td>isometric px</td>
+<td>Radius of what an actor sees.</td>
+</tr>
+<tr>
+<td><code>Actor.salience</code></td>
+<td>isometric px</td>
+<td>Radius within which an actor can be seen.</td>
+</tr>
+<tr>
+<td><code>Actor.base</code></td>
+<td>isometric px</td>
+<td>Radius of the actor's footprint on the ground.</td>
+</tr>
+<tr>
+<td>Touch and interaction reach</td>
+<td>isometric px</td>
+<td>Centre to centre, within the two bodies' radii plus a small margin.</td>
+</tr>
+<tr>
+<td><code>distance_to_target</code>, <code>distance_to_destination</code>, <code>distance_to_home</code></td>
+<td>isometric px</td>
+<td>Measures to compare in conditions, e.g. for a leash.</td>
+</tr>
+<tr>
+<td>Track and destination arrival</td>
+<td>isometric px</td>
+<td>How close counts as arrived.</td>
+</tr>
+<tr>
+<td><code>area_of_effect_*</code> <code>radius</code></td>
+<td>isometric px</td>
+<td>Hits every actor whose centre is within the radius.</td>
+</tr>
+<tr>
+<td><code>area_of_effect_*_radial</code> <code>distance</code></td>
+<td>isometric px</td>
+<td>How far from the caller or target the area's centre sits.</td>
+</tr>
+<tr>
+<td><code>push_target_away</code>, <code>pull_target_closer</code>, <code>move_away_from_target</code> <code>distance</code></td>
+<td>isometric px</td>
+<td>Along the line between the two actors.</td>
+</tr>
+<tr>
+<td><code>move_to_*_radial</code>, <code>teleport</code>, <code>teleport_*_radial</code>, <code>teleport_to_radial</code>, <code>spawn_actor_at_*_radial</code> <code>distance</code></td>
+<td>isometric px</td>
+<td>At the given angle on the ground.</td>
+</tr>
+<tr>
+<td><code>radial</code></td>
+<td>degrees</td>
+<td>An angle on the ground, not a distance.</td>
+</tr>
+<tr>
+<td><code>speed</code>, <code>set_speed_*</code>, <code>temp_speed_*</code></td>
+<td>multiplier</td>
+<td>1.0 is normal speed.</td>
+</tr>
+<tr>
+<td><code>Vector.x</code>, <code>Vector.y</code></td>
+<td>world px</td>
+<td>Positions, not distances.</td>
+</tr>
+<tr>
+<td><code>Sprite.size</code>, <code>Sprite.margin</code>, <code>Overlay.size</code>, <code>Particle.size</code></td>
+<td>texture px</td>
+<td>Sizes of images, not ground distances.</td>
+</tr>
+<tr>
+<td><code>Particle.speed</code></td>
+<td>screen px per second</td>
+<td>A visual drift, not a ground distance.</td>
+</tr>
+</tbody>
+</table>
+<h2>Changes in engine 0.401 (ticket 210)</h2>
+<p>Area-of-effect radii and movement distances used to be measured differently, and now match the rest of the engine.</p>
+<ul>
+<li><strong>Area of effect.</strong> A radius <code>r</code> used to reach about <code>2r</code> plus the target's footprint. It now reaches exactly <code>r</code>.
+  To keep an old area the same size, use <code>r_new = 2 × r_old + base</code>, where <code>base</code> is the footprint radius of the
+  actors it should reach.</li>
+<li><strong>Pushes, pulls and radial moves.</strong> A distance used to be straight-line screen pixels, so moving up or down the
+  screen covered twice the ground of moving sideways. Sideways distances are unchanged. A straight up or down move
+  now covers half the screen distance it used to. To keep an old vertical move, double it; diagonals sit in between.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.410 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

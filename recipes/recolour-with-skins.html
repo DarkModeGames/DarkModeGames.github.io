@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recolour one sprite for many actors &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Recolour one sprite for many actors</h1>
+<p><strong>Problem.</strong> You want a grey wolf, a white wolf and a black wolf, but have only one wolf sprite sheet.</p>
+<p><strong>Pattern.</strong> A <a href="/reference/entities.html#skin"><code>Skin</code></a> recolours a sprite when it is drawn. It is a list of
+<a href="/reference/entities.html#mask"><code>Mask</code></a>s, each swapping one exact colour for another. Every wolf actor uses the same
+<a href="/reference/entities.html#sprite"><code>Sprite</code></a> and picks a different <code>skin</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Mask</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">greyFurToWhiteMask</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">from_color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#7A7A7A&#39;</span>
+<span class="w">    </span><span class="nt">to_color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#E8E8E8&#39;</span>
+<span class="w">  </span><span class="nt">darkFurToWhiteMask</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">from_color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#4A4A4A&#39;</span>
+<span class="w">    </span><span class="nt">to_color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#B8B8C0&#39;</span>
+<span class="w">  </span><span class="nt">greyFurToBlackMask</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">from_color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#7A7A7A&#39;</span>
+<span class="w">    </span><span class="nt">to_color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#2A2A2E&#39;</span>
+<span class="w">  </span><span class="nt">darkFurToBlackMask</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">from_color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#4A4A4A&#39;</span>
+<span class="w">    </span><span class="nt">to_color</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#141416&#39;</span>
+
+<span class="nt">Skin</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">whiteWolfSkin</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">White Wolf</span>
+<span class="w">    </span><span class="nt">masks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">greyFurToWhiteMask</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">darkFurToWhiteMask</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">blackWolfSkin</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Black Wolf</span>
+<span class="w">    </span><span class="nt">masks</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">greyFurToBlackMask</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">darkFurToBlackMask</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Actor</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">greyWolfActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Grey Wolf</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wolfSprite</span>
+<span class="w">  </span><span class="nt">whiteWolfActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">White Wolf</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wolfSprite</span>
+<span class="w">    </span><span class="nt">skin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">whiteWolfSkin</span>
+<span class="w">  </span><span class="nt">blackWolfActor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Black Wolf</span>
+<span class="w">    </span><span class="nt">sprite</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">wolfSprite</span>
+<span class="w">    </span><span class="nt">skin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">blackWolfSkin</span>
+</code></pre></div>
+
+<p><strong>Entities used.</strong> <a href="/reference/entities.html#actor"><code>Actor</code></a>, <a href="/reference/entities.html#mask"><code>Mask</code></a>, <a href="/reference/entities.html#skin"><code>Skin</code></a></p>
+<p><strong>Gotchas.</strong></p>
+<ul>
+<li>Colours must match the sheet's pixels. Pick them from the image, and recolour each shade you care about.</li>
+<li>A Skin holds up to 16 Masks.</li>
+<li>The skin is part of the <a href="/reference/entities.html#actor">Actor</a>. To change colour mid-game, <code>change_actor_self</code> into an actor with another skin.</li>
+<li>Pixel art with few colours recolours well. Smoothly shaded art needs many masks.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.410 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

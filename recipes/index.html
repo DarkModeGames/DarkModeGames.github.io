@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Recipes</h1>
+<p>Reusable patterns for building campaigns and plugins with Isometry data. Each recipe states
+a <strong>Problem</strong>, the <strong>Pattern</strong> that solves it, a complete YAML example, the entities it uses, and the gotchas to
+watch for. Every example validates on its own; sprites and the map's tiles are left for you to supply. For the
+fields of each entity, see <a href="/reference/index.html#all-entity-types">All entity types</a>.</p>
+<blockquote>
+<p>Adding a recipe: drop a new <code>web/recipes/&lt;slug&gt;.md</code> file (the filename is the URL slug,
+the first <code># heading</code> is the title), then add one bullet to the list below. Nothing else
+to wire up.</p>
+</blockquote>
+<h2>Actors &amp; stats</h2>
+<ul>
+<li><a href="/recipes/resource-bounds-and-reveal.html">Give every resource bounds, and hide internal state</a> — <code>min</code>, <code>max</code> and <code>reveal</code>.</li>
+<li><a href="/recipes/spawn-hook.html">Set up each actor when it spawns</a> — a spawn hook, because <code>on_start</code> is for players only.</li>
+<li><a href="/recipes/tags-and-area-filters.html">Tag actors and filter area effects</a> — make an area spell hit only enemies.</li>
+<li><a href="/recipes/derived-stats-with-measures.html">Derive stats from level and gear with Measures</a> — always-current attack power.</li>
+</ul>
+<h2>Characters &amp; progression</h2>
+<ul>
+<li><a href="/recipes/pick-your-hero.html">Let players pick their hero</a> — start as a bodiless camera and choose a character.</li>
+<li><a href="/recipes/starter-form.html">A starter body that picks a class</a> — walk around first, then choose; the choice sticks.</li>
+<li><a href="/recipes/xp-and-levels.html">XP and level-up</a> — a guarded Trigger chain that can't run away.</li>
+<li><a href="/recipes/talents-at-levels.html">Talents unlocked at a level</a> — a choice menu that puts a new skill on the hotbar.</li>
+<li><a href="/recipes/talent-trees.html">Talent trees</a> — points from level-ups, talents that unlock from the bottom up.</li>
+<li><a href="/recipes/character-page.html">A character page with equipment slots</a> — what you wear and your stats on one page.</li>
+<li><a href="/recipes/respawn-on-death.html">Respawn a player on death</a> — fall, a countdown, then rise at a graveyard.</li>
+</ul>
+<h2>Skills &amp; class resources</h2>
+<ul>
+<li><a href="/recipes/skill-cooldowns.html">Give a skill a cooldown</a> — a countdown resource, a Timer, and a private "Not ready".</li>
+<li><a href="/recipes/skill-tooltips-and-readiness.html">Skill tooltips with real numbers, and greyed-out skills</a> — <code>{{range:}}</code>, <code>{{dice:}}</code>, <code>ready</code> and <code>in_range</code>.</li>
+<li><a href="/recipes/skill-pacing.html">Pace a skill: lock time and animation speed</a> — match <code>Action.time</code> and <code>Animation.rate</code>.</li>
+<li><a href="/recipes/regen-and-decay.html">Regenerate mana, decay rage</a> — repeating Timers for class resources.</li>
+<li><a href="/recipes/energy-and-combo-points.html">Energy and combo points</a> — builders and finishers.</li>
+<li><a href="/recipes/out-of-combat-regen.html">Health regeneration only out of combat</a> — heal after a few quiet seconds.</li>
+</ul>
+<h2>Combat</h2>
+<ul>
+<li><a href="/recipes/threat-and-taunt.html">Threat-based targeting and taunt</a> — monsters attack the biggest threat; tanks pull them back.</li>
+<li><a href="/recipes/auto-attack.html">Auto-attack: right-click an enemy, and fight back when hit</a> — <code>auto_interact</code>, <code>on_interact</code>, <code>reaction</code> and <code>start_auto_interact</code>; also for peaceful repeats (tending a crop).</li>
+<li><a href="/recipes/respawning-monsters.html">Monsters that come back</a> — <code>Deployment.respawn</code> and walking home.</li>
+<li><a href="/recipes/crowd-control.html">Stuns and interrupts with a swing lockout</a> — stop a monster attacking for a while.</li>
+<li><a href="/recipes/slows-that-dont-stack.html">Slows that don't stack</a> — <code>temp_speed_target</code> with a lock.</li>
+<li><a href="/recipes/shields-and-mitigation.html">Shields and damage reduction with a hurt Trigger</a> — wards and guard stances.</li>
+</ul>
+<h2>Monsters &amp; bosses</h2>
+<ul>
+<li><a href="/recipes/mob-ai-strategy.html">Monster AI: acquire, chase, attack, leash</a> — how a Strategy picks what to do each tick.</li>
+<li><a href="/recipes/pack-call-for-help.html">Pack call for help</a> — idle packmates join the fight.</li>
+<li><a href="/recipes/summoner-legion.html">A summoner with a following legion</a> — raise minions that march in formation and fight your fights.</li>
+<li><a href="/recipes/boss-phases.html">Boss phases: a half-health line, adds and an enrage clock</a> — a fight that changes as it goes.</li>
+<li><a href="/recipes/party-scaled-boss.html">Scale a boss to the party</a> — health by the number of players present.</li>
+<li><a href="/recipes/monster-corpse.html">Leave a corpse for a few seconds</a> — a death pose before the body goes.</li>
+<li><a href="/recipes/safe-zones.html">A safe zone monsters won't enter</a> — a ward ring at graveyards and arrivals.</li>
+</ul>
+<h2>Items &amp; economy</h2>
+<ul>
+<li><a href="/recipes/items-as-resources.html">Items as resources: equip, use, drop</a> — inventory menus and one weapon at a time.</li>
+<li><a href="/recipes/vendor-with-gold-check.html">A vendor with a gold check</a> — buy and sell from an NPC's menu.</li>
+<li><a href="/recipes/loot-drop-and-pickup.html">Drop loot on death and let a player claim it</a> — a bag that pays whoever walks onto it.</li>
+</ul>
+<h2>Quests &amp; NPCs</h2>
+<ul>
+<li><a href="/recipes/quest-steps.html">Quest steps and an NPC that follows them</a> — a step resource, menu options and kill credit.</li>
+<li><a href="/recipes/quest-log.html">Show a quest in the Quests page</a> — <code>Quest</code> and <code>Step</code> over the same step resource.</li>
+<li><a href="/recipes/choices-and-favour.html">Choices that change dialog and shops</a> — sides, favour and branching dialog.</li>
+<li><a href="/recipes/barks-and-feedback.html">Ambient barks and failure feedback</a> — public and private <code>echo_self</code>, with <code>duration</code>.</li>
+</ul>
+<h2>World &amp; maps</h2>
+<ul>
+<li><a href="/recipes/map-gates.html">Travel between maps through a gate</a> — a Travel / Stay question on touch and on click.</li>
+<li><a href="/recipes/fast-travel-waypoints.html">Fast travel with waypoints</a> — discoverable places with a travel menu.</li>
+<li><a href="/recipes/tall-art-props.html">Trees, walls and other tall art</a> — untargetable actors over ghost obstacle tiles.</li>
+<li><a href="/recipes/corner-pathing-with-nav.html">Help pathfinding round corners with Nav points</a> — doorways and tight gaps.</li>
+<li><a href="/recipes/distances-and-areas.html">Ranges, sight and area sizes</a> — isometric pixels, everywhere.</li>
+</ul>
+<h2>Look &amp; sound</h2>
+<ul>
+<li><a href="/recipes/campaign-credits.html">Credit the people whose work you used</a> — <code>Main.credits</code>, read from the System menu.</li>
+<li><a href="/recipes/combat-text.html">Floating combat numbers</a> — <code>combat_text</code> on a Resource.</li>
+<li><a href="/recipes/recolour-with-skins.html">Recolour one sprite for many actors</a> — Skins and Masks.</li>
+<li><a href="/recipes/backgrounds-and-floors.html">Parallax backgrounds and floor decals</a> — scenery behind and under the map.</li>
+<li><a href="/recipes/sounds-and-ambience.html">Sounds on animations and map ambience</a> — one-shot and looping Sounds.</li>
+<li><a href="/manual/guides/effects-overlays-particles.html">Screen effects and particles</a> — rain, fog and glows (manual guide).</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.410 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

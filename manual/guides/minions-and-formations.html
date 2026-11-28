@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minions and formations &middot; Isometry</title>
+    <meta name="description" content="Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code.">
+    <meta name="author" content="Dark Mode Games">
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+    
+    <link rel="stylesheet" href="/css/custom.css">
+    
+    <link rel="stylesheet" href="/css/default.css">
+    
+</head>
+<body>
+    <header class="site-header">
+        <div class="bar">
+            <a class="brand" href="/"><img class="brand-logo" src="/assets/img/logo.svg" alt="" width="30" height="30">Isometry</a>
+            <input type="checkbox" id="nav-toggle" class="nav-toggle">
+            <label for="nav-toggle" class="nav-toggle-label" aria-label="Menu">&#9776;</label>
+            <nav class="site-nav">
+                
+                <a href="/">Home</a>
+                
+                <a href="/platform/">Download</a>
+                
+                <a href="/guide/">Player Guide</a>
+                
+                <a href="/manual/">Manual</a>
+                
+                <a href="/reference/">Reference</a>
+                
+                <a href="/recipes/">Recipes</a>
+                
+                <a href="/updates/">Updates</a>
+                
+                <a href="/about/">About</a>
+                
+            </nav>
+        </div>
+    </header>
+
+    <main class="content">
+        <h1>Minions and formations</h1>
+<p>This page shows you how to build a summoner: an actor that raises other actors, knows which ones are its own, and leads them about in formation.</p>
+<h2>Prerequisites</h2>
+<ul>
+<li><a href="/manual/guides/define-actions.html">Define actions</a> — spawning is an action.</li>
+<li><a href="/manual/guides/conditions-and-logic.html">Conditions and logic</a> — the built-in values below are read in conditions.</li>
+<li><a href="/manual/guides/add-npc-ai.html">Add NPC AI</a> — a minion follows and fights through its strategy.</li>
+</ul>
+<h2>Masters and minions</h2>
+<p>Every <code>spawn_actor_*</code> action (<code>spawn_actor_at_self</code>, <code>spawn_actor_at_target</code>, and their <code>_radial</code> forms) records its <strong>caller</strong> as the new actor's <strong>master</strong>. The new actor is the caller's <strong>minion</strong>. Nothing else is needed: raise a skeleton with <code>spawn_actor_at_self</code> and it belongs to whoever ran the action.</p>
+<ul>
+<li>The link holds on every player's screen, including players who join later.</li>
+<li><code>change_actor</code> keeps it, on both sides: a minion that changes form is still a minion, and a master that changes form keeps its minions.</li>
+<li>Minions are never saved. When a master leaves the world — it despawns, changes map, or its player disconnects — all its minions despawn with it.</li>
+<li>Actors placed by a map's <code>deployments</code> have no master.</li>
+</ul>
+<h2>Values a minion and its master can read</h2>
+<p>Three <a href="/manual/guides/conditions-and-logic.html">built-in values</a> work like resources in any dice expression:</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Reads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$minions</code></td>
+<td>How many minions the actor has in the world. A minion that despawns stops counting at once.</td>
+</tr>
+<tr>
+<td><code>$has_master</code></td>
+<td><code>1</code> if the actor's master is still in the world, otherwise <code>0</code>.</td>
+</tr>
+<tr>
+<td><code>@mine</code></td>
+<td><code>1</code> when the target is the caller's own minion, otherwise <code>0</code>. <code>$mine</code> is always <code>0</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><code>@mine</code> is what keeps two summoners apart. A heal that should only touch your own skeletons tests <code>@mine == 1</code> in its <code>if</code>; an area spell that should spare them tests <code>@mine == 0</code> in its sub-action. Another summoner's skeletons are never yours.</p>
+<p>A cap on raised minions is one condition on the raise action:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">roomForMoreCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$minions&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;&lt;&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;6&#39;</span>
+</code></pre></div>
+
+<h2>Actions for minions</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Caller</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>target_master</code></td>
+<td>the minion</td>
+<td>Targets its master. Does nothing without one.</td>
+</tr>
+<tr>
+<td><code>target_master_target</code></td>
+<td>the minion</td>
+<td>Targets whatever its master is targeting. Does nothing when the master has no target, or is targeting this minion.</td>
+</tr>
+<tr>
+<td><code>each_minion</code></td>
+<td>the master</td>
+<td>Runs its <code>action</code> parameter once per minion, with the master as caller and the minion as target.</td>
+</tr>
+<tr>
+<td><code>follow_master</code></td>
+<td>the minion</td>
+<td>Walks to its place in the master's formation.</td>
+</tr>
+</tbody>
+</table>
+<p><code>each_minion</code> is the master's way of giving an order: "all of you, attack my target" is <code>each_minion</code> with a sub-action that runs <code>set_target_target_to_self_target</code>.</p>
+<h2>Formations</h2>
+<p><code>follow_master</code> takes two parameters:</p>
+<ul>
+<li><code>formation</code> — the shape:</li>
+<li><code>column</code>: rows of two behind the master;</li>
+<li><code>wedge</code>: a V opening out behind the master;</li>
+<li><code>ring</code>: evenly spaced all round the master;</li>
+<li><code>line</code>: one rank abreast, behind the master.</li>
+<li><code>spacing</code> — the gap between neighbouring minions, and between the master and its first rank, in isometric pixels (a number or dice). Leave room for the minions' sprites: a 64 px sprite looks crowded below about 40.</li>
+</ul>
+<p><strong>Each minion's place</strong> is its place in the order the master raised them. When one is lost, the ones raised after it move up and the gap closes.</p>
+<p><strong>The formation faces the way the master faces.</strong> While the master walks, that is the way it is walking. While it stands, it is the last way it walked, or a direction it turns to face. When the master turns, the formation wheels round to follow it over a moment rather than jumping.</p>
+<p><strong>Pace.</strong> A minion walks at its master's speed while it is near its place, and runs when it falls behind, faster the further behind it is. <code>follow_master</code> sets the minion's speed to do this.</p>
+<p>Run <code>follow_master</code> often, as the action of a behavior whose goal is never met, so the minion keeps its place:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">Condition</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">neverCondition</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">left</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0&#39;</span>
+<span class="w">    </span><span class="nt">operator</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;==&#39;</span>
+<span class="w">    </span><span class="nt">right</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1&#39;</span>
+
+<span class="nt">Parameter</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">columnParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">formation</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">column</span>
+<span class="w">  </span><span class="nt">spacingParameter</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">spacing</span>
+<span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;40&#39;</span>
+
+<span class="nt">Action</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">followAction</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">do</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">follow_master</span>
+<span class="w">    </span><span class="nt">parameters</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">columnParameter</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">spacingParameter</span><span class="p p-Indicator">]</span>
+
+<span class="nt">Behavior</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">followBehavior</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">goals</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">neverCondition</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">followAction</span>
+</code></pre></div>
+
+<p>Running it every tick is cheap. A minion is only given a new path when its place has moved a little way, or when it stands still away from its place, so a large legion doesn't stutter or flood the pathfinder.</p>
+<h2>Fighting for the master</h2>
+<p>Put a fight behavior <strong>before</strong> the follow behavior in the minion's strategy. While it has something to fight, it fights; when the fight ends, its goal is met again and the minion falls back into formation. See <a href="/recipes/summoner-legion.html">A summoner with a following legion</a> for a complete strategy.</p>
+<h2>Common mistakes</h2>
+<ul>
+<li><strong>Spawning from the minion.</strong> Whoever runs <code>spawn_actor_*</code> becomes the master. A Timer on a minion that spawns more actors makes the minion their master, not the summoner.</li>
+<li><strong>Reading <code>$mine</code>.</strong> It is always <code>0</code>. The question "is my target mine?" is <code>@mine</code>.</li>
+<li><strong>Two follow behaviors.</strong> A minion with two <code>follow_master</code> behaviors switches between two shapes every tick. Give each minion one, and change it with <code>change_strategy</code>.</li>
+<li><strong>Expecting minions to cross maps.</strong> They stay behind and despawn when the master changes map. Raise them again on arrival.</li>
+</ul>
+    </main>
+
+    <footer class="site-footer">
+        <div class="bar">
+            <span>Isometry v0.410 &middot; &copy; Dark Mode Games</span>
+            <span class="links">
+                <a href="/updates/">Updates</a>
+                <a href="/about/">About</a>
+                <span class="lic">Dark Mode Games &mdash; CC BY-NC 4.0</span>
+            </span>
+        </div>
+    </footer>
+</body>
+</html>
