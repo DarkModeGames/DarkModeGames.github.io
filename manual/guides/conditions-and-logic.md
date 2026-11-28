@@ -97,6 +97,9 @@ Some operands reference built-in measures rather than resources you defined. The
 - `distance_to_target` — the distance to the actor's current target in pixels on the isometric ground, or `0` if there is no target. Vertical distance counts double (the same ellipse as sight and bases): 100 px above reads `200`, 100 px beside reads `100`. The value keeps its fraction; dice round the final result.
 - `distance_to_destination` — the distance to the actor's destination, in pixels on the same ellipse as `distance_to_target`.
 - `distance_to_home` — the distance to where the actor spawned (its Deployment, or where it was spawned), on the same ellipse; a very large number on another map. `move_home_self` walks it back.
+- `auto_interacting` — `1` while the actor is auto-interacting (repeating its `auto_interact` skill on a target), otherwise `0`. A `reaction` can check `$auto_interacting == 0` so it never switches what the player is already doing.
+- `moving` — `1` while the actor is moving, for any reason, otherwise `0`. A `reaction` can check `$moving == 0` so it never stops a player who is walking away.
+- `is_target` — `1` when the *target* is the *caller's* current target, otherwise `0`. Read it as `@is_target`: like `mine` it relates the two actors, so `$is_target` is always `0`. In a `reaction` it answers "is the one who acted on me the one I'm fighting?".
 - `order` — a minion's order from its master in the Minions menu: 0 Follow (the default), 1 Attack (it is also pointed at the master's target), 2 Stay (its current spot also becomes its home).
 - `flying` — `1` if the actor is currently flying, otherwise `0`. For example, gate a melee action on `@flying = 0` so it misses airborne targets.
 - `can_land` — `1` if the actor is over walkable ground, so a flier could land where it is (a walker on the ground reads `1`), otherwise `0`.

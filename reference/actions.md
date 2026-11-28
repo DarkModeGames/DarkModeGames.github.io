@@ -582,26 +582,32 @@ Action:
     do: move_home_self
 ```
 
-<a id="start_auto_attack"></a>
-## start_auto_attack
+<a id="start_auto_interact"></a>
+## start_auto_interact
 
-No parameters. The caller starts auto-attacking the target: it walks into its Actor's auto_attack_range and repeats its auto_attack skill every auto_attack_interval seconds until the target changes, dies, leaves, or the caller moves by hand. Typically an enemy's on_interact (right-click to attack). Needs an Actor.auto_attack.
+The caller starts auto-interacting with the target: it walks into its Actor's auto_interact_range and repeats its auto_interact skill every auto_interact_interval seconds until the target changes, is gone, leaves, or the caller moves by hand. Typically an actor's on_interact (right-click it to keep acting on it: an enemy to fight, a crop to tend), or a `reaction` (fight back). Needs an Actor.auto_interact. See the [Auto-attack recipe](/recipes/auto-attack.html).
 
 ```yaml
 Action:
   exampleAction:
-    do: start_auto_attack
+    do: start_auto_interact
+    parameters: [p_chase]
+Parameter:
+  p_chase:
+    # "false": never walk after the target; repeat only while it is within reach, and stop once it isn't (optional; default true)
+    key: chase
+    value:  # true | false
 ```
 
-<a id="stop_auto_attack_self"></a>
-## stop_auto_attack_self
+<a id="stop_auto_interact_self"></a>
+## stop_auto_interact_self
 
-No parameters. The caller stops auto-attacking.
+No parameters. The caller stops auto-interacting.
 
 ```yaml
 Action:
   exampleAction:
-    do: stop_auto_attack_self
+    do: stop_auto_interact_self
 ```
 
 <a id="move_to_self_radial"></a>

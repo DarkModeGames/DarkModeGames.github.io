@@ -38,7 +38,7 @@ fields of each entity, see [All entity types](/reference/index.html#all-entity-t
 ## Combat
 
 - [Threat-based targeting and taunt](/recipes/threat-and-taunt.html) — monsters attack the biggest threat; tanks pull them back.
-- [Auto-attack: right-click an enemy to fight it](/recipes/auto-attack.html) — `on_interact` and `start_auto_attack`.
+- [Auto-attack: right-click an enemy, and fight back when hit](/recipes/auto-attack.html) — `auto_interact`, `on_interact`, `reaction` and `start_auto_interact`; also for peaceful repeats (tending a crop).
 - [Monsters that come back](/recipes/respawning-monsters.html) — `Deployment.respawn` and walking home.
 - [Stuns and interrupts with a swing lockout](/recipes/crowd-control.html) — stop a monster attacking for a while.
 - [Slows that don't stack](/recipes/slows-that-dont-stack.html) — `temp_speed_target` with a lock.

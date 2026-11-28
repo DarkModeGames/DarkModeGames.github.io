@@ -154,6 +154,7 @@ exactly as it does from the inventory. A <code>Stat</code> is a label and a dice
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Main hand</span>
 <span class="w">    </span><span class="nt">worn</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ironSwordEquippedResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">ashStaffEquippedResource</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">choices</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">ironSwordResource</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">ashStaffResource</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">paired</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">   </span><span class="c1"># worn[i] goes with choices[i]: the page marks the worn item in its list</span>
 <span class="w">    </span><span class="nt">column</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
 <span class="w">    </span><span class="nt">row</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 
@@ -193,12 +194,16 @@ exactly as it does from the inventory. A <code>Stat</code> is a label and a dice
 <li>A slot's <code>icon</code> and <code>name</code> show only while it is empty; once something is worn, that item's own icon and name
   show.</li>
 <li>Two ring slots can list the same rings; give each ring its own <code>_equipped</code> flag per slot if both can be worn.</li>
+<li>With <code>paired: true</code>, list <code>worn</code> and <code>choices</code> in the same order (one flag per item, same position). Validation
+  rejects a paired slot whose lists differ in length. The list of choices then marks the worn item with a gold
+  border, and its tooltip says "Equipped". Without <code>paired</code>, nothing in the list is marked.</li>
+<li>Resting the mouse on a slot or on an item in its list shows that item's name and description.</li>
 </ul>
     </main>
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.405 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.407 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

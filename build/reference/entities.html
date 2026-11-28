@@ -540,6 +540,8 @@
 <span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
 <span class="w">    </span><span class="c1"># The slot&#39;s name, shown while it is empty (&quot;Main hand&quot;).</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
+<span class="w">    </span><span class="c1"># If true, `worn` and `choices` are pairs by position: `worn[i]` is above 0 while `choices[i]` is worn. The page then marks the worn item in the list of choices. Both lists must then be the same length (ticket 298).</span>
+<span class="w">    </span><span class="nt">paired</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">  </span><span class="c1"># Boolean</span>
 <span class="w">    </span><span class="c1"># Row on the page&#39;s grid, from 0 at the bottom.</span>
 <span class="w">    </span><span class="nt">row</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span><span class="c1"># Integer</span>
 <span class="w">    </span><span class="c1"># Resources that mean &quot;something is worn here&quot; (e.g. one `&lt;item&gt;_equipped` flag per item); the first above 0 shows.</span>
@@ -822,7 +824,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.405 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.407 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

@@ -91,14 +91,18 @@ Actor:
     triggers: null  # Array[Trigger]
     # Talent trees this actor learns from in the Talents menu (ticket 264).
     trees: null  # Array[Tree]
-    # Action run when a player interacts with this actor (right-click, the Interact flag, Enter), with caller = the player and target = this actor, instead of walking up to open its dialog or menu (ticket 267). E.g. start_auto_attack on an enemy.
+    # Action run when a player interacts with this actor (right-click, the Interact flag, Enter), with caller = the player and target = this actor, instead of walking up to open its dialog or menu (ticket 267). E.g. start_auto_interact on something the player should keep acting on (an enemy, a crop, a patient).
     on_interact: null  # Action
-    # Skill this actor repeats while auto-attacking (its `start` action is the swing; ticket 268).
-    auto_attack: null  # Skill
-    # How close the target must be for an auto-attack swing, in isometric pixels; farther away the player walks in. 0 = bases touching.
-    auto_attack_range: 0  # Integer
-    # Seconds between auto-attack swings. Default 2.0.
-    auto_attack_interval: 2.0  # Float
+    # Action this actor runs when another actor acts on it (ticket 302): after any action chain in which another actor's action acted on this one (a `_target` action or transfer_resource; an area effect counts for each actor it reaches), with caller = this actor and target = the actor who acted. Once per chain; what a reaction does never causes reactions. Filter with its `if` (e.g. fight back only at enemies: `@is_enemy == 1`). Players can turn their own off in the options ("React automatically").
+    reaction: null  # Action
+    # Skill this actor repeats while auto-interacting with its target (its `start` action is one repeat: a sword swing, a heal, a harvest; tickets 268, 301).
+    auto_interact: null  # Skill
+    # How close the target must be for each repeat, in isometric pixels; farther away the actor walks in. 0 = bases touching.
+    auto_interact_range: 0  # Integer
+    # Seconds between repeats. Default 2.0.
+    auto_interact_interval: 2.0  # Float
+    # How fast it repeats, in percent (ticket 303): a dice expression read before each repeat ($ = this actor, @ = its target). The wait between repeats is auto_interact_interval x 100 / speed: '100' (the default) keeps it, '125' is a quarter faster, '50' twice as slow. E.g. '100+$haste' for haste. Floored at 10.
+    auto_interact_speed: '100'  # Dice
     # Image shown for this actor on the HUD, e.g. its chip on the minion strip (ticket 273). Optional.
     icon: null  # String
     # The Character page: equipment slots and stat lines (ticket 282). Optional.
