@@ -126,14 +126,18 @@
 <span class="w">    </span><span class="nt">triggers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Trigger]</span>
 <span class="w">    </span><span class="c1"># Talent trees this actor learns from in the Talents menu (ticket 264).</span>
 <span class="w">    </span><span class="nt">trees</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Array[Tree]</span>
-<span class="w">    </span><span class="c1"># Action run when a player interacts with this actor (right-click, the Interact flag, Enter), with caller = the player and target = this actor, instead of walking up to open its dialog or menu (ticket 267). E.g. start_auto_attack on an enemy.</span>
+<span class="w">    </span><span class="c1"># Action run when a player interacts with this actor (right-click, the Interact flag, Enter), with caller = the player and target = this actor, instead of walking up to open its dialog or menu (ticket 267). E.g. start_auto_interact on something the player should keep acting on (an enemy, a crop, a patient).</span>
 <span class="w">    </span><span class="nt">on_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
-<span class="w">    </span><span class="c1"># Skill this actor repeats while auto-attacking (its `start` action is the swing; ticket 268).</span>
-<span class="w">    </span><span class="nt">auto_attack</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Skill</span>
-<span class="w">    </span><span class="c1"># How close the target must be for an auto-attack swing, in isometric pixels; farther away the player walks in. 0 = bases touching.</span>
-<span class="w">    </span><span class="nt">auto_attack_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span><span class="c1"># Integer</span>
-<span class="w">    </span><span class="c1"># Seconds between auto-attack swings. Default 2.0.</span>
-<span class="w">    </span><span class="nt">auto_attack_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># Action this actor runs when another actor acts on it (ticket 302): after any action chain in which another actor&#39;s action acted on this one (a `_target` action or transfer_resource; an area effect counts for each actor it reaches), with caller = this actor and target = the actor who acted. Once per chain; what a reaction does never causes reactions. Filter with its `if` (e.g. fight back only at enemies: `@is_enemy == 1`). Players can turn their own off in the options (&quot;React automatically&quot;).</span>
+<span class="w">    </span><span class="nt">reaction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Action</span>
+<span class="w">    </span><span class="c1"># Skill this actor repeats while auto-interacting with its target (its `start` action is one repeat: a sword swing, a heal, a harvest; tickets 268, 301).</span>
+<span class="w">    </span><span class="nt">auto_interact</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Skill</span>
+<span class="w">    </span><span class="c1"># How close the target must be for each repeat, in isometric pixels; farther away the actor walks in. 0 = bases touching.</span>
+<span class="w">    </span><span class="nt">auto_interact_range</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span><span class="c1"># Integer</span>
+<span class="w">    </span><span class="c1"># Seconds between repeats. Default 2.0.</span>
+<span class="w">    </span><span class="nt">auto_interact_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span><span class="w">  </span><span class="c1"># Float</span>
+<span class="w">    </span><span class="c1"># How fast it repeats, in percent (ticket 303): a dice expression read before each repeat ($ = this actor, @ = its target). The wait between repeats is auto_interact_interval x 100 / speed: &#39;100&#39; (the default) keeps it, &#39;125&#39; is a quarter faster, &#39;50&#39; twice as slow. E.g. &#39;100+$haste&#39; for haste. Floored at 10.</span>
+<span class="w">    </span><span class="nt">auto_interact_speed</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;100&#39;</span><span class="w">  </span><span class="c1"># Dice</span>
 <span class="w">    </span><span class="c1"># Image shown for this actor on the HUD, e.g. its chip on the minion strip (ticket 273). Optional.</span>
 <span class="w">    </span><span class="nt">icon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># String</span>
 <span class="w">    </span><span class="c1"># The Character page: equipment slots and stat lines (ticket 282). Optional.</span>
@@ -824,7 +828,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.407 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.408 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

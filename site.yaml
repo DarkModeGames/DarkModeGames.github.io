@@ -3,7 +3,7 @@ metadata:
   author: "Dark Mode Games"
   description: "Isometry: a data-driven isometric RPG framework. Build a multiplayer game by writing JSON or YAML, not code."
   language: "en-US"
-  version: "0.408"
+  version: "0.410"
   nav:
     - {title: "Home", url: "/"}
     - {title: "Download", url: "/platform/"}

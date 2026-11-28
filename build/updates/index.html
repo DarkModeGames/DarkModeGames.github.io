@@ -48,6 +48,28 @@
 <p>Adding a release: copy the most recent <code>## vX.Y — date</code> block to the top and fill in
 grouped bullets in plain language.</p>
 </blockquote>
+<h2>v0.408 — Auto-interact, reactions and haste (still beta)</h2>
+<h3>For players</h3>
+<ul>
+<li><strong>Your character fights back.</strong> When an enemy hits you and you're standing still with no other target (or it
+  <em>is</em> your target), your character swings back on its own. It never switches a target you picked, never pulls a
+  healer off an ally, and never turns you around while you run. Turn it off in Options: <strong>React Automatically</strong>.</li>
+<li><strong>Clicking an enemy you're standing on works.</strong> Up close your own character could be "in front" of the enemy, so
+  a right-click hit you and stopped your attack. A click now picks the enemy.</li>
+</ul>
+<h3>For campaign makers</h3>
+<ul>
+<li><strong>Auto-attack is now auto-interact</strong> (it repeats any interaction: a swing, a heal, tending a crop). Renamed with
+  no aliases while we're in beta: <code>auto_attack</code> → <code>auto_interact</code>, <code>auto_attack_range</code> → <code>auto_interact_range</code>,
+  <code>auto_attack_interval</code> → <code>auto_interact_interval</code>, <code>start_auto_attack</code> → <code>start_auto_interact</code>,
+  <code>stop_auto_attack_self</code> → <code>stop_auto_interact_self</code>. Rename these in your campaign.</li>
+<li><strong><code>reaction</code></strong> on an Actor runs whenever another actor's action lands on it (the counterpart of <code>on_interact</code>),
+  filtered by its own <code>if</code>.</li>
+<li><strong><code>auto_interact_speed</code></strong>: a dice percentage, read before each repeat. Point it at a stat for haste and slows.</li>
+<li><code>start_auto_interact</code> takes an optional <code>chase: false</code>; new built-in values <code>auto_interacting</code>, <code>moving</code> and
+  <code>@is_target</code>.</li>
+<li>The <a href="/recipes/auto-attack.html">Auto-attack recipe</a> shows all of it: right-click to attack, fight back, haste.</li>
+</ul>
 <h2>v0.407 — Character page and HUD fixes (still beta)</h2>
 <p>A small update on top of the 0.405 release candidate.</p>
 <h3>For players</h3>
@@ -205,7 +227,7 @@ documentation site.</p>
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.407 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.408 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

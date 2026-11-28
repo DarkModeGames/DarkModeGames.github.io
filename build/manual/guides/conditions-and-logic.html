@@ -150,6 +150,9 @@
 <li><code>distance_to_target</code> — the distance to the actor's current target in pixels on the isometric ground, or <code>0</code> if there is no target. Vertical distance counts double (the same ellipse as sight and bases): 100 px above reads <code>200</code>, 100 px beside reads <code>100</code>. The value keeps its fraction; dice round the final result.</li>
 <li><code>distance_to_destination</code> — the distance to the actor's destination, in pixels on the same ellipse as <code>distance_to_target</code>.</li>
 <li><code>distance_to_home</code> — the distance to where the actor spawned (its Deployment, or where it was spawned), on the same ellipse; a very large number on another map. <code>move_home_self</code> walks it back.</li>
+<li><code>auto_interacting</code> — <code>1</code> while the actor is auto-interacting (repeating its <code>auto_interact</code> skill on a target), otherwise <code>0</code>. A <code>reaction</code> can check <code>$auto_interacting == 0</code> so it never switches what the player is already doing.</li>
+<li><code>moving</code> — <code>1</code> while the actor is moving, for any reason, otherwise <code>0</code>. A <code>reaction</code> can check <code>$moving == 0</code> so it never stops a player who is walking away.</li>
+<li><code>is_target</code> — <code>1</code> when the <em>target</em> is the <em>caller's</em> current target, otherwise <code>0</code>. Read it as <code>@is_target</code>: like <code>mine</code> it relates the two actors, so <code>$is_target</code> is always <code>0</code>. In a <code>reaction</code> it answers "is the one who acted on me the one I'm fighting?".</li>
 <li><code>order</code> — a minion's order from its master in the Minions menu: 0 Follow (the default), 1 Attack (it is also pointed at the master's target), 2 Stay (its current spot also becomes its home).</li>
 <li><code>flying</code> — <code>1</code> if the actor is currently flying, otherwise <code>0</code>. For example, gate a melee action on <code>@flying = 0</code> so it misses airborne targets.</li>
 <li><code>can_land</code> — <code>1</code> if the actor is over walkable ground, so a flier could land where it is (a walker on the ground reads <code>1</code>), otherwise <code>0</code>.</li>
@@ -275,7 +278,7 @@
 
     <footer class="site-footer">
         <div class="bar">
-            <span>Isometry v0.407 &middot; &copy; Dark Mode Games</span>
+            <span>Isometry v0.408 &middot; &copy; Dark Mode Games</span>
             <span class="links">
                 <a href="/updates/">Updates</a>
                 <a href="/about/">About</a>

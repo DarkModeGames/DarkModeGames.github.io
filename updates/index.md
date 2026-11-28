@@ -5,6 +5,17 @@ Release notes for Isometry, newest first.
 > Adding a release: copy the most recent `## vX.Y — date` block to the top and fill in
 > grouped bullets in plain language.
 
+## v0.410 — An easier map (still beta)
+
+### For players
+- **Map controls you can click.** A d-pad in the corner pans the map (its middle button brings you back), and
+  + / − zoom. Each button's tooltip shows its key.
+- **Group filters on the map.** The icons at the top of the map are the same group icons as on the HUD. Click one
+  to hide or show that group's dots; it also tells you what each colour means.
+- **Click a waypoint to use it.** Before, only Enter worked. Rest the mouse on a waypoint to read its name and
+  description.
+- **The map no longer disappears** when a waypoint is selected.
+
 ## v0.408 — Auto-interact, reactions and haste (still beta)
 
 ### For players
